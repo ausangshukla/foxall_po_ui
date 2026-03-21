@@ -9,9 +9,10 @@ import {
   Col,
   Form,
   InputGroup,
+  Dropdown,
 } from 'react-bootstrap'
 import { useAuth, useRequireAuth } from '../../contexts/AuthContext'
-import { LoadingSpinner, AlertMessage } from '../../components/common'
+import { LoadingSpinner, AlertMessage, ConfirmationModal } from '../../components/common'
 import { listEntities, deleteEntity } from '../../api/entities'
 import { listUsers } from '../../api/users'
 import type { EntityResponse, UserResponse } from '../../types/api'
@@ -27,6 +28,16 @@ export function EntityListPage() {
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [deletingId, setDeletingId] = useState<number | null>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
+  const toggleSort = (key: keyof EntityResponse) => {
+    if (sortKey === key) {
+      setSortDir(sortDir === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortKey(key)
+      setSortDir('asc')
+    }
+  }
 
   useEffect(() => {
     if (!isAuth) return
@@ -58,18 +69,23 @@ export function EntityListPage() {
     fetchData()
   }, [isAuth])
 
-  const handleDelete = async (id: number) => {
-    if (!window.confirm('Are you sure you want to delete this entity?')) {
-      return
-    }
-
+  const handleDelete = (id: number) => {
     setDeletingId(id)
+    setShowDeleteConfirm(true)
+  }
+
+  const confirmDelete = async () => {
+    if (deletingId === null) return
+
     try {
-      await deleteEntity(id)
-      setEntities(entities.filter((e) => e.id !== id))
+      setIsLoading(true)
+      await deleteEntity(deletingId)
+      setEntities(entities.filter((e) => e.id !== deletingId))
+      setShowDeleteConfirm(false)
     } catch {
       setError('Failed to delete entity')
     } finally {
+      setIsLoading(false)
       setDeletingId(null)
     }
   }
@@ -112,15 +128,10 @@ export function EntityListPage() {
     return 0
   })
 
-  const toggleSort = (key: keyof EntityResponse) => {
-    if (sortKey === key) {
-      setSortDir(sortDir === 'asc' ? 'desc' : 'asc')
-    } else {
-      setSortKey(key)
-      setSortDir('asc')
-    }
+  const getSortIndicator = (key: keyof EntityResponse) => {
+    if (sortKey !== key) return <i className="ti ti-selector text-muted opacity-25 ms-1" style={{ fontSize: '0.8rem' }}></i>
+    return <i className={`ti ti-chevron-${sortDir === 'asc' ? 'up' : 'down'} sort-active ms-1`} style={{ fontSize: '0.8rem' }}></i>
   }
-
 
   if (!isAuth || isLoading) {
     return <LoadingSpinner />
@@ -131,24 +142,32 @@ export function EntityListPage() {
   }
 
   return (
-    <div>
-      <Row className="mb-4 align-items-center">
-        <Col>
-          <h1>Entities</h1>
-        </Col>
-        <Col xs="auto">
-          <Button variant="primary" onClick={() => navigate('/entities/new')}>
-            Add Entity
-          </Button>
-        </Col>
-      </Row>
+    <div className="pb-5">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 className="h3 mb-1 fw-bold text-dark">Entities</h1>
+          <p className="text-muted small mb-0">Manage organizations, branches, and departments</p>
+        </div>
+        <Button
+          variant="primary"
+          className="d-flex align-items-center gap-2"
+          onClick={() => navigate('/entities/new')}
+        >
+          <i className="ti ti-plus"></i> Add Entity
+        </Button>
+      </div>
 
       {error && <AlertMessage variant="danger" message={error} />}
 
-      <Card className="mb-4">
-        <Card.Body>
+      <Card className="mb-4 shadow-sm border-0">
+        <Card.Body className="p-4">
+          <Form.Label className="fw-semibold text-muted small mb-2">Search Entities</Form.Label>
           <InputGroup>
+            <InputGroup.Text className="bg-white border-end-0 text-muted">
+              <i className="ti ti-search"></i>
+            </InputGroup.Text>
             <Form.Control
+              className="border-start-0 ps-0"
               placeholder="Search by name, type, or address..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -157,86 +176,149 @@ export function EntityListPage() {
         </Card.Body>
       </Card>
 
-      <Card>
-        <Card.Body>
+      <Card className="shadow-sm border-0">
+        <Card.Body className="p-0">
+          <div className="p-3 px-4 border-bottom">
+            <div className="results-info fw-medium">
+              Showing <span className="text-dark fw-bold">{filteredEntities.length}</span> entities
+            </div>
+          </div>
+
           {filteredEntities.length === 0 ? (
-            <p className="text-muted text-center my-4">No entities found</p>
+            <div className="text-center py-5">
+              <div className="display-4 mb-3 opacity-25">
+                <i className="ti ti-building"></i>
+              </div>
+              <h5 className="text-dark fw-bold">No entities found</h5>
+              <p className="text-muted small mx-auto" style={{ maxWidth: '300px' }}>
+                Try adjusting your search terms to find the entity you're looking for.
+              </p>
+            </div>
           ) : (
-            <Table responsive hover>
-              <thead>
-                <tr>
-                  <th role="button" onClick={() => toggleSort('name')}>Name {sortKey === 'name' ? (sortDir === 'asc' ? '▲' : '▼') : ''}</th>
-                  <th role="button" onClick={() => toggleSort('entity_type')}>Type {sortKey === 'entity_type' ? (sortDir === 'asc' ? '▲' : '▼') : ''}</th>
-                  <th>URL</th>
-                  <th role="button" onClick={() => toggleSort('address')}>Address {sortKey === 'address' ? (sortDir === 'asc' ? '▲' : '▼') : ''}</th>
-                  <th>Users</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredEntities.map((entity) => (
-                  <tr key={entity.id}>
-                    <td>
-                      <strong>{entity.name}</strong>
-                    </td>
-                    <td>
-                      <Badge bg={getTypeBadgeVariant(entity.entity_type)}>
-                        {entity.entity_type}
-                      </Badge>
-                    </td>
-                    <td>
-                      {entity.url ? (
-                        <a
-                          href={entity.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-decoration-none"
-                        >
-                          {entity.url}
-                        </a>
-                      ) : (
-                        <span className="text-muted">—</span>
-                      )}
-                    </td>
-                    <td>{entity.address || <span className="text-muted">—</span>}</td>
-                    <td>
-                      <Badge bg="light" text="dark" className="fw-semibold">
-                        {userCounts.get(entity.id) || 0}
-                      </Badge>
-                    </td>
-                    <td>
-                      <Button
-                        variant="outline-primary"
-                        size="sm"
-                        className="me-2"
-                        onClick={() => navigate(`/entities/${entity.id}`)}
-                      >
-                        View
-                      </Button>
-                      <Button
-                        variant="outline-secondary"
-                        size="sm"
-                        className="me-2"
-                        onClick={() => navigate(`/entities/${entity.id}/edit`)}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outline-danger"
-                        size="sm"
-                        onClick={() => handleDelete(entity.id)}
-                        disabled={deletingId === entity.id}
-                      >
-                        {deletingId === entity.id ? 'Deleting...' : 'Delete'}
-                      </Button>
-                    </td>
+            <div className="table-responsive">
+              <Table hover className="align-middle">
+                <thead>
+                  <tr>
+                    <th role="button" onClick={() => toggleSort('name')}>
+                      Name {getSortIndicator('name')}
+                    </th>
+                    <th role="button" onClick={() => toggleSort('entity_type')}>
+                      Type {getSortIndicator('entity_type')}
+                    </th>
+                    <th>URL</th>
+                    <th role="button" onClick={() => toggleSort('address')}>
+                      Address {getSortIndicator('address')}
+                    </th>
+                    <th>Users</th>
+                    <th className="text-end">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </Table>
+                </thead>
+                <tbody>
+                  {filteredEntities.map((entity) => (
+                    <tr key={entity.id} onClick={() => navigate(`/entities/${entity.id}`)} style={{ cursor: 'pointer' }}>
+                      <td>
+                        <div className="d-flex align-items-center">
+                          <div className="vendor-avatar">
+                            <i className="ti ti-building-community" style={{ fontSize: '0.8rem' }}></i>
+                          </div>
+                          <div>
+                            <div className="table-link">{entity.name}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <Badge
+                          bg={getTypeBadgeVariant(entity.entity_type)}
+                          style={{ cursor: 'pointer' }}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setSearchTerm(entity.entity_type)
+                          }}
+                        >
+                          {entity.entity_type}
+                        </Badge>
+                      </td>
+                      <td>
+                        {entity.url ? (
+                          <a
+                            href={entity.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-decoration-none small d-flex align-items-center gap-1"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <i className="ti ti-external-link"></i>
+                            {entity.url.replace(/^https?:\/\/(www\.)?/, '')}
+                          </a>
+                        ) : (
+                          <span className="text-muted small">—</span>
+                        )}
+                      </td>
+                      <td>
+                        <div className="small text-truncate" style={{ maxWidth: '200px' }}>
+                          {entity.address || <span className="text-muted">—</span>}
+                        </div>
+                      </td>
+                      <td>
+                        <Badge bg="light" text="dark">
+                          {userCounts.get(entity.id) || 0} users
+                        </Badge>
+                      </td>
+                      <td className="text-end" onClick={(e) => e.stopPropagation()}>
+                        <Dropdown align="end">
+                          <Dropdown.Toggle
+                            variant="link"
+                            className="text-muted p-0 border-0 shadow-none"
+                            id={`entity-actions-${entity.id}`}
+                          >
+                            <i className="ti ti-dots-vertical" style={{ fontSize: '1.2rem' }}></i>
+                          </Dropdown.Toggle>
+                          <Dropdown.Menu className="shadow-sm border-0">
+                            <Dropdown.Item onClick={() => navigate(`/entities/${entity.id}`)} className="d-flex align-items-center gap-2">
+                              <i className="ti ti-eye"></i> View Details
+                            </Dropdown.Item>
+                            <Dropdown.Item onClick={() => navigate(`/entities/${entity.id}/edit`)} className="d-flex align-items-center gap-2">
+                              <i className="ti ti-edit"></i> Edit Entity
+                            </Dropdown.Item>
+                            <Dropdown.Divider />
+                            <Dropdown.Item
+                              className="text-danger d-flex align-items-center gap-2"
+                              onClick={() => handleDelete(entity.id)}
+                              disabled={deletingId === entity.id}
+                            >
+                              <i className="ti ti-trash"></i> Delete
+                            </Dropdown.Item>
+                          </Dropdown.Menu>
+                        </Dropdown>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            </div>
           )}
         </Card.Body>
       </Card>
+
+      <ConfirmationModal
+        show={showDeleteConfirm}
+        title="Confirm Entity Deletion"
+        message={
+          <>
+            Are you sure you want to delete this entity?
+            <br />
+            <strong>This action cannot be undone.</strong>
+          </>
+        }
+        onConfirm={confirmDelete}
+        onCancel={() => {
+          setShowDeleteConfirm(false)
+          setDeletingId(null)
+        }}
+        confirmText="Delete"
+        variant="danger"
+        isLoading={isLoading && deletingId !== null}
+      />
     </div>
   )
 }
