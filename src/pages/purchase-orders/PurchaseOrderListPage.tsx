@@ -11,6 +11,7 @@ import type {
   PurchaseOrderStatus,
   PurchaseOrderType,
   PurchaseOrderSearchCondition,
+  ShippingMethod,
 } from '../../types/api'
 
 const STATUS_VARIANTS: Record<PurchaseOrderStatus, string> = {
@@ -46,42 +47,49 @@ const ALL_STATUSES: PurchaseOrderStatus[] = [
   'cancelled',
 ]
 
+const ALL_SHIPPING_METHODS: ShippingMethod[] = [
+  'air',
+  'sea',
+  'ground',
+  'express',
+]
+
 export function PurchaseOrderListPage() {
-  const isAuth = useRequireAuth()
-  const navigate = useNavigate()
-  const { canManageUsers } = useAuth()
+    const isAuth = useRequireAuth()
+    const navigate = useNavigate()
+    const { canManageUsers } = useAuth()
 
-  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrderResponse[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [deletingId, setDeletingId] = useState<number | null>(null)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [showFilters, setShowFilters] = useState(false)
+    const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrderResponse[]>([])
+    const [isLoading, setIsLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+    const [deletingId, setDeletingId] = useState<number | null>(null)
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+    const [showFilters, setShowFilters] = useState(false)
 
-  // Pagination
-  const [page, setPage] = useState(1)
-  const [perPage] = useState(25)
-  const [totalPages, setTotalPages] = useState(1)
-  const [totalCount, setTotalCount] = useState(0)
+    // Pagination
+    const [page, setPage] = useState(1)
+    const [perPage] = useState(25)
+    const [totalPages, setTotalPages] = useState(1)
+    const [totalCount, setTotalCount] = useState(0)
 
-  // Filter states
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState<PurchaseOrderStatus | 'all'>('all')
-  const [poTypeFilter, setPoTypeFilter] = useState<PurchaseOrderType | 'all'>('all')
-  const [vendorId, setVendorId] = useState('')
-  const [orderDateFrom, setOrderDateFrom] = useState('')
-  const [orderDateTo, setOrderDateTo] = useState('')
-  const [poNumber, setPoNumber] = useState('')
-  const [totalAmountMin, setTotalAmountMin] = useState('')
-  const [totalAmountMax, setTotalAmountMax] = useState('')
-  const [shippingMethod, setShippingMethod] = useState('')
-  const [carrier, setCarrier] = useState('')
-  const [trackingNumber, setTrackingNumber] = useState('')
+    // Filter states
+    const [searchTerm, setSearchTerm] = useState('')
+    const [statusFilter, setStatusFilter] = useState<PurchaseOrderStatus | 'all'>('all')
+    const [poTypeFilter, setPoTypeFilter] = useState<PurchaseOrderType | 'all'>('all')
+    const [vendorId, setVendorId] = useState('')
+    const [orderDateFrom, setOrderDateFrom] = useState('')
+    const [orderDateTo, setOrderDateTo] = useState('')
+    const [poNumber, setPoNumber] = useState('')
+    const [totalAmountMin, setTotalAmountMin] = useState('')
+    const [totalAmountMax, setTotalAmountMax] = useState('')
+    const [shippingMethod, setShippingMethod] = useState('')
+    const [carrier, setCarrier] = useState('')
+    const [trackingNumber, setTrackingNumber] = useState('')
 
-  const [sortKey, setSortKey] = useState<string>('order_date')
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+    const [sortKey, setSortKey] = useState<string>('order_date')
+    const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
 
-  const fetchPurchaseOrders = useCallback(async () => {
+    const fetchPurchaseOrders = useCallback(async () => {
     if (!isAuth) return
 
     try {
@@ -185,17 +193,36 @@ export function PurchaseOrderListPage() {
     sortDir,
   ])
 
-  const toggleSort = (key: string) => {
-    if (sortKey === key) {
-      setSortDir(sortDir === 'asc' ? 'desc' : 'asc')
-    } else {
-      setSortKey(key)
-      setSortDir('asc')
+    const handleSort = (key: string) => {
+      if (sortKey === key) {
+        setSortDir(sortDir === 'asc' ? 'desc' : 'asc')
+      } else {
+        setSortKey(key)
+        setSortDir('asc')
+      }
+      setPage(1)
     }
-    setPage(1)
-  }
 
-  useEffect(() => {
+    const handleFilterClick = (e: React.MouseEvent, type: 'status' | 'po_type' | 'method' | 'carrier', value: string) => {
+      e.stopPropagation()
+      setPage(1)
+      switch (type) {
+        case 'status':
+          setStatusFilter(value as PurchaseOrderStatus)
+          break
+        case 'po_type':
+          setPoTypeFilter(value as PurchaseOrderType)
+          break
+        case 'method':
+          setShippingMethod(value)
+          break
+        case 'carrier':
+          setCarrier(value)
+          break
+      }
+    }
+
+    useEffect(() => {
     fetchPurchaseOrders()
   }, [fetchPurchaseOrders])
 
@@ -300,34 +327,40 @@ export function PurchaseOrderListPage() {
     return 'local_shipping'
   }
 
-  const renderStatusBadge = (status: PurchaseOrderStatus | undefined, expectedDeliveryDate?: string | null) => {
-    // Check if late
-    let currentStatus = status
-    if (status === 'sent' || status === 'pending') {
-      if (expectedDeliveryDate && new Date(expectedDeliveryDate) < new Date()) {
-        // Just for visual effect in this demo/update
-        // @ts-ignore
-        currentStatus = 'late'
+    const renderStatusBadge = (status: PurchaseOrderStatus | undefined, expectedDeliveryDate?: string | null) => {
+      // Check if late
+      let currentStatus = status
+      if (status === 'sent' || status === 'pending') {
+        if (expectedDeliveryDate && new Date(expectedDeliveryDate) < new Date()) {
+          // Just for visual effect in this demo/update
+          // @ts-ignore
+          currentStatus = 'late'
+        }
       }
+
+      const classes = getStatusClasses(currentStatus)
+      const icon = getStatusIcon(currentStatus)
+      return (
+        <span 
+          onClick={(e) => status && handleFilterClick(e, 'status', status)}
+          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all ${classes}`}
+        >
+          <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>{icon}</span>
+          {(currentStatus || 'unknown').replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
+        </span>
+      )
     }
 
-    const classes = getStatusClasses(currentStatus)
-    const icon = getStatusIcon(currentStatus)
-    return (
-      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${classes}`}>
-        <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>{icon}</span>
-        {(currentStatus || 'unknown').replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
-      </span>
-    )
-  }
-
-  const renderTypeBadge = (type: PurchaseOrderType | undefined) => {
-    return (
-      <span className="text-xs font-medium px-2 py-1 bg-slate-100 text-slate-600 rounded">
-        {(type || 'standard').replace(/\b\w/g, (l) => l.toUpperCase())}
-      </span>
-    )
-  }
+    const renderTypeBadge = (type: PurchaseOrderType | undefined) => {
+      return (
+        <span 
+          onClick={(e) => type && handleFilterClick(e, 'po_type', type)}
+          className="text-xs font-medium px-2 py-1 bg-slate-100 text-slate-600 rounded cursor-pointer hover:bg-primary/10 hover:text-primary transition-all"
+        >
+          {(type || 'standard').replace(/\b\w/g, (l) => l.toUpperCase())}
+        </span>
+      )
+    }
 
   const hasActiveFilters =
     searchTerm ||
@@ -490,7 +523,7 @@ export function PurchaseOrderListPage() {
           <div className="space-y-2">
             <label className="text-xs font-bold text-outline uppercase tracking-widest ml-1">PO Type</label>
             <select
-              className="w-full px-4 py-2.5 bg-surface-container-lowest border-none rounded-xl text-on-surface focus:ring-2 focus:ring-primary/20 font-bold text-sm"
+              className="w-full px-4 py-2.5 bg-surface-container-lowest border-none rounded-xl text-on-surface focus:ring-2 focus:ring-primary/20 font-bold text-sm capitalize"
               value={poTypeFilter}
               onChange={(e) => { setPoTypeFilter(e.target.value as PurchaseOrderType | 'all'); setPage(1); }}
             >
@@ -499,6 +532,46 @@ export function PurchaseOrderListPage() {
               <option value="blanket">Blanket</option>
               <option value="service">Service</option>
             </select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-outline uppercase tracking-widest ml-1">Status</label>
+            <select
+              className="w-full px-4 py-2.5 bg-surface-container-lowest border-none rounded-xl text-on-surface focus:ring-2 focus:ring-primary/20 font-bold text-sm capitalize"
+              value={statusFilter}
+              onChange={(e) => { setStatusFilter(e.target.value as PurchaseOrderStatus | 'all'); setPage(1); }}
+            >
+              <option value="all">All Statuses</option>
+              {ALL_STATUSES.map((status) => (
+                <option key={status} value={status}>
+                  {status.replace(/_/g, ' ')}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-outline uppercase tracking-widest ml-1">Shipping Method</label>
+            <select
+              className="w-full px-4 py-2.5 bg-surface-container-lowest border-none rounded-xl text-on-surface focus:ring-2 focus:ring-primary/20 font-bold text-sm capitalize"
+              value={shippingMethod}
+              onChange={(e) => { setShippingMethod(e.target.value); setPage(1); }}
+            >
+              <option value="">Any Method</option>
+              {ALL_SHIPPING_METHODS.map((method) => (
+                <option key={method} value={method}>
+                  {method}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-outline uppercase tracking-widest ml-1">Carrier</label>
+            <input
+              type="text"
+              placeholder="e.g. FedEx, DHL"
+              className="w-full px-4 py-2.5 bg-surface-container-lowest border-none rounded-xl text-on-surface focus:ring-2 focus:ring-primary/20 font-bold text-sm"
+              value={carrier}
+              onChange={(e) => { setCarrier(e.target.value); setPage(1); }}
+            />
           </div>
           <div className="space-y-2">
             <label className="text-xs font-bold text-outline uppercase tracking-widest ml-1">Order Date From</label>
@@ -518,7 +591,7 @@ export function PurchaseOrderListPage() {
               onChange={(e) => { setOrderDateTo(e.target.value); setPage(1); }}
             />
           </div>
-          <div className="space-y-2 flex flex-col justify-end">
+          <div className="space-y-2 lg:col-start-4 flex flex-col justify-end">
             <button
               onClick={handleClearFilters}
               className="w-full px-4 py-2.5 bg-white text-error border border-error/20 rounded-xl font-bold text-sm hover:bg-error/5 transition-all active:scale-95 flex items-center justify-center gap-2"
@@ -538,7 +611,7 @@ export function PurchaseOrderListPage() {
               <tr className="bg-surface-container-low/50">
                 <th 
                   className="px-6 py-4 text-xs font-bold text-outline uppercase tracking-widest cursor-pointer group hover:text-primary transition-colors"
-                  onClick={() => toggleSort('po_number')}
+                  onClick={() => handleSort('po_number')}
                 >
                   <div className="flex items-center gap-1">PO Number {getSortIndicator('po_number')}</div>
                 </th>
@@ -547,24 +620,25 @@ export function PurchaseOrderListPage() {
                 <th className="px-6 py-4 text-xs font-bold text-outline uppercase tracking-widest text-center">Status</th>
                 <th 
                   className="px-6 py-4 text-xs font-bold text-outline uppercase tracking-widest cursor-pointer group hover:text-primary transition-colors"
-                  onClick={() => toggleSort('order_date')}
+                  onClick={() => handleSort('order_date')}
                 >
                   <div className="flex items-center gap-1">Timeline {getSortIndicator('order_date')}</div>
                 </th>
                 <th 
                   className="px-6 py-4 text-xs font-bold text-outline uppercase tracking-widest cursor-pointer group hover:text-primary transition-colors"
-                  onClick={() => toggleSort('total_amount')}
+                  onClick={() => handleSort('total_amount')}
                 >
                   <div className="flex items-center gap-1">Total Amount {getSortIndicator('total_amount')}</div>
                 </th>
                 <th className="px-6 py-4 text-xs font-bold text-outline uppercase tracking-widest">Method</th>
+                <th className="px-6 py-4 text-xs font-bold text-outline uppercase tracking-widest text-center">Carrier</th>
                 <th className="px-6 py-4 text-xs font-bold text-outline uppercase tracking-widest text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {purchaseOrders.length === 0 && !isLoading ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-20 text-center">
+                  <td colSpan={9} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center justify-center">
                       <div className="w-20 h-20 bg-surface-container-low rounded-full flex items-center justify-center mb-4">
                         <span className="material-symbols-outlined text-4xl text-outline">inventory_2</span>
@@ -616,10 +690,21 @@ export function PurchaseOrderListPage() {
                       <div className="text-[10px] text-outline uppercase tracking-wider font-extrabold">{po.currency || 'USD'}</div>
                     </td>
                     <td className="px-6 py-5">
-                      <div className="flex items-center gap-2 text-outline">
-                        <span className="material-symbols-outlined text-lg">{getShippingIcon(po.shipping_method)}</span>
-                        <span className="text-xs font-bold capitalize">{po.shipping_method || 'Ground'}</span>
+                      <div 
+                        onClick={(e) => handleFilterClick(e, 'method', po.shipping_method || 'ground')}
+                        className="flex items-center gap-2 text-outline cursor-pointer hover:text-primary transition-all group/method"
+                      >
+                        <span className="material-symbols-outlined text-lg group-hover/method:scale-110 transition-transform">{getShippingIcon(po.shipping_method || undefined)}</span>
+                        <span className="text-xs font-bold capitalize">{po.shipping_method || 'ground'}</span>
                       </div>
+                    </td>
+                    <td className="px-6 py-5 text-center">
+                      <span 
+                        onClick={(e) => po.carrier && handleFilterClick(e, 'carrier', po.carrier)}
+                        className="text-sm font-bold text-on-surface cursor-pointer hover:text-primary transition-colors"
+                      >
+                        {po.carrier || '—'}
+                      </span>
                     </td>
                     <td className="px-6 py-5 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
