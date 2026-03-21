@@ -87,6 +87,14 @@ export async function apiRequest<T, M = unknown>(
     tokenFromHeader = authHeader.substring(7)
   }
 
+  // Handle 204 No Content responses
+  if (response.status === 204) {
+    if (returnFull) {
+      return { data: null as T, meta: null as M, status: { code: 204, message: 'No Content' } }
+    }
+    return null as T
+  }
+
   // Parse the response body
   let body: ApiResponse<T, M>
   try {

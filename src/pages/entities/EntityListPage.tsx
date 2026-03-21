@@ -73,16 +73,19 @@ export function EntityListPage() {
   const confirmDelete = async () => {
     if (deletingId === null) return
 
+    const idToDelete = deletingId
+
     try {
       setIsLoading(true)
-      await deleteEntity(deletingId)
-      setEntities(entities.filter((e) => e.id !== deletingId))
+      await deleteEntity(idToDelete)
+      setEntities((prev) => prev.filter((e) => e.id !== idToDelete))
       setShowDeleteConfirm(false)
-    } catch {
-      setError('Failed to delete entity')
+      setDeletingId(null)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to delete entity'
+      setError(message)
     } finally {
       setIsLoading(false)
-      setDeletingId(null)
     }
   }
 

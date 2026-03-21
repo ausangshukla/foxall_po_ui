@@ -65,16 +65,20 @@ export function UserListPage() {
 
   const confirmDelete = async () => {
     if (deletingId === null) return
+
+    const idToDelete = deletingId
+
     try {
       setIsLoading(true)
-      await deleteUser(deletingId)
-      setUsers(users.filter((u) => u.id !== deletingId))
+      await deleteUser(idToDelete)
+      setUsers((prev) => prev.filter((u) => u.id !== idToDelete))
       setShowDeleteConfirm(false)
-    } catch {
-      setError('Failed to delete user')
+      setDeletingId(null)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to delete user'
+      setError(message)
     } finally {
       setIsLoading(false)
-      setDeletingId(null)
     }
   }
 

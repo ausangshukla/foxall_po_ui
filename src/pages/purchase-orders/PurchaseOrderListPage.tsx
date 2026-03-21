@@ -232,16 +232,19 @@ export function PurchaseOrderListPage() {
   const confirmDelete = async () => {
     if (deletingId === null) return
 
+    const idToDelete = deletingId
+
     try {
       setIsLoading(true)
-      await deletePurchaseOrder(deletingId)
-      setPurchaseOrders((purchaseOrders || []).filter((po) => po.id !== deletingId))
+      await deletePurchaseOrder(idToDelete)
+      setPurchaseOrders((prev) => prev.filter((po) => po.id !== idToDelete))
       setShowDeleteConfirm(false)
-    } catch {
-      setError('Failed to delete purchase order')
+      setDeletingId(null)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to delete purchase order'
+      setError(message)
     } finally {
       setIsLoading(false)
-      setDeletingId(null)
     }
   }
 
