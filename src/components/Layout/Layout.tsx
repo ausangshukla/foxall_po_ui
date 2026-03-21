@@ -9,7 +9,7 @@ export function Layout({ children }: LayoutProps) {
   return (
     <div className="min-vh-100 bg-light">
       <AppNavbar />
-      <Container>{children}</Container>
+      <Container fluid>{children}</Container>
     </div>
   )
 }

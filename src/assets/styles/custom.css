@@ -1,0 +1,22 @@
+
+/* Better padding for badges - more relaxed */
+.badge {
+  padding: 0.5em 0.8em !important;
+  font-size: 0.875rem !important;
+  font-weight: 400 !important;
+  border-radius: 6px !important;
+}
+
+/* More relaxed grid/table spacing */
+.jsgrid-cell,
+.jsgrid-header-cell {
+  padding: 12px 15px !important;
+  font-weight: 400 !important;
+}
+
+/* Ensure buttons have comfortable padding */
+.btn {
+  padding: 0.5rem 1rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 400 !important;
+}

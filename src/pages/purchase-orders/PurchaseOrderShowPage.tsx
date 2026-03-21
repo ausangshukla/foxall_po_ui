@@ -413,7 +413,7 @@ export function PurchaseOrderShowPage() {
             <h5 className="mb-0 fw-semibold">Notes</h5>
           </Card.Header>
           <Card.Body className="p-4">
-            <p className="mb-0" style={{ whiteSpace: 'pre-wrap' }}>{purchaseOrder.notes}</p>
+            <div dangerouslySetInnerHTML={{ __html: purchaseOrder.notes }} />
           </Card.Body>
         </Card>
       )}

@@ -2,7 +2,7 @@ import { useState, useEffect, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Card, Form, Button, Row, Col, Spinner } from 'react-bootstrap'
 import { useAuth, useRequireAuth } from '../../contexts/AuthContext'
-import { LoadingSpinner, AlertMessage } from '../../components/common'
+import { LoadingSpinner, AlertMessage, RichTextEditor } from '../../components/common'
 import {
   createPurchaseOrder,
   updatePurchaseOrder,
@@ -91,7 +91,7 @@ export function PurchaseOrderFormPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const isAuth = useRequireAuth()
-  const { canManageUsers } = useAuth()
+  const { user, canManageUsers } = useAuth()
 
   const isEditing = !!id
   const poId = id ? parseInt(id, 10) : null
@@ -103,7 +103,7 @@ export function PurchaseOrderFormPage() {
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    if (!isAuth) return
+    if (!isAuth || !user) return
 
     const loadData = async () => {
       if (isEditing && poId) {
@@ -138,17 +138,20 @@ export function PurchaseOrderFormPage() {
           setIsLoading(false)
         }
       } else {
+        setFormData((prev) => ({
+          ...prev,
+          entity_id: user.entity_id.toString(),
+        }))
         setIsLoading(false)
       }
     }
 
     loadData()
-  }, [isAuth, isEditing, poId])
+  }, [isAuth, isEditing, poId, user])
 
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {}
 
-    if (!formData.entity_id.trim()) errors.entity_id = 'Entity ID is required'
     if (!formData.po_number.trim()) errors.po_number = 'PO Number is required'
     if (!formData.vendor_id.trim()) errors.vendor_id = 'Vendor ID is required'
     if (!formData.order_date) errors.order_date = 'Order date is required'
@@ -183,6 +186,7 @@ export function PurchaseOrderFormPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError(null)
+    if (!user) return
 
     if (!validateForm()) return
 
@@ -191,7 +195,7 @@ export function PurchaseOrderFormPage() {
     try {
       if (isEditing && poId) {
         const updateData: UpdatePurchaseOrderRequest = {
-          entity_id: parseInt(formData.entity_id, 10),
+          entity_id: user.entity_id,
           po_number: formData.po_number,
           vendor_id: parseInt(formData.vendor_id, 10),
           status: formData.status,
@@ -212,7 +216,7 @@ export function PurchaseOrderFormPage() {
         await updatePurchaseOrder(poId, updateData)
       } else {
         const createData: CreatePurchaseOrderRequest = {
-          entity_id: parseInt(formData.entity_id, 10),
+          entity_id: user.entity_id,
           po_number: formData.po_number,
           vendor_id: parseInt(formData.vendor_id, 10),
           status: formData.status,
@@ -233,7 +237,11 @@ export function PurchaseOrderFormPage() {
         await createPurchaseOrder(createData)
       }
 
-      navigate('/purchase-orders')
+      if (isEditing) {
+        navigate(`/purchase-orders/${id}`)
+      } else {
+        navigate('/purchase-orders')
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save purchase order')
     } finally {
@@ -273,23 +281,6 @@ export function PurchaseOrderFormPage() {
             {/* Core Information */}
             <h5 className="mb-3 text-primary">Core Information</h5>
             <Row>
-              <Col md={6} lg={4}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Entity ID *</Form.Label>
-                  <Form.Control
-                    type="number"
-                    name="entity_id"
-                    value={formData.entity_id}
-                    onChange={handleChange}
-                    isInvalid={!!validationErrors.entity_id}
-                    placeholder="e.g. 1"
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {validationErrors.entity_id}
-                  </Form.Control.Feedback>
-                </Form.Group>
-              </Col>
-
               <Col md={6} lg={4}>
                 <Form.Group className="mb-3">
                   <Form.Label>PO Number *</Form.Label>
@@ -432,12 +423,9 @@ export function PurchaseOrderFormPage() {
 
             <Form.Group className="mb-4">
               <Form.Label>Notes</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={3}
-                name="notes"
+              <RichTextEditor
                 value={formData.notes}
-                onChange={handleChange}
+                onChange={(value) => setFormData((prev) => ({ ...prev, notes: value }))}
                 placeholder="Additional notes about this purchase order..."
               />
             </Form.Group>
