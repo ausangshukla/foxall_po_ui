@@ -19,10 +19,13 @@ import { NotFound } from '../components/common'
 
 export function AppRouter() {
   return (
-    <Layout>
-      <Routes>
+    <Routes>
+      {/* Route without layout */}
+      <Route path="/login" element={<LoginPage />} />
+
+      {/* Routes with layout */}
+      <Route element={<Layout />}>
         <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<LoginPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/users" element={<UserListPage />} />
@@ -38,7 +41,7 @@ export function AppRouter() {
         <Route path="/purchase-orders/:id" element={<PurchaseOrderShowPage />} />
         <Route path="/purchase-orders/:id/edit" element={<PurchaseOrderFormPage />} />
         <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Layout>
+      </Route>
+    </Routes>
   )
 }

@@ -23,24 +23,56 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
   };
 
   return (
-    <div className="border rounded overflow-hidden">
-      <div className="d-flex p-1 border-bottom bg-light gap-1">
-        <button type="button" className="btn btn-sm btn-light" onClick={() => execCommand('bold')}><b>B</b></button>
-        <button type="button" className="btn btn-sm btn-light" onClick={() => execCommand('italic')}><i>I</i></button>
-        <button type="button" className="btn btn-sm btn-light" onClick={() => execCommand('underline')}><u>U</u></button>
-        <button type="button" className="btn btn-sm btn-light" onClick={() => execCommand('insertOrderedList')}>1.</button>
-        <button type="button" className="btn btn-sm btn-light" onClick={() => execCommand('insertUnorderedList')}>•</button>
+    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm transition-all focus-within:ring-2 focus-within:ring-blue-500/10 focus-within:border-blue-500/50">
+      <div className="flex items-center gap-1 p-2 bg-slate-50 border-b border-slate-100 flex-wrap">
+        <button 
+          type="button" 
+          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-slate-700 transition-all active:scale-95" 
+          onClick={() => execCommand('bold')}
+          title="Bold"
+        >
+          <span className="material-symbols-outlined text-[20px] font-black">format_bold</span>
+        </button>
+        <button 
+          type="button" 
+          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-slate-700 transition-all active:scale-95" 
+          onClick={() => execCommand('italic')}
+          title="Italic"
+        >
+          <span className="material-symbols-outlined text-[20px]">format_italic</span>
+        </button>
+        <button 
+          type="button" 
+          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-slate-700 transition-all active:scale-95" 
+          onClick={() => execCommand('underline')}
+          title="Underline"
+        >
+          <span className="material-symbols-outlined text-[20px]">format_underlined</span>
+        </button>
+        <div className="w-[1px] h-4 bg-slate-200 mx-1"></div>
+        <button 
+          type="button" 
+          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-slate-700 transition-all active:scale-95" 
+          onClick={() => execCommand('insertOrderedList')}
+          title="Numbered List"
+        >
+          <span className="material-symbols-outlined text-[20px]">format_list_numbered</span>
+        </button>
+        <button 
+          type="button" 
+          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-slate-700 transition-all active:scale-95" 
+          onClick={() => execCommand('insertUnorderedList')}
+          title="Bullet List"
+        >
+          <span className="material-symbols-outlined text-[20px]">format_list_bulleted</span>
+        </button>
       </div>
       <div
         ref={editorRef}
         contentEditable
         onInput={(e) => onChange(e.currentTarget.innerHTML)}
-        style={{
-          minHeight: '100px',
-          padding: '0.375rem 0.75rem',
-          backgroundColor: '#fff',
-          outline: 'none',
-        }}
+        className="min-h-[150px] p-4 bg-white text-slate-800 outline-none prose prose-sm prose-slate max-w-none font-medium placeholder:text-slate-400"
+        aria-placeholder={placeholder}
       />
     </div>
   );

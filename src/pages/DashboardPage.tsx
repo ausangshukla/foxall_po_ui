@@ -1,5 +1,4 @@
 import { useEffect } from 'react'
-import { Row, Col, Card } from 'react-bootstrap'
 import { useNavigate } from 'react-router-dom'
 import { useAuth, useRequireAuth } from '../contexts/AuthContext'
 import { LoadingSpinner } from '../components/common'
@@ -13,90 +12,70 @@ export function DashboardPage() {
   }
 
   return (
-    <div>
-      <h1 className="mb-4">Dashboard</h1>
+    <div className="p-6">
+      <h1 className="text-3xl font-bold mb-6 text-gray-800">Dashboard</h1>
 
-      <Row>
-        <Col md={6} lg={4} className="mb-4">
-          <Card>
-            <Card.Body>
-              <Card.Title>Welcome, {user?.first_name}!</Card.Title>
-              <Card.Text className="text-muted">
-                You are logged in as{' '}
-                <span className="badge bg-primary">
-                  {user?.roles.join(', ')}
-                </span>
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Welcome Card */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Welcome, {user?.first_name}!</h2>
+          <p className="text-gray-500">
+            You are logged in as{' '}
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              {user?.roles.join(', ')}
+            </span>
+          </p>
+        </div>
 
         {hasRole('super') && (
-          <Col md={6} lg={4} className="mb-4">
-            <Card className="border-primary">
-              <Card.Body>
-                <Card.Title className="text-primary">Super Admin</Card.Title>
-                <Card.Text>
-                  You have full access to manage all users and entities across the
-                  system.
-                </Card.Text>
-              </Card.Body>
-            </Card>
-          </Col>
+          <div className="bg-white rounded-xl shadow-sm border-2 border-blue-500 p-6">
+            <h2 className="text-xl font-semibold text-blue-600 mb-2 font-bold">Super Admin</h2>
+            <p className="text-gray-700">
+              You have full access to manage all users and entities across the system.
+            </p>
+          </div>
         )}
 
         {hasRole('admin') && (
-          <Col md={6} lg={4} className="mb-4">
-            <Card className="border-info">
-              <Card.Body>
-                <Card.Title className="text-info">Admin</Card.Title>
-                <Card.Text>
-                  You can manage users within your entity.
-                </Card.Text>
-              </Card.Body>
-            </Card>
-          </Col>
+          <div className="bg-white rounded-xl shadow-sm border-2 border-cyan-500 p-6">
+            <h2 className="text-xl font-semibold text-cyan-600 mb-2 font-bold">Admin</h2>
+            <p className="text-gray-700">
+              You can manage users within your entity.
+            </p>
+          </div>
         )}
 
         {hasRole('employee') && (
-          <Col md={6} lg={4} className="mb-4">
-            <Card>
-              <Card.Body>
-                <Card.Title>Employee</Card.Title>
-                <Card.Text>
-                  You have access to view your profile information.
-                </Card.Text>
-              </Card.Body>
-            </Card>
-          </Col>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Employee</h2>
+            <p className="text-gray-700">
+              You have access to view your profile information.
+            </p>
+          </div>
         )}
-      </Row>
+      </div>
 
-      <Row className="mt-4">
-        <Col>
-          <Card>
-            <Card.Header>
-              <h5 className="mb-0">Quick Links</h5>
-            </Card.Header>
-            <Card.Body>
-              <ul className="list-unstyled mb-0">
-                <li className="mb-2">
-                  <a href="/profile" className="text-decoration-none">
-                    → View/Edit Profile
-                  </a>
-                </li>
-                {(hasRole('super') || hasRole('admin')) && (
-                  <li>
-                    <a href="/users" className="text-decoration-none">
-                      → Manage Users
-                    </a>
-                  </li>
-                )}
-              </ul>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+      <div className="mt-8 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
+          <h2 className="text-lg font-semibold text-gray-900">Quick Links</h2>
+        </div>
+        <div className="p-6">
+          <ul className="space-y-3">
+            <li>
+              <a href="/profile" className="text-blue-600 hover:text-blue-800 font-medium flex items-center transition-colors">
+                <span className="mr-2">→</span> View/Edit Profile
+              </a>
+            </li>
+            {(hasRole('super') || hasRole('admin')) && (
+              <li>
+                <a href="/users" className="text-blue-600 hover:text-blue-800 font-medium flex items-center transition-colors">
+                  <span className="mr-2">→</span> Manage Users
+                </a>
+              </li>
+            )}
+          </ul>
+        </div>
+      </div>
     </div>
   )
 }

@@ -1,21 +1,17 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  Table,
-  Button,
-  Badge,
-  Card,
-  Row,
-  Col,
-  Form,
-  InputGroup,
-  Dropdown,
-} from 'react-bootstrap'
 import { useAuth, useRequireAuth } from '../../contexts/AuthContext'
 import { LoadingSpinner, AlertMessage, ConfirmationModal } from '../../components/common'
 import { listEntities, deleteEntity } from '../../api/entities'
 import { listUsers } from '../../api/users'
 import type { EntityResponse, UserResponse } from '../../types/api'
+
+const TYPE_CONFIG: Record<string, { icon: string, bg: string, text: string, border: string }> = {
+  company: { icon: 'corporate_fare', bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-100' },
+  branch: { icon: 'store', bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-100' },
+  department: { icon: 'lan', bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-100' },
+  warehouse: { icon: 'inventory_2', bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-100' },
+}
 
 export function EntityListPage() {
   const isAuth = useRequireAuth()
@@ -29,6 +25,8 @@ export function EntityListPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [sortKey, setSortKey] = useState<keyof EntityResponse>('name')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
 
   const toggleSort = (key: keyof EntityResponse) => {
     if (sortKey === key) {
@@ -51,7 +49,6 @@ export function EntityListPage() {
         ])
         setEntities(entitiesData)
 
-        // Count users per entity
         const counts = new Map<number, number>()
         usersData.forEach((user: UserResponse) => {
           counts.set(user.entity_id, (counts.get(user.entity_id) || 0) + 1)
@@ -59,7 +56,6 @@ export function EntityListPage() {
         setUserCounts(counts)
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to load entities'
-        console.error('Failed to load entities:', err)
         setError(message)
       } finally {
         setIsLoading(false)
@@ -90,25 +86,6 @@ export function EntityListPage() {
     }
   }
 
-  const getTypeBadgeVariant = (type: string): string => {
-    switch (type.toLowerCase()) {
-      case 'company':
-        return 'primary'
-      case 'branch':
-        return 'info'
-      case 'department':
-        return 'success'
-      case 'warehouse':
-        return 'warning'
-      default:
-        return 'secondary'
-    }
-  }
-
-  const [sortKey, setSortKey] = useState<keyof EntityResponse>('name')
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
-
-  // Filter entities based on search
   const filteredEntities = entities.filter((entity) => {
     const searchLower = searchTerm.toLowerCase()
     return (
@@ -129,193 +106,164 @@ export function EntityListPage() {
   })
 
   const getSortIndicator = (key: keyof EntityResponse) => {
-    if (sortKey !== key) return <i className="ti ti-selector text-muted opacity-25 ms-1" style={{ fontSize: '0.8rem' }}></i>
-    return <i className={`ti ti-chevron-${sortDir === 'asc' ? 'up' : 'down'} sort-active ms-1`} style={{ fontSize: '0.8rem' }}></i>
+    if (sortKey !== key) return <span className="material-symbols-outlined text-slate-300 text-xs ml-1">unfold_more</span>
+    return <span className="material-symbols-outlined text-blue-600 text-xs ml-1">{sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward'}</span>
   }
 
-  if (!isAuth || isLoading) {
-    return <LoadingSpinner />
-  }
-
-  if (!canManageUsers()) {
-    return <AlertMessage variant="danger" message="Access denied" />
-  }
+  if (!isAuth || isLoading) return <LoadingSpinner />
+  if (!canManageUsers()) return <AlertMessage variant="danger" message="Access denied" />
 
   return (
-    <div className="pb-5">
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="h3 mb-1 fw-bold text-dark">Entities</h1>
-          <p className="text-muted small mb-0">Manage organizations, branches, and departments</p>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 font-headline">Entities</h1>
+          <p className="mt-1 text-slate-500 font-medium">Manage organizations, branches, and distribution departments</p>
         </div>
-        <Button
-          variant="primary"
-          className="d-flex align-items-center gap-2"
+        <button
           onClick={() => navigate('/entities/new')}
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 active:scale-95"
         >
-          <i className="ti ti-plus"></i> Add Entity
-        </Button>
+          <span className="material-symbols-outlined">add_business</span>
+          Register New Entity
+        </button>
       </div>
 
-      {error && <AlertMessage variant="danger" message={error} />}
+      {error && <AlertMessage variant="danger" message={error} onClose={() => setError(null)} />}
 
-      <Card className="mb-4 shadow-sm border-0">
-        <Card.Body className="p-4">
-          <Form.Label className="fw-semibold text-muted small mb-2">Search Entities</Form.Label>
-          <InputGroup>
-            <InputGroup.Text className="bg-white border-end-0 text-muted">
-              <i className="ti ti-search"></i>
-            </InputGroup.Text>
-            <Form.Control
-              className="border-start-0 ps-0"
-              placeholder="Search by name, type, or address..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </InputGroup>
-        </Card.Body>
-      </Card>
+      {/* Search/Filter Card */}
+      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+        <div className="max-w-md relative">
+          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+          <input
+            className="w-full pl-12 pr-4 py-3 bg-slate-50 border-none rounded-xl text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 transition-all font-medium"
+            placeholder="Search by name, type, or address..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
 
-      <Card className="shadow-sm border-0">
-        <Card.Body className="p-0">
-          <div className="p-3 px-4 border-bottom">
-            <div className="results-info fw-medium">
-              Showing <span className="text-dark fw-bold">{filteredEntities.length}</span> entities
-            </div>
+      {/* Grid Display */}
+      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <div className="px-8 py-5 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
+          <div className="text-sm font-semibold text-slate-600">
+            Showing <span className="text-blue-600 font-bold">{filteredEntities.length}</span> active entities
           </div>
+        </div>
 
-          {filteredEntities.length === 0 ? (
-            <div className="text-center py-5">
-              <div className="display-4 mb-3 opacity-25">
-                <i className="ti ti-building"></i>
-              </div>
-              <h5 className="text-dark fw-bold">No entities found</h5>
-              <p className="text-muted small mx-auto" style={{ maxWidth: '300px' }}>
-                Try adjusting your search terms to find the entity you're looking for.
-              </p>
+        {filteredEntities.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+              <span className="material-symbols-outlined text-4xl text-slate-300">location_off</span>
             </div>
-          ) : (
-            <div className="table-responsive">
-              <Table hover className="align-middle">
-                <thead>
-                  <tr>
-                    <th role="button" onClick={() => toggleSort('name')}>
-                      Name {getSortIndicator('name')}
-                    </th>
-                    <th role="button" onClick={() => toggleSort('entity_type')}>
-                      Type {getSortIndicator('entity_type')}
-                    </th>
-                    <th>URL</th>
-                    <th role="button" onClick={() => toggleSort('address')}>
-                      Address {getSortIndicator('address')}
-                    </th>
-                    <th>Users</th>
-                    <th className="text-end">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredEntities.map((entity) => (
-                    <tr key={entity.id} onClick={() => navigate(`/entities/${entity.id}`)} style={{ cursor: 'pointer' }}>
-                      <td>
-                        <div className="d-flex align-items-center">
-                          <div className="vendor-avatar">
-                            <i className="ti ti-building-community" style={{ fontSize: '0.8rem' }}></i>
+            <h3 className="text-lg font-bold text-slate-900 mb-1">No entities found</h3>
+            <p className="text-slate-500 max-w-xs mx-auto">Try adjusting your search terms or add a new subsidiary entity.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50/30">
+                  <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest cursor-pointer group" onClick={() => toggleSort('name')}>
+                    <div className="flex items-center">Organization {getSortIndicator('name')}</div>
+                  </th>
+                  <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest cursor-pointer group" onClick={() => toggleSort('entity_type')}>
+                    <div className="flex items-center">Category {getSortIndicator('entity_type')}</div>
+                  </th>
+                  <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Digital Presence</th>
+                  <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">User Base</th>
+                  <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {filteredEntities.map((e) => {
+                  const type = e.entity_type.toLowerCase();
+                  const cfg = TYPE_CONFIG[type] || TYPE_CONFIG.company;
+                  return (
+                    <tr 
+                      key={e.id} 
+                      className="hover:bg-slate-50/80 transition-all cursor-pointer group"
+                      onClick={() => navigate(`/entities/${e.id}`)}
+                    >
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm border ${cfg.bg} ${cfg.text} ${cfg.border}`}>
+                            <span className="material-symbols-outlined text-2xl">{cfg.icon}</span>
                           </div>
                           <div>
-                            <div className="table-link">{entity.name}</div>
+                            <div className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{e.name}</div>
+                            <div className="text-xs font-bold text-slate-400 uppercase truncate max-w-[200px]">{e.address || 'No Address Listed'}</div>
                           </div>
                         </div>
                       </td>
-                      <td>
-                        <Badge
-                          bg={getTypeBadgeVariant(entity.entity_type)}
-                          style={{ cursor: 'pointer' }}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setSearchTerm(entity.entity_type)
-                          }}
-                        >
-                          {entity.entity_type}
-                        </Badge>
+                      <td className="px-8 py-5">
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${cfg.bg} ${cfg.text} ${cfg.border}`}>
+                          {e.entity_type}
+                        </span>
                       </td>
-                      <td>
-                        {entity.url ? (
-                          <a
-                            href={entity.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-decoration-none small d-flex align-items-center gap-1"
-                            onClick={(e) => e.stopPropagation()}
+                      <td className="px-8 py-5">
+                        {e.url ? (
+                          <a 
+                            href={e.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            onClick={(ev) => ev.stopPropagation()}
+                            className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-800 font-bold text-sm"
                           >
-                            <i className="ti ti-external-link"></i>
-                            {entity.url.replace(/^https?:\/\/(www\.)?/, '')}
+                            <span className="material-symbols-outlined text-[18px]">language</span>
+                            <span className="underline underline-offset-4 decoration-blue-100">{e.url.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]}</span>
                           </a>
                         ) : (
-                          <span className="text-muted small">—</span>
+                          <span className="text-slate-300 font-medium text-xs">—</span>
                         )}
                       </td>
-                      <td>
-                        <div className="small text-truncate" style={{ maxWidth: '200px' }}>
-                          {entity.address || <span className="text-muted">—</span>}
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-2">
+                          <div className="flex -space-x-2">
+                             {[1,2,3].slice(0, Math.min(3, userCounts.get(e.id) || 0)).map(i => (
+                               <div key={i} className="w-6 h-6 rounded-full bg-slate-200 border-2 border-white"></div>
+                             ))}
+                          </div>
+                          <span className="text-xs font-bold text-slate-600">
+                            {userCounts.get(e.id) || 0} Members
+                          </span>
                         </div>
                       </td>
-                      <td>
-                        <Badge bg="light" text="dark">
-                          {userCounts.get(entity.id) || 0} users
-                        </Badge>
-                      </td>
-                      <td className="text-end" onClick={(e) => e.stopPropagation()}>
-                        <Dropdown align="end">
-                          <Dropdown.Toggle
-                            variant="link"
-                            className="text-muted p-0 border-0 shadow-none"
-                            id={`entity-actions-${entity.id}`}
-                          >
-                            <i className="ti ti-dots-vertical" style={{ fontSize: '1.2rem' }}></i>
-                          </Dropdown.Toggle>
-                          <Dropdown.Menu className="shadow-sm border-0">
-                            <Dropdown.Item onClick={() => navigate(`/entities/${entity.id}`)} className="d-flex align-items-center gap-2">
-                              <i className="ti ti-eye"></i> View Details
-                            </Dropdown.Item>
-                            <Dropdown.Item onClick={() => navigate(`/entities/${entity.id}/edit`)} className="d-flex align-items-center gap-2">
-                              <i className="ti ti-edit"></i> Edit Entity
-                            </Dropdown.Item>
-                            <Dropdown.Divider />
-                            <Dropdown.Item
-                              className="text-danger d-flex align-items-center gap-2"
-                              onClick={() => handleDelete(entity.id)}
-                              disabled={deletingId === entity.id}
+                      <td className="px-8 py-5 text-right" onClick={(ev) => ev.stopPropagation()}>
+                         <div className="flex items-center justify-end gap-2">
+                            <button 
+                              onClick={() => navigate(`/entities/${e.id}/edit`)}
+                              className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all"
+                              title="Edit Entity"
                             >
-                              <i className="ti ti-trash"></i> Delete
-                            </Dropdown.Item>
-                          </Dropdown.Menu>
-                        </Dropdown>
+                              <span className="material-symbols-outlined text-[20px]">edit</span>
+                            </button>
+                            <button 
+                              onClick={() => handleDelete(e.id)}
+                              className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                              title="Delete Entity"
+                            >
+                              <span className="material-symbols-outlined text-[20px]">delete</span>
+                            </button>
+                         </div>
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </Table>
-            </div>
-          )}
-        </Card.Body>
-      </Card>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       <ConfirmationModal
         show={showDeleteConfirm}
-        title="Confirm Entity Deletion"
-        message={
-          <>
-            Are you sure you want to delete this entity?
-            <br />
-            <strong>This action cannot be undone.</strong>
-          </>
-        }
+        title="Delete Entity Subsidiary"
+        message={`Are you sure you want to delete this entity? This will remove all associated configurations. This action cannot be reversed and may affect users assigned to this entity.`}
         onConfirm={confirmDelete}
-        onCancel={() => {
-          setShowDeleteConfirm(false)
-          setDeletingId(null)
-        }}
-        confirmText="Delete"
+        onCancel={() => { setShowDeleteConfirm(false); setDeletingId(null) }}
+        confirmText="Confirm Deletion"
         variant="danger"
         isLoading={isLoading && deletingId !== null}
       />

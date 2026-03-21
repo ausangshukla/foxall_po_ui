@@ -1,11 +1,18 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Row, Col, Card, Badge, Button, Table } from 'react-bootstrap'
 import { useAuth, useRequireAuth } from '../../contexts/AuthContext'
 import { LoadingSpinner, AlertMessage } from '../../components/common'
 import { getEntity } from '../../api/entities'
 import { listUsers } from '../../api/users'
 import type { EntityResponse, UserResponse } from '../../types/api'
+
+const TYPE_CONFIG: Record<string, { icon: string, bg: string, text: string, border: string, gradient: string }> = {
+  company: { icon: 'corporate_fare', bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-100', gradient: 'from-blue-600 to-indigo-700' },
+  branch: { icon: 'store', bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-100', gradient: 'from-indigo-500 to-purple-600' },
+  department: { icon: 'lan', bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-100', gradient: 'from-emerald-500 to-teal-600' },
+  warehouse: { icon: 'inventory_2', bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-100', gradient: 'from-amber-500 to-orange-600' },
+  store: { icon: 'shopping_basket', bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-100', gradient: 'from-rose-500 to-pink-600' },
+}
 
 export function EntityShowPage() {
   const { id } = useParams<{ id: string }>()
@@ -43,378 +50,209 @@ export function EntityShowPage() {
     fetchData()
   }, [isAuth, entityId])
 
-  const getTypeBadgeVariant = (type: string): string => {
-    switch (type.toLowerCase()) {
-      case 'company': return 'primary'
-      case 'branch': return 'info'
-      case 'department': return 'success'
-      case 'warehouse': return 'warning'
-      case 'store': return 'secondary'
-      default: return 'light'
-    }
-  }
-
-  const getTypeIcon = (type: string): string => {
-    switch (type.toLowerCase()) {
-      case 'company': return '🏢'
-      case 'branch': return '🏛️'
-      case 'department': return '📂'
-      case 'warehouse': return '🏭'
-      case 'store': return '🛍️'
-      default: return '📋'
-    }
-  }
-
-  const getRoleBadgeVariant = (role: string): string => {
-    switch (role) {
-      case 'super': return 'danger'
-      case 'admin': return 'warning'
-      case 'employee': return 'info'
-      default: return 'secondary'
-    }
-  }
-
-  const adminCount = users.filter(
-    (u) => u.roles.includes('admin') || u.roles.includes('super')
-  ).length
-  const employeeCount = users.filter(
-    (u) => u.roles.includes('employee') && !u.roles.includes('admin') && !u.roles.includes('super')
-  ).length
-  const emailEnabledCount = users.filter((u) => u.email_enabled).length
-  const waEnabledCount = users.filter((u) => u.wa_enabled).length
-
   if (!isAuth || isLoading) return <LoadingSpinner />
 
-  if (error) {
+  if (error || !entity) {
     return (
-      <div>
-        <AlertMessage variant="danger" message={error} />
-        <Button variant="outline-secondary" onClick={() => navigate('/entities')}>
-          &larr; Back to Entities
-        </Button>
+      <div className="max-w-4xl mx-auto p-8 text-center">
+        <AlertMessage variant={error ? "danger" : "warning"} message={error || "Entity not found"} />
+        <button 
+          onClick={() => navigate('/entities')}
+          className="mt-6 inline-flex items-center gap-2 px-6 py-2.5 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 hover:bg-slate-50 transition-all"
+        >
+          <span className="material-symbols-outlined">arrow_back</span>
+          Back to Entities
+        </button>
       </div>
     )
   }
 
-  if (!entity) {
-    return (
-      <div>
-        <AlertMessage variant="warning" message="Entity not found" />
-        <Button variant="outline-secondary" onClick={() => navigate('/entities')}>
-          &larr; Back to Entities
-        </Button>
-      </div>
-    )
-  }
-
-  const detailItemStyle: React.CSSProperties = {
-    background: 'var(--bs-tertiary-bg)',
-  }
-
-  const iconCircleStyle = (bg: string): React.CSSProperties => ({
-    width: '40px',
-    height: '40px',
-    background: bg,
-    fontSize: '1.1rem',
-  })
-
-  const labelStyle: React.CSSProperties = {
-    fontSize: '0.75rem',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
-  }
+  const typeCfg = TYPE_CONFIG[entity.entity_type.toLowerCase()] || TYPE_CONFIG.company
+  const adminCount = users.filter(u => u.roles.includes('admin') || u.roles.includes('super')).length
+  const employeeCount = users.length - adminCount
 
   return (
-    <div>
-      {/* Back navigation */}
-      <div className="mb-3">
-        <Button
-          variant="link"
-          className="text-decoration-none p-0 d-inline-flex align-items-center gap-1"
-          onClick={() => navigate('/entities')}
-        >
-          <span style={{ fontSize: '1.25rem' }}>&larr;</span>
-          <span className="text-muted">Back to Entities</span>
-        </Button>
-      </div>
+    <div className="max-w-6xl mx-auto px-4 py-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Navigation */}
+      <button 
+        onClick={() => navigate('/entities')}
+        className="group inline-flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors font-semibold"
+      >
+        <span className="material-symbols-outlined transition-transform group-hover:-translate-x-1">arrow_back</span>
+        Back to Entity Directory
+      </button>
 
-      {/* ===== Header Card ===== */}
-      <Card className="border-0 shadow-sm mb-4" style={{ overflow: 'hidden' }}>
-        <div
-          className="d-flex align-items-center justify-content-between flex-wrap gap-2"
-          style={{
-            background: 'linear-gradient(135deg, var(--bs-primary) 0%, var(--bs-secondary) 100%)',
-            padding: '1.75rem 1.75rem',
-          }}
-        >
-          <div className="d-flex align-items-center gap-3">
-            <div
-              className="d-flex align-items-center justify-content-center rounded-circle"
-              style={{ width: '60px', height: '60px', background: 'rgba(255,255,255,0.2)', fontSize: '1.75rem' }}
-            >
-              {getTypeIcon(entity.entity_type)}
-            </div>
-            <div className="text-white">
-              <h2 className="mb-1 fw-semibold" style={{ fontSize: '1.5rem' }}>
-                {entity.name}
-              </h2>
-              <Badge
-                bg="rgba(255,255,255,0.2)"
-                className="border border-white border-opacity-40 text-white"
-                style={{ fontSize: '0.75rem' }}
-              >
-                {entity.entity_type.charAt(0).toUpperCase() + entity.entity_type.slice(1)}
-              </Badge>
-            </div>
-          </div>
-
-          {canManageUsers() && (
-            <Button
-              variant="light"
-              size="sm"
-              className="d-flex align-items-center gap-1 fw-semibold"
-              onClick={() => navigate(`/entities/${entity.id}/edit`)}
-            >
-              <span>✏️</span> Edit Entity
-            </Button>
-          )}
+      {/* Entity Header Card */}
+      <div className={`relative overflow-hidden rounded-[2.5rem] shadow-2xl bg-gradient-to-r ${typeCfg.gradient}`}>
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full -mr-20 -mt-20 blur-3xl"></div>
         </div>
 
-        {/* Entity Details Grid */}
-        <Card.Body className="p-4">
-          <Row className="g-3">
-            <Col md={6} lg={4}>
-              <div className="d-flex align-items-start gap-3 p-3 rounded-3" style={detailItemStyle}>
-                <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={iconCircleStyle('var(--bs-primary-bg-subtle)')}>
-                  📛
-                </div>
-                <div>
-                  <div className="text-muted fw-medium" style={labelStyle}>Name</div>
-                  <div className="fw-semibold mt-1" style={{ color: 'var(--bs-heading-color)' }}>{entity.name}</div>
-                </div>
+        <div className="relative p-8 md:p-12 flex flex-col md:flex-row md:items-center justify-between gap-8">
+          <div className="flex items-center gap-6">
+            <div className="w-20 h-20 rounded-3xl bg-white/10 backdrop-blur-md flex items-center justify-center text-white border border-white/20 shadow-inner">
+              <span className="material-symbols-outlined text-4xl">{typeCfg.icon}</span>
+            </div>
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-4xl font-extrabold text-white tracking-tighter font-headline">
+                  {entity.name}
+                </h1>
+                <span className="px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-white/20 text-white border border-white/30 backdrop-blur-sm">
+                  {entity.entity_type}
+                </span>
               </div>
-            </Col>
-
-            <Col md={6} lg={4}>
-              <div className="d-flex align-items-start gap-3 p-3 rounded-3" style={detailItemStyle}>
-                <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={iconCircleStyle('var(--bs-info-bg-subtle)')}>
-                  🏷️
-                </div>
-                <div>
-                  <div className="text-muted fw-medium" style={labelStyle}>Type</div>
-                  <div className="mt-1">
-                    <Badge bg={getTypeBadgeVariant(entity.entity_type)} className="px-3 py-2">
-                      {entity.entity_type.charAt(0).toUpperCase() + entity.entity_type.slice(1)}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-            </Col>
-
-            <Col md={6} lg={4}>
-              <div className="d-flex align-items-start gap-3 p-3 rounded-3" style={detailItemStyle}>
-                <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={iconCircleStyle('var(--bs-success-bg-subtle)')}>
-                  🌐
-                </div>
-                <div style={{ minWidth: 0 }}>
-                  <div className="text-muted fw-medium" style={labelStyle}>Website</div>
-                  <div className="mt-1">
-                    {entity.url ? (
-                      <a href={entity.url} target="_blank" rel="noopener noreferrer" className="fw-semibold text-decoration-none" style={{ wordBreak: 'break-all' }}>
-                        {entity.url} <span style={{ fontSize: '0.75rem' }}>↗</span>
-                      </a>
-                    ) : (
-                      <span className="text-muted fst-italic">Not set</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </Col>
-
-            <Col md={6} lg={8}>
-              <div className="d-flex align-items-start gap-3 p-3 rounded-3" style={detailItemStyle}>
-                <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={iconCircleStyle('var(--bs-warning-bg-subtle)')}>
-                  📍
-                </div>
-                <div>
-                  <div className="text-muted fw-medium" style={labelStyle}>Address</div>
-                  <div className="fw-semibold mt-1" style={{ color: 'var(--bs-heading-color)' }}>
-                    {entity.address || <span className="text-muted fst-italic">Not set</span>}
-                  </div>
-                </div>
-              </div>
-            </Col>
-
-            <Col md={6} lg={4}>
-              <div className="d-flex align-items-start gap-3 p-3 rounded-3" style={detailItemStyle}>
-                <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={iconCircleStyle('var(--bs-secondary-bg-subtle)')}>
-                  #
-                </div>
-                <div>
-                  <div className="text-muted fw-medium" style={labelStyle}>Entity ID</div>
-                  <div className="mt-1">
-                    <code style={{ background: 'var(--bs-tertiary-bg)', padding: '2px 8px', borderRadius: '4px', fontSize: '0.85rem' }}>
-                      {entity.id}
-                    </code>
-                  </div>
-                </div>
-              </div>
-            </Col>
-          </Row>
-        </Card.Body>
-      </Card>
-
-      {/* ===== Stats Cards ===== */}
-      <Row className="g-3 mb-4">
-        <Col xs={6} md={3}>
-          <Card className="border-0 shadow-sm text-center h-100">
-            <Card.Body className="py-4">
-              <div className="mb-2" style={{ fontSize: '2rem' }}>👥</div>
-              <div className="fw-bold display-6" style={{ color: 'var(--bs-primary)' }}>
-                {users.length}
-              </div>
-              <div className="text-muted small fw-medium">Total Users</div>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col xs={6} md={3}>
-          <Card className="border-0 shadow-sm text-center h-100">
-            <Card.Body className="py-4">
-              <div className="mb-2" style={{ fontSize: '2rem' }}>🛡️</div>
-              <div className="fw-bold display-6" style={{ color: 'var(--bs-warning)' }}>
-                {adminCount}
-              </div>
-              <div className="text-muted small fw-medium">Admins</div>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col xs={6} md={3}>
-          <Card className="border-0 shadow-sm text-center h-100">
-            <Card.Body className="py-4">
-              <div className="mb-2" style={{ fontSize: '2rem' }}>💼</div>
-              <div className="fw-bold display-6" style={{ color: 'var(--bs-success)' }}>
-                {employeeCount}
-              </div>
-              <div className="text-muted small fw-medium">Employees</div>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col xs={6} md={3}>
-          <Card className="border-0 shadow-sm text-center h-100">
-            <Card.Body className="py-4">
-              <div className="mb-2" style={{ fontSize: '2rem' }}>🔔</div>
-              <div className="fw-bold display-6" style={{ color: 'var(--bs-info)' }}>
-                {emailEnabledCount + waEnabledCount}
-              </div>
-              <div className="text-muted small fw-medium">Active Notifications</div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
-      {/* ===== Users Table ===== */}
-      <Card className="border-0 shadow-sm">
-        <Card.Header
-          className="d-flex align-items-center justify-content-between border-bottom"
-          style={{ background: 'transparent', padding: '1rem 1.5rem' }}
-        >
-          <div className="d-flex align-items-center gap-2">
-            <h5 className="mb-0 fw-semibold">Users in this Entity</h5>
-            <Badge bg="light" text="dark" className="fw-bold px-2 py-1">
-              {users.length}
-            </Badge>
-          </div>
-          {canManageUsers() && (
-            <Button variant="primary" size="sm" onClick={() => navigate('/users/new')}>
-              + Add User
-            </Button>
-          )}
-        </Card.Header>
-        <Card.Body className="p-0">
-          {users.length === 0 ? (
-            <div className="text-center py-5">
-              <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>👤</div>
-              <h6 className="text-muted">No users in this entity yet</h6>
-              <p className="text-muted small">
-                Users assigned to this entity will appear here.
+              <p className="text-white/70 font-medium flex items-center gap-2">
+                <span className="material-symbols-outlined text-sm">location_on</span>
+                {entity.address || 'Central Headquarters'}
               </p>
             </div>
-          ) : (
-            <Table responsive hover className="mb-0">
+          </div>
+
+          <div className="flex items-center gap-3">
+             {canManageUsers() && (
+               <button 
+                onClick={() => navigate(`/entities/${entity.id}/edit`)}
+                className="px-6 py-3 bg-white text-slate-900 rounded-2xl font-bold shadow-xl hover:bg-slate-50 transition-all active:scale-95 flex items-center gap-2"
+               >
+                 <span className="material-symbols-outlined">edit</span>
+                 Edit Entity
+               </button>
+             )}
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Summary */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {[
+          { label: 'Total Staff', value: users.length, icon: 'groups', color: 'blue' },
+          { label: 'Administrators', value: adminCount, icon: 'shield_person', color: 'amber' },
+          { label: 'Employees', value: employeeCount, icon: 'person', color: 'emerald' },
+          { label: 'Digital Hubs', value: entity.url ? '1' : '0', icon: 'language', color: 'indigo' }
+        ].map((stat, i) => (
+          <div key={i} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center text-center group hover:border-blue-100 transition-colors">
+            <div className={`w-12 h-12 rounded-2xl mb-3 flex items-center justify-center bg-${stat.color}-50 text-${stat.color}-600 group-hover:scale-110 transition-transform`}>
+              <span className="material-symbols-outlined">{stat.icon}</span>
+            </div>
+            <div className="text-2xl font-black text-slate-900">{stat.value}</div>
+            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">{stat.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Organization Info */}
+        <div className="lg:col-span-1 space-y-8">
+          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+            <div className="px-8 py-5 border-b border-slate-50 bg-slate-50/50 flex items-center gap-2">
+              <span className="material-symbols-outlined text-blue-600 text-sm">corporate_fare</span>
+              <h3 className="font-bold text-slate-900 uppercase tracking-widest text-[10px]">Entity Profile</h3>
+            </div>
+            <div className="p-8 space-y-6">
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Official Name</p>
+                <p className="font-bold text-slate-900">{entity.name}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Digital Presence</p>
+                {entity.url ? (
+                  <a href={entity.url} target="_blank" rel="noopener noreferrer" className="font-bold text-blue-600 hover:underline inline-flex items-center gap-1">
+                    {entity.url.replace(/^https?:\/\//, '')}
+                    <span className="material-symbols-outlined text-sm">open_in_new</span>
+                  </a>
+                ) : <p className="text-slate-400 font-medium italic">No website configured</p>}
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Physical Location</p>
+                <p className="font-bold text-slate-700 text-sm leading-relaxed">{entity.address || 'No physical address registered for this entity.'}</p>
+              </div>
+              <div className="pt-4 border-t border-slate-50">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Unique Identifier</p>
+                <code className="text-xs font-mono bg-slate-100 px-2 py-1 rounded text-slate-600 font-bold">ENT-{entity.id.toString().padStart(4, '0')}</code>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Members Table */}
+        <div className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+          <div className="px-8 py-5 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-blue-600 text-sm">group</span>
+              <h3 className="font-bold text-slate-900 uppercase tracking-widest text-[10px]">Entity Members</h3>
+            </div>
+            {canManageUsers() && (
+              <button 
+                onClick={() => navigate('/users/new')}
+                className="text-xs font-black uppercase text-blue-600 hover:text-blue-800 transition-colors"
+              >
+                + Register Member
+              </button>
+            )}
+          </div>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
               <thead>
-                <tr style={{ background: 'var(--bs-tertiary-bg)' }}>
-                  <th className="fw-semibold text-muted ps-4" style={{ ...labelStyle, border: 'none' }}>User</th>
-                  <th className="fw-semibold text-muted" style={{ ...labelStyle, border: 'none' }}>Contact</th>
-                  <th className="fw-semibold text-muted" style={{ ...labelStyle, border: 'none' }}>Roles</th>
-                  <th className="fw-semibold text-muted pe-4" style={{ ...labelStyle, border: 'none' }}>Notifications</th>
+                <tr className="bg-slate-50/30">
+                  <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Name</th>
+                  <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Permissions</th>
+                  <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Notification Status</th>
                 </tr>
               </thead>
-              <tbody>
-                {users.map((user, index) => (
-                  <tr
-                    key={user.id}
-                    className="cursor-pointer"
-                    onClick={() => navigate(`/users/${user.id}`)}
-                  >
-                    <td className="ps-4 py-3" style={{ borderTop: index === 0 ? 'none' : undefined }}>
-                      <div className="d-flex align-items-center gap-3">
-                        <div
-                          className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
-                          style={{
-                            width: '36px',
-                            height: '36px',
-                            background: `hsl(${(user.id * 67) % 360}, 65%, 85%)`,
-                            color: 'var(--bs-heading-color)',
-                            fontWeight: 600,
-                            fontSize: '0.8rem',
-                          }}
-                        >
-                          {user.first_name.charAt(0)}{user.last_name.charAt(0)}
-                        </div>
-                        <div>
-                          <div className="fw-semibold" style={{ color: 'var(--bs-heading-color)', fontSize: '0.875rem' }}>
-                            {user.first_name} {user.last_name}
-                          </div>
-                          <div className="text-muted" style={{ fontSize: '0.75rem' }}>ID: {user.id}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-3">
-                      <div style={{ fontSize: '0.875rem' }}>
-                        <div className="d-flex align-items-center gap-1 mb-1">
-                          <span>✉️</span> <span>{user.email}</span>
-                        </div>
-                        <div className="d-flex align-items-center gap-1 text-muted">
-                          <span>📱</span> <span>{user.phone}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-3">
-                      <div className="d-flex gap-1 flex-wrap">
-                        {user.roles.map((role) => (
-                          <Badge key={role} bg={getRoleBadgeVariant(role)} className="fw-medium">
-                            {role}
-                          </Badge>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="py-3 pe-4">
-                      <div className="d-flex gap-1 flex-wrap">
-                        <Badge bg={user.email_enabled ? 'success' : 'secondary'} className="fw-medium">
-                          ✉️ Email
-                        </Badge>
-                        <Badge bg={user.wa_enabled ? 'success' : 'secondary'} className="fw-medium">
-                          📱 WhatsApp
-                        </Badge>
-                      </div>
+              <tbody className="divide-y divide-slate-50">
+                {users.length === 0 ? (
+                  <tr>
+                    <td colSpan={3} className="px-8 py-12 text-center">
+                       <p className="text-slate-400 font-medium italic">No users currently assigned to this entity.</p>
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  users.map(u => (
+                    <tr 
+                      key={u.id} 
+                      className="hover:bg-slate-50/80 transition-all cursor-pointer group"
+                      onClick={() => navigate(`/users/${u.id}`)}
+                    >
+                      <td className="px-8 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-black text-[10px]">
+                            {u.first_name.charAt(0)}{u.last_name.charAt(0)}
+                          </div>
+                          <div>
+                            <div className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{u.first_name} {u.last_name}</div>
+                            <div className="text-[10px] font-medium text-slate-400 uppercase tracking-tight">{u.email}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-8 py-4">
+                        <div className="flex gap-1">
+                          {u.roles.map(r => (
+                            <span key={r} className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter border ${
+                              r === 'super' ? 'bg-red-50 text-red-600 border-red-100' : 
+                              r === 'admin' ? 'bg-amber-50 text-amber-600 border-amber-100' : 
+                              'bg-blue-50 text-blue-600 border-blue-100'
+                            }`}>
+                              {r}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-8 py-4">
+                        <div className="flex items-center gap-2">
+                           <span className={`w-2 h-2 rounded-full ${u.email_enabled ? 'bg-emerald-500' : 'bg-slate-200'}`} title="Email"></span>
+                           <span className={`w-2 h-2 rounded-full ${u.wa_enabled ? 'bg-green-400' : 'bg-slate-200'}`} title="WhatsApp"></span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
-            </Table>
-          )}
-        </Card.Body>
-      </Card>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

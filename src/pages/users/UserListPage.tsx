@@ -1,16 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  Table,
-  Button,
-  Badge,
-  Card,
-  Row,
-  Col,
-  Form,
-  InputGroup,
-  Dropdown,
-} from 'react-bootstrap'
 import { useAuth, useRequireAuth } from '../../contexts/AuthContext'
 import { LoadingSpinner, AlertMessage, ConfirmationModal } from '../../components/common'
 import { listUsers, deleteUser } from '../../api/users'
@@ -22,12 +11,15 @@ export function UserListPage() {
   const navigate = useNavigate()
   const { canManageUsers, canManageAllUsers, user: currentUser } = useAuth()
 
-  const canManageUser = (user: UserResponse): boolean => {
-    if (canManageAllUsers()) return true
-    if (!canManageUsers()) return false
-    // Admin cannot manage super users
-    return !user.roles.includes('super')
-  }
+  const [users, setUsers] = useState<UserResponse[]>([])
+  const [entities, setEntities] = useState<Map<number, EntityResponse>>(new Map())
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [deletingId, setDeletingId] = useState<number | null>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [sortKey, setSortKey] = useState<keyof UserResponse>('first_name')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
 
   const toggleSort = (key: keyof UserResponse) => {
     if (sortKey === key) {
@@ -37,14 +29,6 @@ export function UserListPage() {
       setSortDir('asc')
     }
   }
-
-  const [users, setUsers] = useState<UserResponse[]>([])
-  const [entities, setEntities] = useState<Map<number, EntityResponse>>(new Map())
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [deletingId, setDeletingId] = useState<number | null>(null)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   useEffect(() => {
     if (!isAuth) return
@@ -58,7 +42,6 @@ export function UserListPage() {
         ])
         setUsers(usersData)
 
-        // Create entity lookup map
         const entityMap = new Map<number, EntityResponse>()
         entitiesData.forEach((entity) => {
           entityMap.set(entity.id, entity)
@@ -66,7 +49,6 @@ export function UserListPage() {
         setEntities(entityMap)
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to load users'
-        console.error('Failed to load users:', err)
         setError(message)
       } finally {
         setIsLoading(false)
@@ -83,7 +65,6 @@ export function UserListPage() {
 
   const confirmDelete = async () => {
     if (deletingId === null) return
-
     try {
       setIsLoading(true)
       await deleteUser(deletingId)
@@ -97,23 +78,15 @@ export function UserListPage() {
     }
   }
 
-  const getRoleBadgeVariant = (role: string): string => {
+  const getRoleBadgeClasses = (role: string): string => {
     switch (role) {
-      case 'super':
-        return 'danger'
-      case 'admin':
-        return 'warning'
-      case 'employee':
-        return 'info'
-      default:
-        return 'secondary'
+      case 'super': return 'bg-red-50 text-red-700 border-red-100'
+      case 'admin': return 'bg-amber-50 text-amber-700 border-amber-100'
+      case 'employee': return 'bg-blue-50 text-blue-700 border-blue-100'
+      default: return 'bg-slate-50 text-slate-700 border-slate-100'
     }
   }
 
-  const [sortKey, setSortKey] = useState<keyof UserResponse>('first_name')
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
-
-  // Filter users based on search
   const filteredUsers = users.filter((user) => {
     const searchLower = searchTerm.toLowerCase()
     return (
@@ -134,201 +107,154 @@ export function UserListPage() {
   })
 
   const getSortIndicator = (key: keyof UserResponse) => {
-    if (sortKey !== key) return <i className="ti ti-selector text-muted opacity-25 ms-1" style={{ fontSize: '0.8rem' }}></i>
-    return <i className={`ti ti-chevron-${sortDir === 'asc' ? 'up' : 'down'} sort-active ms-1`} style={{ fontSize: '0.8rem' }}></i>
+    if (sortKey !== key) return <span className="material-symbols-outlined text-slate-300 text-xs ml-1">unfold_more</span>
+    return <span className="material-symbols-outlined text-blue-600 text-xs ml-1">{sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward'}</span>
   }
 
-  if (!isAuth || isLoading) {
-    return <LoadingSpinner />
-  }
-
-  if (!canManageUsers() && !currentUser) {
-    return <AlertMessage variant="danger" message="Access denied" />
-  }
+  if (!isAuth || isLoading) return <LoadingSpinner />
+  if (!canManageUsers() && !currentUser) return <AlertMessage variant="danger" message="Access denied" />
 
   return (
-    <div className="pb-5">
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="h3 mb-1 fw-bold text-dark">Users</h1>
-          <p className="text-muted small mb-0">Manage platform users and their permissions</p>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 font-headline">Users</h1>
+          <p className="mt-1 text-slate-500 font-medium">Manage platform users and their access permissions</p>
         </div>
         {canManageUsers() && (
-          <Button
-            variant="primary"
-            className="d-flex align-items-center gap-2"
+          <button
             onClick={() => navigate('/users/new')}
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 active:scale-95"
           >
-            <i className="ti ti-user-plus"></i> Add User
-          </Button>
+            <span className="material-symbols-outlined">person_add</span>
+            Add New User
+          </button>
         )}
       </div>
 
-      {error && <AlertMessage variant="danger" message={error} />}
+      {error && <AlertMessage variant="danger" message={error} onClose={() => setError(null)} />}
 
-      <Card className="mb-4 shadow-sm border-0">
-        <Card.Body className="p-4">
-          <Form.Label className="fw-semibold text-muted small mb-2">Search Users</Form.Label>
-          <InputGroup>
-            <InputGroup.Text className="bg-white border-end-0 text-muted">
-              <i className="ti ti-search"></i>
-            </InputGroup.Text>
-            <Form.Control
-              className="border-start-0 ps-0"
-              placeholder="Search by name, email, or role..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </InputGroup>
-        </Card.Body>
-      </Card>
+      {/* Search and Filters Card */}
+      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+        <div className="max-w-md relative">
+          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+          <input
+            className="w-full pl-12 pr-4 py-3 bg-slate-50 border-none rounded-xl text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 transition-all font-medium"
+            placeholder="Search by name, email, or role..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
 
-      <Card className="shadow-sm border-0">
-        <Card.Body className="p-0">
-          <div className="p-3 px-4 border-bottom">
-            <div className="results-info fw-medium">
-              Showing <span className="text-dark fw-bold">{filteredUsers.length}</span> users
-            </div>
+      {/* Table Section */}
+      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <div className="px-8 py-5 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
+          <div className="text-sm font-semibold text-slate-600">
+            Showing <span className="text-blue-600 font-bold">{filteredUsers.length}</span> platform users
           </div>
+        </div>
 
-          {filteredUsers.length === 0 ? (
-            <div className="text-center py-5">
-              <div className="display-4 mb-3 opacity-25">
-                <i className="ti ti-users"></i>
-              </div>
-              <h5 className="text-dark fw-bold">No users found</h5>
-              <p className="text-muted small mx-auto" style={{ maxWidth: '300px' }}>
-                Try adjusting your search terms to find the user you're looking for.
-              </p>
+        {filteredUsers.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+              <span className="material-symbols-outlined text-4xl text-slate-300">group_off</span>
             </div>
-          ) : (
-            <div className="table-responsive">
-              <Table hover className="align-middle">
-                <thead>
-                  <tr>
-                    <th role="button" onClick={() => toggleSort('first_name')}>
-                      Name {getSortIndicator('first_name')}
-                    </th>
-                    <th role="button" onClick={() => toggleSort('email')}>
-                      Email {getSortIndicator('email')}
-                    </th>
-                    <th>Entity</th>
-                    <th>Roles</th>
-                    <th>Notifications</th>
-                    <th className="text-end">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredUsers.map((user) => (
-                    <tr key={user.id} onClick={() => navigate(`/users/${user.id}`)} style={{ cursor: 'pointer' }}>
-                      <td>
-                        <div className="d-flex align-items-center">
-                          <div className="vendor-avatar">
-                            <i className="ti ti-user" style={{ fontSize: '0.8rem' }}></i>
-                          </div>
-                          <div>
-                            <div className="table-link">{user.first_name} {user.last_name}</div>
-                            {user.phone && <div className="text-muted small">{user.phone}</div>}
-                          </div>
+            <h3 className="text-lg font-bold text-slate-900 mb-1">No users found</h3>
+            <p className="text-slate-500 max-w-xs mx-auto">Try adjusting your search criteria or add a new user to the platform.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50/30">
+                  <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest cursor-pointer group" onClick={() => toggleSort('first_name')}>
+                    <div className="flex items-center">Name {getSortIndicator('first_name')}</div>
+                  </th>
+                  <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest cursor-pointer group" onClick={() => toggleSort('email')}>
+                    <div className="flex items-center">Account {getSortIndicator('email')}</div>
+                  </th>
+                  <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Entity</th>
+                  <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Permissions</th>
+                  <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {filteredUsers.map((u) => (
+                  <tr 
+                    key={u.id} 
+                    className="hover:bg-slate-50/80 transition-all cursor-pointer group"
+                    onClick={() => navigate(`/users/${u.id}`)}
+                  >
+                    <td className="px-8 py-5">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 flex items-center justify-center text-blue-600 font-black text-sm shadow-sm">
+                          {u.first_name.charAt(0)}{u.last_name.charAt(0)}
                         </div>
-                      </td>
-                      <td>{user.email}</td>
-                      <td>
-                        <Badge bg="light" text="dark">
-                          {entities.get(user.entity_id)?.name || 'Unknown'}
-                        </Badge>
-                      </td>
-                      <td>
-                        <div className="d-flex flex-wrap gap-1">
-                          {user.roles.map((role) => (
-                            <Badge
-                              key={role}
-                              bg={getRoleBadgeVariant(role)}
-                              style={{ cursor: 'pointer' }}
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setSearchTerm(role)
-                              }}
-                            >
-                              {role}
-                            </Badge>
-                          ))}
+                        <div>
+                          <div className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{u.first_name} {u.last_name}</div>
+                          <div className="text-xs font-bold text-slate-400 uppercase tracking-tight">{u.phone || 'No Phone'}</div>
                         </div>
-                      </td>
-                      <td>
-                        <div className="d-flex gap-1">
-                          {user.email_enabled && (
-                            <Badge bg="success" title="Email Notifications">
-                              <i className="ti ti-mail" style={{ fontSize: '0.8rem' }}></i>
-                            </Badge>
-                          )}
-                          {user.wa_enabled && (
-                            <Badge bg="success" title="WhatsApp Notifications">
-                              <i className="ti ti-brand-whatsapp" style={{ fontSize: '0.8rem' }}></i>
-                            </Badge>
-                          )}
-                        </div>
-                      </td>
-                      <td className="text-end" onClick={(e) => e.stopPropagation()}>
-                        <Dropdown align="end">
-                          <Dropdown.Toggle
-                            variant="link"
-                            className="text-muted p-0 border-0 shadow-none"
-                            id={`user-actions-${user.id}`}
+                      </div>
+                    </td>
+                    <td className="px-8 py-5">
+                      <div className="text-sm font-semibold text-slate-700">{u.email}</div>
+                      <div className="flex items-center gap-2 mt-1">
+                        {u.email_enabled && <span className="w-2 h-2 rounded-full bg-emerald-500" title="Email Enabled"></span>}
+                        {u.wa_enabled && <span className="w-2 h-2 rounded-full bg-green-400" title="WhatsApp Enabled"></span>}
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Verified</span>
+                      </div>
+                    </td>
+                    <td className="px-8 py-5">
+                      <span className="inline-flex items-center px-3 py-1 rounded-lg bg-slate-100 border border-slate-200 text-xs font-bold text-slate-600">
+                        {entities.get(u.entity_id)?.name || 'Central Admin'}
+                      </span>
+                    </td>
+                    <td className="px-8 py-5">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {u.roles.map((role) => (
+                          <span 
+                            key={role} 
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${getRoleBadgeClasses(role)}`}
                           >
-                            <i className="ti ti-dots-vertical" style={{ fontSize: '1.2rem' }}></i>
-                          </Dropdown.Toggle>
-                          <Dropdown.Menu className="shadow-sm border-0">
-                            <Dropdown.Item onClick={() => navigate(`/users/${user.id}`)} className="d-flex align-items-center gap-2">
-                              <i className="ti ti-user"></i> View Profile
-                            </Dropdown.Item>
-                            <Dropdown.Item
-                              onClick={() => navigate(`/users/${user.id}/edit`)}
-                              disabled={!canManageUser(user)}
-                              className="d-flex align-items-center gap-2"
-                            >
-                              <i className="ti ti-edit"></i> Edit User
-                            </Dropdown.Item>
-                            {canManageUsers() && (
-                              <>
-                                <Dropdown.Divider />
-                                <Dropdown.Item
-                                  className="text-danger d-flex align-items-center gap-2"
-                                  onClick={() => handleDelete(user.id)}
-                                  disabled={deletingId === user.id || !canManageUser(user)}
-                                >
-                                  <i className="ti ti-trash"></i> Delete
-                                </Dropdown.Item>
-                              </>
-                            )}
-                          </Dropdown.Menu>
-                        </Dropdown>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-            </div>
-          )}
-        </Card.Body>
-      </Card>
+                            {role}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-8 py-5 text-right" onClick={(e) => e.stopPropagation()}>
+                       <div className="flex items-center justify-end gap-2">
+                          <button 
+                            onClick={() => navigate(`/users/${u.id}/edit`)}
+                            className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all"
+                            title="Edit User"
+                          >
+                            <span className="material-symbols-outlined text-[20px]">edit</span>
+                          </button>
+                          <button 
+                            onClick={() => handleDelete(u.id)}
+                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                            title="Delete User"
+                          >
+                            <span className="material-symbols-outlined text-[20px]">delete</span>
+                          </button>
+                       </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       <ConfirmationModal
         show={showDeleteConfirm}
-        title="Confirm User Deletion"
-        message={
-          <>
-            Are you sure you want to delete this user?
-            <br />
-            <strong>This action cannot be undone.</strong>
-          </>
-        }
+        title="Revoke Access"
+        message={`Are you sure you want to delete this user? This will immediately revoke their access to the Foxall PO platform. This action cannot be reversed.`}
         onConfirm={confirmDelete}
-        onCancel={() => {
-          setShowDeleteConfirm(false)
-          setDeletingId(null)
-        }}
-        confirmText="Delete"
+        onCancel={() => { setShowDeleteConfirm(false); setDeletingId(null) }}
+        confirmText="Confirm Deletion"
         variant="danger"
         isLoading={isLoading && deletingId !== null}
       />

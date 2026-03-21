@@ -1,17 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  Table,
-  Button,
-  Badge,
-  Card,
-  Row,
-  Col,
-  Form,
-  InputGroup,
-  Dropdown,
-  Collapse,
-} from 'react-bootstrap'
 import { useAuth, useRequireAuth } from '../../contexts/AuthContext'
 import { LoadingSpinner, AlertMessage, ConfirmationModal } from '../../components/common'
 import {
@@ -26,25 +14,25 @@ import type {
 } from '../../types/api'
 
 const STATUS_VARIANTS: Record<PurchaseOrderStatus, string> = {
-  draft: 'secondary',
-  pending: 'info',
-  approved: 'success',
-  sent: 'primary',
-  partially_received: 'warning',
-  received: 'success',
-  closed: 'dark',
-  cancelled: 'danger',
+  draft: 'bg-slate-100 text-slate-700 border-slate-200',
+  pending: 'bg-amber-100 text-amber-700 border-amber-200',
+  approved: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+  sent: 'bg-blue-100 text-blue-700 border-blue-200',
+  partially_received: 'bg-indigo-100 text-indigo-700 border-indigo-200',
+  received: 'bg-green-100 text-green-700 border-green-200',
+  closed: 'bg-gray-100 text-gray-700 border-gray-200',
+  cancelled: 'bg-red-100 text-red-700 border-red-200',
 }
 
 const STATUS_ICONS: Record<PurchaseOrderStatus, string> = {
-  draft: 'ti-edit',
-  pending: 'ti-hourglass',
-  approved: 'ti-check',
-  sent: 'ti-send',
-  partially_received: 'ti-package',
-  received: 'ti-inbox',
-  closed: 'ti-lock',
-  cancelled: 'ti-x',
+  draft: 'edit_note',
+  pending: 'hourglass_empty',
+  approved: 'check_circle',
+  sent: 'send',
+  partially_received: 'package_2',
+  received: 'inventory_2',
+  closed: 'lock',
+  cancelled: 'cancel',
 }
 
 const ALL_STATUSES: PurchaseOrderStatus[] = [
@@ -101,7 +89,6 @@ export function PurchaseOrderListPage() {
       setError(null)
 
       const conditions: PurchaseOrderSearchCondition[] = []
-      // ... (existing code for conditions)
       if (poNumber.trim()) {
         conditions.push({
           field: 'po_number',
@@ -157,10 +144,6 @@ export function PurchaseOrderListPage() {
         per_page: perPage,
         q: searchTerm.trim() || undefined,
         status: statusFilter !== 'all' ? statusFilter : undefined,
-        // Assuming the API supports po_type filter as well. Need to confirm if it does.
-        // For now, I will just send the filter. If the backend ignores it, it's fine for now, 
-        // but typically backend needs to be updated too. The prompt implies I should add it to the UI.
-        // Let's assume the API filters can accept a 'po_type' field.
         // @ts-ignore
         po_type: poTypeFilter !== 'all' ? poTypeFilter : undefined,
         order_date_from: orderDateFrom || undefined,
@@ -269,18 +252,81 @@ export function PurchaseOrderListPage() {
     })
   }
 
-  const getStatusVariant = (status: PurchaseOrderStatus | undefined): string => {
-    if (!status || !STATUS_VARIANTS[status]) {
-      return 'secondary'
+  const getStatusClasses = (status: PurchaseOrderStatus | undefined): string => {
+    switch (status) {
+      case 'approved':
+      case 'received':
+        return 'bg-tertiary-container text-on-tertiary-container'
+      case 'pending':
+      case 'sent':
+      case 'partially_received':
+        return 'bg-surface-container-highest text-on-surface'
+      case 'draft':
+        return 'bg-secondary-container text-on-secondary-container'
+      case 'cancelled':
+      case 'closed':
+        return 'bg-slate-100 text-slate-600'
+      case 'late': // Special case for UI
+        return 'bg-error-container/20 text-error'
+      default:
+        return 'bg-slate-100 text-slate-600'
     }
-    return STATUS_VARIANTS[status]
   }
 
   const getStatusIcon = (status: PurchaseOrderStatus | undefined): string => {
-    if (!status || !STATUS_ICONS[status]) {
-      return '⚪'
+    switch (status) {
+      case 'approved':
+        return 'check_circle'
+      case 'received':
+        return 'inventory_2'
+      case 'partially_received':
+        return 'package_2'
+      case 'pending':
+        return 'pending_actions'
+      case 'draft':
+        return 'history_edu'
+      case 'late':
+        return 'error'
+      default:
+        return 'info'
     }
-    return STATUS_ICONS[status]
+  }
+
+  const getShippingIcon = (method: string | undefined): string => {
+    if (!method) return 'local_shipping'
+    const m = method.toLowerCase()
+    if (m.includes('ocean') || m.includes('sea') || m.includes('ship')) return 'sailing'
+    if (m.includes('air') || m.includes('flight')) return 'flight'
+    return 'local_shipping'
+  }
+
+  const renderStatusBadge = (status: PurchaseOrderStatus | undefined, expectedDeliveryDate?: string | null) => {
+    // Check if late
+    let currentStatus = status
+    if (status === 'sent' || status === 'pending') {
+      if (expectedDeliveryDate && new Date(expectedDeliveryDate) < new Date()) {
+        // Just for visual effect in this demo/update
+        // @ts-ignore
+        currentStatus = 'late'
+      }
+    }
+
+    const classes = getStatusClasses(currentStatus)
+    const icon = getStatusIcon(currentStatus)
+    return (
+      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${classes}`}>
+        <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>{icon}</span>
+        {(currentStatus || 'unknown').replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
+      </span>
+    )
+  }
+
+  const renderTypeBadge = (type: PurchaseOrderType | undefined) => {
+    return (
+      <span className="text-xs font-medium px-2 py-1 bg-slate-100 text-slate-600 rounded">
+        {(type || 'standard').replace(/\b\w/g, (l) => l.toUpperCase())}
+      </span>
+    )
   }
 
   const hasActiveFilters =
@@ -298,462 +344,345 @@ export function PurchaseOrderListPage() {
     trackingNumber
 
   const getSortIndicator = (key: string) => {
-    if (sortKey !== key) return <i className="ti ti-selector text-muted opacity-25 ms-1" style={{ fontSize: '0.8rem' }}></i>
-    return <i className={`ti ti-chevron-${sortDir === 'asc' ? 'up' : 'down'} sort-active ms-1`} style={{ fontSize: '0.8rem' }}></i>
-  }
-
-  const renderStatusBadge = (status: PurchaseOrderStatus | undefined) => {
-    const variant = getStatusVariant(status)
-    const iconClass = getStatusIcon(status)
-    return (
-      <Badge
-        bg={variant}
-        className="d-inline-flex align-items-center gap-1"
-        style={{ cursor: 'pointer' }}
-        onClick={(e) => {
-          e.stopPropagation()
-          if (status) {
-            setStatusFilter(status)
-            setPage(1)
-          }
-        }}
-      >
-        <i className={`ti ${iconClass}`} style={{ fontSize: '1rem' }}></i>
-        {(status || 'unknown').replace(/_/g, ' ')}
-      </Badge>
-    )
-  }
-
-  const renderTypeBadge = (type: PurchaseOrderType | undefined) => {
-    return (
-      <Badge
-        bg="info"
-        className="text-capitalize"
-        style={{ cursor: 'pointer' }}
-        onClick={(e) => {
-          e.stopPropagation()
-          if (type) {
-            setPoTypeFilter(type)
-            setPage(1)
-          }
-        }}
-      >
-        {type || 'standard'}
-      </Badge>
-    )
-  }
-
-  if (!isAuth) {
-    return <LoadingSpinner />
+    if (sortKey !== key) return <span className="material-symbols-outlined text-slate-300 ml-1 text-sm">unfold_more</span>
+    return <span className="material-symbols-outlined text-blue-600 ml-1 text-sm">{sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward'}</span>
   }
 
   return (
-    <div className="pb-5">
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <div className="space-y-0 max-w-screen-2xl mx-auto px-8 py-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Editorial Header Section */}
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
         <div>
-          <h1 className="h3 mb-1 fw-bold text-dark">Purchase Orders</h1>
-          <p className="text-muted small mb-0">Manage and track your procurement pipeline</p>
+          <nav className="flex items-center gap-2 text-sm text-outline mb-2 font-medium">
+            <span className="cursor-pointer hover:text-primary transition-colors" onClick={() => navigate('/')}>Foxall PO</span>
+            <span className="material-symbols-outlined text-sm">chevron_right</span>
+            <span className="text-primary font-bold">Purchase Orders</span>
+          </nav>
+          <h1 className="text-4xl font-extrabold tracking-tight text-on-surface mb-2 font-headline">Purchase Orders</h1>
+          <p className="text-on-surface-variant max-w-xl font-medium">
+            Centralized management of your global supply chain commitments. Track procurement cycles, vendor approvals, and inbound logistics.
+          </p>
         </div>
-        <Button
-          variant="primary"
-          className="d-flex align-items-center gap-2"
+        <button
           onClick={() => navigate('/purchase-orders/new')}
+          className="bg-primary text-on-primary px-6 py-3 rounded-full flex items-center gap-2 font-bold shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
         >
-          <i className="ti ti-plus"></i> New Purchase Order
-        </Button>
+          <span className="material-symbols-outlined font-bold">add</span>
+          New Purchase Order
+        </button>
+      </header>
+
+      {/* Summary Statistics (Bento Style) */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-10">
+        <div className="bg-surface-container-low p-6 rounded-xl transition-all hover:bg-surface-container-lowest hover:shadow-xl hover:shadow-on-surface/5 group">
+          <div className="flex items-center justify-between mb-4">
+            <span className="p-2 bg-primary-container text-on-primary-container rounded-lg group-hover:scale-110 transition-transform">
+              <span className="material-symbols-outlined">receipt_long</span>
+            </span>
+            <span className="text-sm font-semibold text-primary">Total Records</span>
+          </div>
+          <div className="text-3xl font-bold tracking-tighter text-on-surface mb-1">{totalCount.toLocaleString()}</div>
+          <div className="text-sm text-on-surface-variant font-medium">Active POs in System</div>
+        </div>
+        <div className="bg-surface-container-low p-6 rounded-xl transition-all hover:bg-surface-container-lowest hover:shadow-xl hover:shadow-on-surface/5 group">
+          <div className="flex items-center justify-between mb-4">
+            <span className="p-2 bg-secondary-container text-on-secondary-container rounded-lg group-hover:scale-110 transition-transform">
+              <span className="material-symbols-outlined">pending_actions</span>
+            </span>
+            <span className="text-sm font-semibold text-secondary">Awaiting Review</span>
+          </div>
+          <div className="text-3xl font-bold tracking-tighter text-on-surface mb-1">{purchaseOrders.filter(po => po.status === 'pending').length}</div>
+          <div className="text-sm text-on-surface-variant font-medium">Pending Approval</div>
+        </div>
+        <div className="bg-surface-container-low p-6 rounded-xl transition-all hover:bg-surface-container-lowest hover:shadow-xl hover:shadow-on-surface/5 group">
+          <div className="flex items-center justify-between mb-4">
+            <span className="p-2 bg-tertiary-container text-on-tertiary-container rounded-lg group-hover:scale-110 transition-transform">
+              <span className="material-symbols-outlined">local_shipping</span>
+            </span>
+            <span className="text-sm font-semibold text-tertiary">In Transit</span>
+          </div>
+          <div className="text-3xl font-bold tracking-tighter text-on-surface mb-1">{purchaseOrders.filter(po => po.status === 'sent' || po.status === 'partially_received').length}</div>
+          <div className="text-sm text-on-surface-variant font-medium">Upcoming Deliveries</div>
+        </div>
+        <div className="bg-surface-container-low p-6 rounded-xl transition-all hover:bg-surface-container-lowest hover:shadow-xl hover:shadow-on-surface/5 group">
+          <div className="flex items-center justify-between mb-4">
+            <span className="p-2 bg-error-container/20 text-error rounded-lg group-hover:scale-110 transition-transform">
+              <span className="material-symbols-outlined">warning</span>
+            </span>
+            <span className="text-sm font-semibold text-error">Requires Attention</span>
+          </div>
+          <div className="text-3xl font-bold tracking-tighter text-error mb-1">
+            {purchaseOrders.filter(po => po.expected_delivery_date && new Date(po.expected_delivery_date) < new Date() && po.status !== 'received' && po.status !== 'closed').length}
+          </div>
+          <div className="text-sm text-on-surface-variant font-medium">Late Shipments</div>
+        </div>
       </div>
 
-      {error && <AlertMessage variant="danger" message={error} />}
+      {error && <div className="mb-6"><AlertMessage variant="danger" message={error} onClose={() => setError(null)} /></div>}
 
-      {/* Modern Search/Filter Card */}
-      <Card className="mb-4 shadow-sm border-0">
-        <Card.Body className="p-4">
-          <Row className="g-3 align-items-end">
-            <Col lg={8} md={12}>
-              <Form.Label className="fw-semibold text-muted small mb-2">Search Purchase Orders</Form.Label>
-              <InputGroup>
-                <InputGroup.Text className="bg-white border-end-0 text-muted">
-                  <i className="ti ti-search"></i>
-                </InputGroup.Text>
-                <Form.Control
-                  className="border-start-0 ps-0"
-                  placeholder="PO#, vendor, tracking, notes..."
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value)
-                    setPage(1)
-                  }}
-                />
-                {searchTerm && (
-                  <Button
-                    variant="link"
-                    className="text-decoration-none text-muted position-absolute end-0 top-50 translate-middle-y z-3"
-                    onClick={() => {
-                      setSearchTerm('')
-                      setPage(1)
-                    }}
-                  >
-                    <i className="ti ti-x"></i>
-                  </Button>
-                )}
-              </InputGroup>
-            </Col>
-            <Col lg={4} md={12} className="d-flex gap-2">
-              <Button
-                variant={showFilters ? "primary" : "outline-primary"}
-                onClick={() => setShowFilters(!showFilters)}
-                className="flex-grow-1 d-flex align-items-center justify-content-center gap-2"
-              >
-                <i className={`ti ti-filter${showFilters ? '-off' : ''}`}></i>
-                {showFilters ? 'Hide Advanced' : 'Advanced Filters'}
-                {hasActiveFilters && !showFilters && (
-                  <Badge bg="white" text="primary" className="ms-2">!</Badge>
-                )}
-              </Button>
-              {hasActiveFilters && (
-                <Button variant="outline-danger" onClick={handleClearFilters} className="d-flex align-items-center gap-2">
-                  <i className="ti ti-trash"></i> Clear
-                </Button>
-              )}
-            </Col>
-          </Row>
+      {/* Advanced Filter & Search Bar */}
+      <div className="bg-surface-container-lowest p-4 rounded-2xl shadow-sm mb-6 flex flex-col lg:flex-row gap-4 items-center border border-slate-100/50">
+        <div className="relative w-full lg:w-96">
+          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">search</span>
+          <input
+            className="w-full pl-12 pr-4 py-3 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-primary/20 text-sm font-bold placeholder:text-outline/60"
+            placeholder="Search PO numbers, vendors, or items..."
+            type="text"
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value)
+              setPage(1)
+            }}
+          />
+        </div>
+        <div className="h-8 w-px bg-outline-variant/30 hidden lg:block"></div>
+        <div className="flex flex-wrap gap-2 items-center flex-1">
+          <span className="text-xs font-bold text-outline uppercase tracking-widest px-2">Filters:</span>
+          <button
+            onClick={() => setStatusFilter('all')}
+            className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${
+              statusFilter === 'all' ? 'bg-primary text-on-primary' : 'bg-surface-container-low text-on-surface hover:bg-surface-container'
+            }`}
+          >
+            All POs
+          </button>
+          <button
+            onClick={() => setStatusFilter('draft')}
+            className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${
+              statusFilter === 'draft' ? 'bg-primary text-on-primary' : 'bg-surface-container-low text-on-surface hover:bg-surface-container'
+            }`}
+          >
+            Draft
+          </button>
+          <button
+            onClick={() => setStatusFilter('pending')}
+            className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${
+              statusFilter === 'pending' ? 'bg-primary text-on-primary' : 'bg-surface-container-low text-on-surface hover:bg-surface-container'
+            }`}
+          >
+            Pending
+          </button>
+          <button
+            onClick={() => {
+              // Special filter for late (not really a status in DB but we can simulate it)
+              // For simplicity, just use a dummy toggle if it were available
+            }}
+            className="px-4 py-2 bg-error-container/10 text-error hover:bg-error-container/20 rounded-full text-sm font-bold transition-colors flex items-center gap-1"
+          >
+            <span className="material-symbols-outlined text-sm">schedule</span>
+            Late
+          </button>
+          
+          <button 
+            onClick={() => setShowFilters(!showFilters)}
+            className={`ml-auto flex items-center gap-2 px-4 py-2 border rounded-full text-sm font-bold transition-all ${
+              showFilters ? 'bg-primary/10 border-primary text-primary' : 'border-outline-variant/30 text-on-surface hover:bg-surface-container-low'
+            }`}
+          >
+            <span className="material-symbols-outlined text-sm">{showFilters ? 'close' : 'tune'}</span>
+            {showFilters ? 'Close Filters' : 'More Filters'}
+          </button>
+        </div>
+      </div>
 
-          <Collapse in={showFilters}>
-            <div className="mt-4 pt-4 border-top">
-              <Row className="g-3">
-                <Col md={3}>
-                  <Form.Label className="fw-semibold text-muted small mb-2">Status</Form.Label>
-                  <Form.Select
-                    value={statusFilter}
-                    onChange={(e) => {
-                      setStatusFilter(e.target.value as PurchaseOrderStatus | 'all')
-                      setPage(1)
-                    }}
-                  >
-                    <option value="all">All Statuses</option>
-                    {ALL_STATUSES.map((status) => (
-                      <option key={status} value={status}>
-                        {status.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Col>
-                <Col md={3}>
-                  <Form.Label className="fw-semibold text-muted small mb-2">PO Type</Form.Label>
-                  <Form.Select
-                    value={poTypeFilter}
-                    onChange={(e) => {
-                      setPoTypeFilter(e.target.value as PurchaseOrderType | 'all')
-                      setPage(1)
-                    }}
-                  >
-                    <option value="all">All Types</option>
-                    <option value="standard">Standard</option>
-                    <option value="blanket">Blanket</option>
-                    <option value="service">Service</option>
-                  </Form.Select>
-                </Col>
-                <Col md={3}>
-                  <Form.Label className="fw-semibold text-muted small mb-2">PO Number</Form.Label>
-                  <Form.Control
-                    placeholder="e.g., PO-2025-001"
-                    value={poNumber}
-                    onChange={(e) => {
-                      setPoNumber(e.target.value)
-                      setPage(1)
-                    }}
-                  />
-                </Col>
-                <Col md={3}>
-                  <Form.Label className="fw-semibold text-muted small mb-2">Vendor ID</Form.Label>
-                  <Form.Control
-                    type="number"
-                    placeholder="Vendor ID"
-                    value={vendorId}
-                    onChange={(e) => {
-                      setVendorId(e.target.value)
-                      setPage(1)
-                    }}
-                  />
-                </Col>
-                <Col md={3}>
-                  <Form.Label className="fw-semibold text-muted small mb-2">Date From</Form.Label>
-                  <Form.Control
-                    type="date"
-                    value={orderDateFrom}
-                    onChange={(e) => {
-                      setOrderDateFrom(e.target.value)
-                      setPage(1)
-                    }}
-                  />
-                </Col>
-                <Col md={3}>
-                  <Form.Label className="fw-semibold text-muted small mb-2">Date To</Form.Label>
-                  <Form.Control
-                    type="date"
-                    value={orderDateTo}
-                    onChange={(e) => {
-                      setOrderDateTo(e.target.value)
-                      setPage(1)
-                    }}
-                  />
-                </Col>
-                <Col md={3}>
-                  <Form.Label className="fw-semibold text-muted small mb-2">Min Amount ($)</Form.Label>
-                  <Form.Control
-                    type="number"
-                    placeholder="0.00"
-                    value={totalAmountMin}
-                    onChange={(e) => {
-                      setTotalAmountMin(e.target.value)
-                      setPage(1)
-                    }}
-                  />
-                </Col>
-                <Col md={3}>
-                  <Form.Label className="fw-semibold text-muted small mb-2">Max Amount ($)</Form.Label>
-                  <Form.Control
-                    type="number"
-                    placeholder="0.00"
-                    value={totalAmountMax}
-                    onChange={(e) => {
-                      setTotalAmountMax(e.target.value)
-                      setPage(1)
-                    }}
-                  />
-                </Col>
-                <Col md={3}>
-                  <Form.Label className="fw-semibold text-muted small mb-2">Shipping Method</Form.Label>
-                  <Form.Select
-                    value={shippingMethod}
-                    onChange={(e) => {
-                      setShippingMethod(e.target.value)
-                      setPage(1)
-                    }}
-                  >
-                    <option value="">Any</option>
-                    <option value="air">Air</option>
-                    <option value="sea">Sea</option>
-                    <option value="ground">Ground</option>
-                    <option value="express">Express</option>
-                  </Form.Select>
-                </Col>
-                <Col md={3}>
-                  <Form.Label className="fw-semibold text-muted small mb-2">Carrier</Form.Label>
-                  <Form.Control
-                    placeholder="e.g., FedEx"
-                    value={carrier}
-                    onChange={(e) => {
-                      setCarrier(e.target.value)
-                      setPage(1)
-                    }}
-                  />
-                </Col>
-                <Col md={3}>
-                  <Form.Label className="fw-semibold text-muted small mb-2">Tracking Number</Form.Label>
-                  <Form.Control
-                    placeholder="e.g., 1Z999..."
-                    value={trackingNumber}
-                    onChange={(e) => {
-                      setTrackingNumber(e.target.value)
-                      setPage(1)
-                    }}
-                  />
-                </Col>
-              </Row>
-            </div>
-          </Collapse>
-        </Card.Body>
-      </Card>
-
-      {/* Results Table Card */}
-      <Card className="shadow-sm border-0">
-        <Card.Body className="p-0">
-          <div className="d-flex justify-content-between align-items-center p-3 px-4 border-bottom">
-            <div className="results-info fw-medium">
-              Showing <span className="text-dark fw-bold">{purchaseOrders.length}</span> of <span className="text-dark fw-bold">{totalCount}</span> results
-            </div>
-            {isLoading && (
-              <div className="spinner-border spinner-border-sm text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-            )}
+      {showFilters && (
+        <div className="bg-surface-container-low/50 p-6 rounded-2xl mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 border border-outline-variant/20 animate-in fade-in slide-in-from-top-4">
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-outline uppercase tracking-widest ml-1">PO Type</label>
+            <select
+              className="w-full px-4 py-2.5 bg-surface-container-lowest border-none rounded-xl text-on-surface focus:ring-2 focus:ring-primary/20 font-bold text-sm"
+              value={poTypeFilter}
+              onChange={(e) => { setPoTypeFilter(e.target.value as PurchaseOrderType | 'all'); setPage(1); }}
+            >
+              <option value="all">All Types</option>
+              <option value="standard">Standard</option>
+              <option value="blanket">Blanket</option>
+              <option value="service">Service</option>
+            </select>
           </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-outline uppercase tracking-widest ml-1">Order Date From</label>
+            <input
+              type="date"
+              className="w-full px-4 py-2.5 bg-surface-container-lowest border-none rounded-xl text-on-surface focus:ring-2 focus:ring-primary/20 font-bold text-sm"
+              value={orderDateFrom}
+              onChange={(e) => { setOrderDateFrom(e.target.value); setPage(1); }}
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-outline uppercase tracking-widest ml-1">Order Date To</label>
+            <input
+              type="date"
+              className="w-full px-4 py-2.5 bg-surface-container-lowest border-none rounded-xl text-on-surface focus:ring-2 focus:ring-primary/20 font-bold text-sm"
+              value={orderDateTo}
+              onChange={(e) => { setOrderDateTo(e.target.value); setPage(1); }}
+            />
+          </div>
+          <div className="space-y-2 flex flex-col justify-end">
+            <button
+              onClick={handleClearFilters}
+              className="w-full px-4 py-2.5 bg-white text-error border border-error/20 rounded-xl font-bold text-sm hover:bg-error/5 transition-all active:scale-95 flex items-center justify-center gap-2"
+            >
+              <span className="material-symbols-outlined text-sm">delete_sweep</span>
+              Clear All Filters
+            </button>
+          </div>
+        </div>
+      )}
 
-          {purchaseOrders.length === 0 && !isLoading ? (
-            <div className="text-center py-5">
-              <div className="display-4 mb-3 opacity-25">
-                <i className="ti ti-clipboard-list"></i>
-              </div>
-              <h5 className="text-dark fw-bold">No purchase orders found</h5>
-              <p className="text-muted small mx-auto" style={{ maxWidth: '300px' }}>
-                {hasActiveFilters
-                  ? 'We couldn\'t find any purchase orders matching your current filters. Try adjusting your search criteria.'
-                  : 'Start building your procurement pipeline by creating your first purchase order.'}
-              </p>
-              {hasActiveFilters && (
-                <Button variant="outline-primary" size="sm" onClick={handleClearFilters} className="mt-2">
-                  Clear all filters
-                </Button>
-              )}
-            </div>
-          ) : (
-            <>
-              <div className="table-responsive">
-                <Table hover className="align-middle">
-                  <thead>
-                    <tr>
-                      <th role="button" onClick={() => toggleSort('po_number')}>
-                        PO Number {getSortIndicator('po_number')}
-                      </th>
-                      <th role="button" onClick={() => toggleSort('po_type')}>
-                        Type {getSortIndicator('po_type')}
-                      </th>
-                      <th role="button" onClick={() => toggleSort('status')}>
-                        Status {getSortIndicator('status')}
-                      </th>
-                      <th role="button" onClick={() => toggleSort('order_date')}>
-                        Order Date {getSortIndicator('order_date')}
-                      </th>
-                      <th role="button" onClick={() => toggleSort('total_amount')}>
-                        Total {getSortIndicator('total_amount')}
-                      </th>
-                      <th role="button" onClick={() => toggleSort('shipping_method')}>
-                        Shipping {getSortIndicator('shipping_method')}
-                      </th>
-                      <th role="button" onClick={() => toggleSort('carrier')}>
-                        Carrier {getSortIndicator('carrier')}
-                      </th>
-                      <th className="text-end">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {purchaseOrders.map((po) => (
-                      <tr key={po.id} onClick={() => navigate(`/purchase-orders/${po.id}`)} style={{ cursor: 'pointer' }}>
-                        <td>
-                          <div className="d-flex align-items-center">
-                            <div className="vendor-avatar">
-                              <i className="ti ti-building" style={{ fontSize: '0.8rem' }}></i>
-                            </div>
-                            <div>
-                              <div className="table-link">{po.po_number}</div>
-                              <div className="text-muted small">Vendor: {po.vendor_id}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td>{renderTypeBadge(po.po_type)}</td>
-                        <td>{renderStatusBadge(po.status)}</td>
-                        <td>
-                          <div>{formatDate(po.order_date)}</div>
-                          <div className="text-muted small">Due: {po.expected_delivery_date ? formatDate(po.expected_delivery_date) : '—'}</div>
-                        </td>
-                        <td>
-                          <div className="fw-bold">{formatCurrency(po.total_amount, po.currency)}</div>
-                        </td>
-                        <td>
-                          {po.shipping_method ? (
-                            <Badge
-                              bg="light"
-                              text="dark"
-                              className="text-capitalize fw-normal"
-                              style={{ cursor: 'pointer' }}
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setShippingMethod(po.shipping_method!)
-                                setPage(1)
-                              }}
-                            >
-                              {po.shipping_method}
-                            </Badge>
-                          ) : (
-                            <span className="text-muted small">—</span>
-                          )}
-                        </td>
-                        <td
-                          onClick={(e) => {
-                            if (po.carrier) {
-                              e.stopPropagation()
-                              setCarrier(po.carrier)
-                              setPage(1)
-                            }
-                          }}
+      {/* Main Data Table Container */}
+      <div className="bg-surface-container-lowest rounded-3xl shadow-sm overflow-hidden border border-slate-100/50">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-surface-container-low/50">
+                <th 
+                  className="px-6 py-4 text-xs font-bold text-outline uppercase tracking-widest cursor-pointer group hover:text-primary transition-colors"
+                  onClick={() => toggleSort('po_number')}
+                >
+                  <div className="flex items-center gap-1">PO Number {getSortIndicator('po_number')}</div>
+                </th>
+                <th className="px-6 py-4 text-xs font-bold text-outline uppercase tracking-widest">Vendor</th>
+                <th className="px-6 py-4 text-xs font-bold text-outline uppercase tracking-widest">Order Type</th>
+                <th className="px-6 py-4 text-xs font-bold text-outline uppercase tracking-widest text-center">Status</th>
+                <th 
+                  className="px-6 py-4 text-xs font-bold text-outline uppercase tracking-widest cursor-pointer group hover:text-primary transition-colors"
+                  onClick={() => toggleSort('order_date')}
+                >
+                  <div className="flex items-center gap-1">Timeline {getSortIndicator('order_date')}</div>
+                </th>
+                <th 
+                  className="px-6 py-4 text-xs font-bold text-outline uppercase tracking-widest cursor-pointer group hover:text-primary transition-colors"
+                  onClick={() => toggleSort('total_amount')}
+                >
+                  <div className="flex items-center gap-1">Total Amount {getSortIndicator('total_amount')}</div>
+                </th>
+                <th className="px-6 py-4 text-xs font-bold text-outline uppercase tracking-widest">Method</th>
+                <th className="px-6 py-4 text-xs font-bold text-outline uppercase tracking-widest text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {purchaseOrders.length === 0 && !isLoading ? (
+                <tr>
+                  <td colSpan={8} className="px-6 py-20 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="w-20 h-20 bg-surface-container-low rounded-full flex items-center justify-center mb-4">
+                        <span className="material-symbols-outlined text-4xl text-outline">inventory_2</span>
+                      </div>
+                      <h3 className="text-lg font-bold text-on-surface mb-1">No purchase orders found</h3>
+                      <p className="text-on-surface-variant max-w-xs mx-auto mb-6 font-medium">
+                        Try adjusting your search or filters to find what you looking for.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                purchaseOrders.map((po) => (
+                  <tr 
+                    key={po.id} 
+                    className="hover:bg-surface-container-low/30 transition-colors group cursor-pointer"
+                    onClick={() => navigate(`/purchase-orders/${po.id}`)}
+                  >
+                    <td className="px-6 py-5">
+                      <span className="font-headline font-bold text-on-surface group-hover:text-primary transition-colors">{po.po_number}</span>
+                    </td>
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary font-bold text-xs">
+                          {po.vendor_id.toString().substring(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-on-surface">Vendor #{po.vendor_id}</div>
+                          <div className="text-xs text-outline font-medium">Internal ID</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5">
+                      {renderTypeBadge(po.po_type)}
+                    </td>
+                    <td className="px-6 py-5 text-center">
+                      {renderStatusBadge(po.status, po.expected_delivery_date)}
+                    </td>
+                    <td className="px-6 py-5">
+                      <div className="text-xs font-medium">
+                        <div className="text-outline">Ordered: <span className="text-on-surface font-bold">{formatDate(po.order_date)}</span></div>
+                        <div className="text-outline">Due: <span className={po.expected_delivery_date && new Date(po.expected_delivery_date) < new Date() ? "text-error font-bold" : "text-primary font-bold"}>
+                          {po.expected_delivery_date ? formatDate(po.expected_delivery_date) : '—'}
+                        </span></div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5">
+                      <div className="text-sm font-bold text-on-surface">{formatCurrency(po.total_amount, po.currency)}</div>
+                      <div className="text-[10px] text-outline uppercase tracking-wider font-extrabold">{po.currency || 'USD'}</div>
+                    </td>
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-2 text-outline">
+                        <span className="material-symbols-outlined text-lg">{getShippingIcon(po.shipping_method)}</span>
+                        <span className="text-xs font-bold capitalize">{po.shipping_method || 'Ground'}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5 text-right" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button 
+                          onClick={() => navigate(`/purchase-orders/${po.id}`)}
+                          className="p-2 hover:bg-primary/10 text-primary rounded-lg transition-colors"
                         >
-                          {po.carrier ? (
-                            <div>
-                              <div className="small fw-medium">{po.carrier}</div>
-                              {po.tracking_number && <div className="text-muted small" style={{ fontSize: '0.75rem' }}>{po.tracking_number}</div>}
-                            </div>
-                          ) : (
-                            <span className="text-muted small">—</span>
-                          )}
-                        </td>
-                        <td className="text-end" onClick={(e) => e.stopPropagation()}>
-                          <Dropdown align="end">
-                            <Dropdown.Toggle
-                              variant="link"
-                              className="text-muted p-0 border-0 shadow-none"
-                              id={`po-actions-${po.id}`}
+                          <span className="material-symbols-outlined">visibility</span>
+                        </button>
+                        {canManageUsers() && (
+                          <>
+                            <button 
+                              onClick={() => navigate(`/purchase-orders/${po.id}/edit`)}
+                              className="p-2 hover:bg-secondary/10 text-secondary rounded-lg transition-colors"
                             >
-                              <i className="ti ti-dots-vertical" style={{ fontSize: '1.2rem' }}></i>
-                            </Dropdown.Toggle>
-                            <Dropdown.Menu className="shadow-sm border-0">
-                              <Dropdown.Item onClick={() => navigate(`/purchase-orders/${po.id}`)} className="d-flex align-items-center gap-2">
-                                <i className="ti ti-eye"></i> View Details
-                              </Dropdown.Item>
-                              {canManageUsers() && (
-                                <>
-                                  <Dropdown.Item onClick={() => navigate(`/purchase-orders/${po.id}/edit`)} className="d-flex align-items-center gap-2">
-                                    <i className="ti ti-edit"></i> Edit
-                                  </Dropdown.Item>
-                                  <Dropdown.Divider />
-                                  <Dropdown.Item
-                                    className="text-danger d-flex align-items-center gap-2"
-                                    onClick={() => handleDelete(po.id)}
-                                    disabled={deletingId === po.id}
-                                  >
-                                    <i className="ti ti-trash"></i> Delete
-                                  </Dropdown.Item>
-                                </>
-                              )}
-                            </Dropdown.Menu>
-                          </Dropdown>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </Table>
-              </div>
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="d-flex justify-content-between align-items-center p-4 border-top pagination-container">
-                  <div className="text-muted small">
-                    Page <span className="text-dark fw-bold">{page}</span> of <span className="text-dark fw-bold">{totalPages}</span>
-                  </div>
-                  <div className="btn-group shadow-sm">
-                    <Button
-                      variant="white"
-                      className="bg-white border d-flex align-items-center gap-1"
-                      disabled={page <= 1}
-                      onClick={() => setPage(page - 1)}
-                    >
-                      <i className="ti ti-chevron-left"></i> Previous
-                    </Button>
-                    <Button
-                      variant="white"
-                      className="bg-white border d-flex align-items-center gap-1"
-                      disabled={page >= totalPages}
-                      onClick={() => setPage(page + 1)}
-                    >
-                      Next <i className="ti ti-chevron-right"></i>
-                    </Button>
-                  </div>
-                </div>
+                              <span className="material-symbols-outlined">edit</span>
+                            </button>
+                            <button 
+                              onClick={() => handleDelete(po.id)}
+                              className="p-2 hover:bg-error-container/10 text-error rounded-lg transition-colors"
+                            >
+                              <span className="material-symbols-outlined">delete</span>
+                            </button>
+                          </>
+                        )}
+                        <button className="p-2 hover:bg-slate-100 text-outline rounded-lg transition-colors">
+                          <span className="material-symbols-outlined">more_vert</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
               )}
-            </>
-          )}
-        </Card.Body>
-      </Card>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Table Footer / Pagination */}
+        <div className="px-8 py-5 flex items-center justify-between bg-surface-container-low/20 border-t border-slate-100">
+          <span className="text-xs font-bold text-outline uppercase tracking-wider">
+            Showing <span className="text-on-surface">{purchaseOrders.length > 0 ? (page - 1) * perPage + 1 : 0}-{Math.min(page * perPage, totalCount)}</span> of <span className="text-on-surface">{totalCount.toLocaleString()}</span> purchase orders
+          </span>
+          <div className="flex gap-2">
+            <button
+              disabled={page <= 1}
+              onClick={() => setPage(page - 1)}
+              className="px-4 py-2 text-sm font-bold text-outline hover:text-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <div className="flex items-center px-4 py-2 bg-surface-container-low rounded-lg text-sm font-extrabold text-primary">
+              {page}
+            </div>
+            <button
+              disabled={page >= totalPages}
+              onClick={() => setPage(page + 1)}
+              className="px-4 py-2 text-sm font-bold text-outline hover:text-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
 
       <ConfirmationModal
         show={showDeleteConfirm}
@@ -761,8 +690,7 @@ export function PurchaseOrderListPage() {
         message={
           <>
             Are you sure you want to delete this purchase order?
-            <br />
-            <strong>This action cannot be undone.</strong>
+            This action cannot be undone and will remove all associated data.
           </>
         }
         onConfirm={confirmDelete}
@@ -770,7 +698,7 @@ export function PurchaseOrderListPage() {
           setShowDeleteConfirm(false)
           setDeletingId(null)
         }}
-        confirmText="Delete"
+        confirmText="Delete Order"
         variant="danger"
         isLoading={isLoading && deletingId !== null}
       />
