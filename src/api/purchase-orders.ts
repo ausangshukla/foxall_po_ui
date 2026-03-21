@@ -4,6 +4,8 @@ import type {
   PurchaseOrderResponse,
   CreatePurchaseOrderRequest,
   UpdatePurchaseOrderRequest,
+  PurchaseOrderSearchRequest,
+  PurchaseOrderSearchMeta,
 } from '../types/api'
 
 export async function listPurchaseOrders(): Promise<PurchaseOrderResponse[]> {
@@ -29,4 +31,13 @@ export async function updatePurchaseOrder(
 
 export async function deletePurchaseOrder(id: number): Promise<string> {
   return api.delete<string>(API_ROUTES.PURCHASE_ORDER(id))
+}
+
+export async function searchPurchaseOrders(
+  params: PurchaseOrderSearchRequest
+): Promise<{ data: PurchaseOrderResponse[]; meta: PurchaseOrderSearchMeta }> {
+  return api.post<{ data: PurchaseOrderResponse[]; meta: PurchaseOrderSearchMeta }>(
+    `${API_ROUTES.PURCHASE_ORDERS}/search`,
+    params
+  )
 }

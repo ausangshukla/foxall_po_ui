@@ -185,6 +185,34 @@ export interface UpdatePurchaseOrderRequest {
 }
 
 // ============================================
+// Purchase Order Search Types
+// ============================================
+export interface PurchaseOrderSearchCondition {
+  field: string
+  pred: string
+  value: string
+}
+
+export interface PurchaseOrderSearchRequest {
+  page?: number
+  per_page?: number
+  q?: string
+  status?: string
+  entity_id?: number
+  vendor_id?: number
+  order_date_from?: string
+  order_date_to?: string
+  conditions?: PurchaseOrderSearchCondition[]
+}
+
+export interface PurchaseOrderSearchMeta {
+  current_page: number
+  per_page: number
+  total_pages: number
+  total_count: number
+}
+
+// ============================================
 // API Error Types
 // ============================================
 export class ApiError extends Error {
