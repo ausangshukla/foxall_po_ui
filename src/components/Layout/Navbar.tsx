@@ -1,16 +1,33 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { useState } from 'react'
 
 export function AppNavbar() {
   const { user, isAuthenticated, logout, canManageUsers } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
 
   const handleLogout = () => {
     logout()
     navigate('/login')
+  }
+
+  const isActive = (path: string) => {
+    return location.pathname === path || location.pathname.startsWith(`${path}/`)
+  }
+
+  const linkClass = (path: string) => {
+    return isActive(path)
+      ? "text-sky-900 font-extrabold border-b-2 border-sky-600 pb-1 tracking-tight text-sm transition-all"
+      : "text-slate-500 hover:text-sky-700 transition-colors font-bold tracking-tight text-sm"
+  }
+
+  const mobileLinkClass = (path: string) => {
+    return isActive(path)
+      ? "block px-4 py-3 rounded-xl text-base font-bold text-sky-900 bg-sky-50"
+      : "block px-4 py-3 rounded-xl text-base font-bold text-slate-700 hover:bg-slate-50"
   }
 
   return (
@@ -20,22 +37,22 @@ export function AppNavbar() {
           <Link to="/" className="text-2xl font-extrabold tracking-tighter text-sky-900 font-headline">Foxall PO</Link>
           <div className="hidden md:flex gap-8 items-center">
             {isAuthenticated && (
-              <Link to="/dashboard" className="text-slate-500 hover:text-sky-700 transition-colors font-bold tracking-tight text-sm">
+              <Link to="/dashboard" className={linkClass('/dashboard')}>
                 Dashboard
               </Link>
             )}
             {isAuthenticated && (
-              <Link to="/purchase-orders" className="text-sky-900 font-extrabold border-b-2 border-sky-600 pb-1 tracking-tight text-sm">
+              <Link to="/purchase-orders" className={linkClass('/purchase-orders')}>
                 Orders
               </Link>
             )}
             {canManageUsers() && (
-              <Link to="/entities" className="text-slate-500 hover:text-sky-700 transition-colors font-bold tracking-tight text-sm">
+              <Link to="/entities" className={linkClass('/entities')}>
                 Entities
               </Link>
             )}
             {canManageUsers() && (
-              <Link to="/users" className="text-slate-500 hover:text-sky-700 transition-colors font-bold tracking-tight text-sm">
+              <Link to="/users" className={linkClass('/users')}>
                 Users
               </Link>
             )}
@@ -104,20 +121,20 @@ export function AppNavbar() {
         <div className="md:hidden bg-white border-t border-slate-100 px-4 pt-2 pb-6 space-y-1 shadow-xl animate-in slide-in-from-top-full duration-300">
           {isAuthenticated && (
             <>
-              <Link to="/dashboard" className="block px-4 py-3 rounded-xl text-base font-bold text-slate-700 hover:bg-slate-50">Dashboard</Link>
-              <Link to="/purchase-orders" className="block px-4 py-3 rounded-xl text-base font-bold text-sky-900 bg-sky-50">Purchase Orders</Link>
+              <Link to="/dashboard" className={mobileLinkClass('/dashboard')}>Dashboard</Link>
+              <Link to="/purchase-orders" className={mobileLinkClass('/purchase-orders')}>Purchase Orders</Link>
             </>
           )}
           {canManageUsers() && (
             <>
-              <Link to="/entities" className="block px-4 py-3 rounded-xl text-base font-bold text-slate-700 hover:bg-slate-50">Entities</Link>
-              <Link to="/users" className="block px-4 py-3 rounded-xl text-base font-bold text-slate-700 hover:bg-slate-50">Users</Link>
+              <Link to="/entities" className={mobileLinkClass('/entities')}>Entities</Link>
+              <Link to="/users" className={mobileLinkClass('/users')}>Users</Link>
             </>
           )}
           <hr className="border-slate-100 my-2" />
           {isAuthenticated ? (
             <>
-              <Link to="/profile" className="block px-4 py-3 rounded-xl text-base font-bold text-slate-700 hover:bg-slate-50">Profile</Link>
+              <Link to="/profile" className={mobileLinkClass('/profile')}>Profile</Link>
               <button onClick={handleLogout} className="block w-full text-left px-4 py-3 rounded-xl text-base font-bold text-error hover:bg-error/5">Logout</button>
             </>
           ) : (

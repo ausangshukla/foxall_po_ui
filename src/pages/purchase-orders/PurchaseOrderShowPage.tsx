@@ -106,276 +106,197 @@ export function PurchaseOrderShowPage() {
   const isDelivered = purchaseOrder.status === 'received' || purchaseOrder.status === 'closed'
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* Breadcrumb / Back */}
-      <button 
-        onClick={() => navigate('/purchase-orders')}
-        className="group inline-flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors font-semibold"
-      >
-        <span className="material-symbols-outlined transition-transform group-hover:-translate-x-1">arrow_back</span>
-        Back to Fleet List
-      </button>
-
-      {/* Hero Header Card */}
-      <div className={`relative overflow-hidden rounded-[2.5rem] shadow-2xl transition-all duration-500 ${
-        isCancelled ? 'bg-slate-900' : isDelivered ? 'bg-emerald-900' : 'bg-blue-900'
-      }`}>
-        {/* Background Patterns */}
-        <div className="absolute inset-0 opacity-10 pointer-events-none">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full -mr-20 -mt-20 blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-white rounded-full -ml-10 -mb-10 blur-3xl"></div>
+    <div className="max-w-7xl mx-auto px-4 md:px-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Header Section: Editorial Mint Gradient */}
+      <header className="relative overflow-hidden rounded-xl mb-10 p-8 md:p-12 flex flex-col md:flex-row justify-between items-end md:items-center bg-gradient-to-br from-primary-container via-surface to-surface-container-low">
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-2">
+            <span className={`px-3 py-1 bg-surface-container-lowest text-primary text-[10px] font-extrabold tracking-widest rounded-full uppercase`}>
+              {purchaseOrder.status.replace(/_/g, ' ')}
+            </span>
+            <span className="text-on-surface-variant font-light tracking-widest text-sm">{purchaseOrder.po_number}</span>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tighter text-on-primary-fixed mb-2">Purchase Order Details</h1>
+          <p className="text-on-surface-variant font-light tracking-wide max-w-md">Reviewing logistics and vendor procurement requirements for fiscal Q3 infrastructure.</p>
         </div>
-
-        <div className="relative p-8 md:p-12 flex flex-col md:flex-row md:items-center justify-between gap-8">
-          <div className="flex items-center gap-6">
-            <div className="w-20 h-20 rounded-3xl bg-white/10 backdrop-blur-md flex items-center justify-center text-white border border-white/20 shadow-inner">
-              <span className="material-symbols-outlined text-4xl">inventory</span>
-            </div>
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-4xl font-extrabold text-white tracking-tighter font-headline">
-                  {purchaseOrder.po_number}
-                </h1>
-                <span className={`px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest border backdrop-blur-sm ${
-                  isCancelled ? 'bg-red-500/20 text-red-100 border-red-400/30' : 
-                  isDelivered ? 'bg-emerald-500/20 text-emerald-100 border-emerald-400/30' : 
-                  'bg-blue-500/20 text-blue-100 border-blue-400/30'
-                }`}>
-                  {purchaseOrder.status.replace(/_/g, ' ')}
-                </span>
-              </div>
-              <p className="text-blue-100/70 font-medium">Order ID: {purchaseOrder.id} • Registered on {formatDate(purchaseOrder.order_date)}</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-             {canManageUsers() && (
-               <button 
-                onClick={() => navigate(`/purchase-orders/${purchaseOrder.id}/edit`)}
-                className="px-6 py-3 bg-white text-slate-900 rounded-2xl font-bold shadow-xl hover:bg-slate-50 transition-all active:scale-95 flex items-center gap-2"
-               >
-                 <span className="material-symbols-outlined">edit</span>
-                 Modify Order
-               </button>
-             )}
-          </div>
-        </div>
-      </div>
-
-      {/* Main Grid Details */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Left Column - Core Info */}
-        <div className="lg:col-span-2 space-y-8">
-          
-          {/* Detailed Info Card */}
-          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-             <div className="px-8 py-5 border-b border-slate-50 flex items-center gap-2 bg-slate-50/50">
-               <span className="material-symbols-outlined text-blue-600">info</span>
-               <h3 className="font-bold text-slate-900 uppercase tracking-widest text-xs">Essential Details</h3>
-             </div>
-             <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="flex items-start gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100/50">
-                  <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600">
-                    <span className="material-symbols-outlined">apartment</span>
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Entity / Subsidiary</p>
-                    <p className="font-bold text-slate-900">Entity #{purchaseOrder.entity_id}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100/50">
-                  <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600">
-                    <span className="material-symbols-outlined">store</span>
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Vendor Reference</p>
-                    <p className="font-bold text-slate-900">Partner #{purchaseOrder.vendor_id}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100/50">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600">
-                    <span className="material-symbols-outlined">payments</span>
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Financial Total</p>
-                    <p className="font-bold text-slate-900 text-xl">{formatCurrency(purchaseOrder.total_amount, purchaseOrder.currency)}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100/50">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600">
-                    <span className="material-symbols-outlined">category</span>
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Contract Type</p>
-                    <p className="font-bold text-slate-900 uppercase tracking-tight">{purchaseOrder.po_type}</p>
-                  </div>
-                </div>
-             </div>
-          </div>
-
-          {/* Logistics Card */}
-          {(purchaseOrder.shipping_method || purchaseOrder.carrier || purchaseOrder.tracking_number) && (
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-              <div className="px-8 py-5 border-b border-slate-50 flex items-center gap-2 bg-slate-50/50">
-                <span className="material-symbols-outlined text-blue-600">local_shipping</span>
-                <h3 className="font-bold text-slate-900 uppercase tracking-widest text-xs">Logistics & Freight</h3>
-              </div>
-              <div className="p-8">
-                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    {purchaseOrder.shipping_method && (
-                      <div className="space-y-1">
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Method</p>
-                        <div className="flex items-center gap-2 font-bold text-slate-900">
-                          <span className="material-symbols-outlined text-blue-500">{SHIPPING_ICONS[purchaseOrder.shipping_method] || 'package'}</span>
-                          <span className="capitalize">{purchaseOrder.shipping_method}</span>
-                        </div>
-                      </div>
-                    )}
-                    {purchaseOrder.carrier && (
-                      <div className="space-y-1">
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Carrier</p>
-                        <p className="font-bold text-slate-900">{purchaseOrder.carrier}</p>
-                      </div>
-                    )}
-                    {purchaseOrder.tracking_number && (
-                      <div className="space-y-1">
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Tracking #</p>
-                        <p className="font-bold text-blue-600 select-all font-mono">{purchaseOrder.tracking_number}</p>
-                      </div>
-                    )}
-                 </div>
-
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-slate-50">
-                    <div className="space-y-3">
-                       <p className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                         <span className="material-symbols-outlined text-sm">location_on</span>
-                         Destination
-                       </p>
-                       <p className="text-slate-700 font-medium leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                         {purchaseOrder.destination_address || 'No destination address provided.'}
-                       </p>
-                    </div>
-                    <div className="space-y-3">
-                       <p className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                         <span className="material-symbols-outlined text-sm">receipt_long</span>
-                         Billing Address
-                       </p>
-                       <p className="text-slate-700 font-medium leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                         {purchaseOrder.bill_to_address || 'No billing address provided.'}
-                       </p>
-                    </div>
-                 </div>
-              </div>
-            </div>
-          )}
-
-          {/* Notes Card */}
-          {purchaseOrder.notes && (
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-               <div className="px-8 py-5 border-b border-slate-50 flex items-center gap-2 bg-slate-50/50">
-                 <span className="material-symbols-outlined text-blue-600">notes</span>
-                 <h3 className="font-bold text-slate-900 uppercase tracking-widest text-xs">Documentation & Notes</h3>
-               </div>
-               <div className="p-8 prose prose-slate max-w-none" dangerouslySetInnerHTML={{ __html: purchaseOrder.notes }} />
-            </div>
+        <div className="relative z-10 mt-6 md:mt-0">
+          {canManageUsers() && (
+            <button 
+              onClick={() => navigate(`/purchase-orders/${purchaseOrder.id}/edit`)}
+              className="px-8 py-3 bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold rounded-lg shadow-lg hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2"
+            >
+              <span className="material-symbols-outlined text-sm">edit</span>
+              Modify Order
+            </button>
           )}
         </div>
+        {/* Decorative Abstract Pattern */}
+        <div className="absolute -right-20 -top-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl"></div>
+      </header>
 
-        {/* Right Column - Status & Metadata */}
-        <div className="space-y-8">
-           
-           {/* Timeline / Dates Card */}
-           <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 space-y-6">
-              <h3 className="font-bold text-slate-900 uppercase tracking-widest text-xs mb-4">Delivery Timeline</h3>
-              
-              <div className="relative pl-8 space-y-8">
-                 {/* Timeline Line */}
-                 <div className="absolute top-0 left-[11px] bottom-0 w-0.5 bg-slate-100"></div>
-
-                 <div className="relative">
-                    <div className="absolute -left-8 w-6 h-6 rounded-full bg-blue-100 border-4 border-white flex items-center justify-center z-10">
-                       <div className="w-2 h-2 rounded-full bg-blue-600"></div>
-                    </div>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Ordered On</p>
-                    <p className="font-bold text-slate-900">{formatDate(purchaseOrder.order_date)}</p>
-                 </div>
-
-                 <div className="relative">
-                    <div className="absolute -left-8 w-6 h-6 rounded-full bg-amber-100 border-4 border-white flex items-center justify-center z-10">
-                       <div className="w-2 h-2 rounded-full bg-amber-600"></div>
-                    </div>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Expected By</p>
-                    <p className="font-bold text-slate-900">{formatDate(purchaseOrder.expected_delivery_date)}</p>
-                 </div>
-
-                 <div className="relative">
-                    <div className={`absolute -left-8 w-6 h-6 rounded-full border-4 border-white flex items-center justify-center z-10 ${isDelivered ? 'bg-green-100' : 'bg-slate-50'}`}>
-                       <div className={`w-2 h-2 rounded-full ${isDelivered ? 'bg-green-600' : 'bg-slate-300'}`}></div>
-                    </div>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Actual Delivery</p>
-                    <p className={`font-bold ${isDelivered ? 'text-green-600' : 'text-slate-400 italic'}`}>
-                      {purchaseOrder.actual_delivery_date ? formatDate(purchaseOrder.actual_delivery_date) : 'Pending Arrival'}
-                    </p>
-                 </div>
+      {/* Bento Grid Content */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+        {/* Column 1: Essential Details & Logistics */}
+        <div className="md:col-span-8 flex flex-col gap-6">
+          {/* Essential Details Glass Card */}
+          <section className="glass-panel ambient-shadow rounded-xl p-8 border border-outline-variant/20">
+            <h2 className="text-on-primary-container font-extrabold tracking-tight text-lg mb-8">Essential Details</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              <div>
+                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Subsidiary</p>
+                <p className="font-bold text-on-surface">Entity #{purchaseOrder.entity_id}</p>
               </div>
-           </div>
+              <div>
+                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Vendor Reference</p>
+                <p className="font-bold text-on-surface">Partner #{purchaseOrder.vendor_id}</p>
+              </div>
+              <div>
+                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Financial Total</p>
+                <p className="font-bold text-primary text-xl tracking-tight">{formatCurrency(purchaseOrder.total_amount, purchaseOrder.currency)}</p>
+              </div>
+              <div>
+                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Contract Type</p>
+                <p className="font-bold text-on-surface uppercase">{purchaseOrder.po_type}</p>
+              </div>
+            </div>
+          </section>
 
-           {/* Custom Attributes */}
-           {fieldDefinitions.length > 0 && (
-             <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
-                <h3 className="font-bold text-slate-900 uppercase tracking-widest text-xs mb-6">Extended Attributes</h3>
-                <div className="space-y-4">
-                  {fieldDefinitions.map((def) => (
-                    <div key={def.field_key} className="flex flex-col border-b border-slate-50 pb-3 last:border-0 last:pb-0">
-                      <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{def.field_label}</span>
-                      <span className="font-bold text-slate-800">
-                        {def.field_type === 'checkbox'
-                          ? (purchaseOrder.custom_fields?.[def.field_key] ? '✅ Enabled' : '❌ Disabled')
-                          : String(purchaseOrder.custom_fields?.[def.field_key] || '—')}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-             </div>
-           )}
-
-           {/* Audit Log Card */}
-           <div className="bg-slate-900 rounded-3xl shadow-xl p-8 text-white">
-              <h3 className="font-bold text-white/40 uppercase tracking-widest text-xs mb-6">System Audit Log</h3>
+          {/* Logistics & Freight */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <section className="glass-panel ambient-shadow rounded-xl p-8 border border-outline-variant/20">
+              <div className="flex items-center gap-3 mb-6">
+                <span className="material-symbols-outlined text-primary">local_shipping</span>
+                <h2 className="text-on-primary-container font-extrabold tracking-tight text-lg">Logistics</h2>
+              </div>
               <div className="space-y-6">
-                <div className="flex items-center gap-4">
-                   <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white/60">
-                     <span className="material-symbols-outlined text-[20px]">person_add</span>
-                   </div>
-                   <div>
-                      <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">Creator Account</p>
-                      <p className="text-sm font-bold">Operator ID: {purchaseOrder.created_by}</p>
-                   </div>
+                <div>
+                  <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Tracking #</p>
+                  <p className="font-bold text-on-surface">{purchaseOrder.tracking_number || 'Pending'}</p>
                 </div>
-                {purchaseOrder.approved_by && (
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400">
-                      <span className="material-symbols-outlined text-[20px]">verified_user</span>
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">Approver</p>
-                        <p className="text-sm font-bold">Manager ID: {purchaseOrder.approved_by}</p>
-                    </div>
+                <div>
+                  <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Destination</p>
+                  <p className="font-light text-on-surface leading-relaxed">{purchaseOrder.destination_address || 'No destination address provided.'}</p>
+                </div>
+              </div>
+            </section>
+            
+            <section className="glass-panel ambient-shadow rounded-xl p-8 border border-outline-variant/20">
+              <div className="flex items-center gap-3 mb-6">
+                <span className="material-symbols-outlined text-primary">receipt_long</span>
+                <h2 className="text-on-primary-container font-extrabold tracking-tight text-lg">Billing</h2>
+              </div>
+              <div className="space-y-6">
+                <div>
+                  <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Billing Address</p>
+                  <p className="font-light text-on-surface leading-relaxed">{purchaseOrder.bill_to_address || 'No billing address provided.'}</p>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          {/* Extended Attributes & Documentation */}
+          <section className="glass-panel ambient-shadow rounded-xl p-8 border border-outline-variant/20">
+            <div className="flex items-center gap-3 mb-8">
+              <span className="material-symbols-outlined text-primary">list_alt</span>
+              <h2 className="text-on-primary-container font-extrabold tracking-tight text-lg">Extended Attributes & Notes</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+              <div className="space-y-6">
+                {fieldDefinitions.length > 0 && (
+                  <div className="space-y-4">
+                    {fieldDefinitions.map((def) => (
+                      <div key={def.field_key}>
+                        <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">{def.field_label}</p>
+                        <p className="font-bold text-on-surface">
+                          {def.field_type === 'checkbox'
+                            ? (purchaseOrder.custom_fields?.[def.field_key] ? 'YES' : 'NO')
+                            : String(purchaseOrder.custom_fields?.[def.field_key] || '—')}
+                        </p>
+                      </div>
+                    ))}
                   </div>
                 )}
-                <div className="pt-6 border-t border-white/10 space-y-4">
-                   <div>
-                      <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mb-1">System Timestamp</p>
-                      <p className="text-xs font-medium text-white/60">Modified: {formatDateTime(purchaseOrder.updated_at)}</p>
-                      <p className="text-xs font-medium text-white/60">Registry: {formatDateTime(purchaseOrder.created_at)}</p>
-                   </div>
+              </div>
+              <div>
+                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Documentation & Notes</p>
+                <div 
+                  className="mt-2 p-4 bg-surface-container-low rounded-lg min-h-[100px] font-light text-sm text-on-surface-variant italic"
+                  dangerouslySetInnerHTML={{ __html: purchaseOrder.notes || 'No documentation or notes provided.' }}
+                />
+              </div>
+            </div>
+          </section>
+        </div>
+
+        {/* Column 2: Timeline & Audit */}
+        <div className="md:col-span-4 flex flex-col gap-6">
+          {/* Delivery Timeline */}
+          <section className="glass-panel ambient-shadow rounded-xl p-8 border border-outline-variant/20">
+            <h2 className="text-on-primary-container font-extrabold tracking-tight text-lg mb-8">Delivery Timeline</h2>
+            <div className="relative space-y-10 pl-6 border-l-2 border-primary-container">
+              <div className="relative">
+                <div className="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-primary border-4 border-surface"></div>
+                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Ordered On</p>
+                <p className="font-bold text-on-surface">{formatDate(purchaseOrder.order_date)}</p>
+              </div>
+              <div className="relative">
+                <div className="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-primary-container border-4 border-surface"></div>
+                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Expected By</p>
+                <p className="font-bold text-on-surface">{formatDate(purchaseOrder.expected_delivery_date)}</p>
+              </div>
+              <div className={`relative ${!purchaseOrder.actual_delivery_date ? 'opacity-40' : ''}`}>
+                <div className={`absolute -left-[31px] top-1 w-4 h-4 rounded-full ${purchaseOrder.actual_delivery_date ? 'bg-primary' : 'bg-surface-variant'} border-4 border-surface`}></div>
+                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Actual Delivery</p>
+                <p className="font-bold text-on-surface">{purchaseOrder.actual_delivery_date ? formatDate(purchaseOrder.actual_delivery_date) : 'TBD'}</p>
+              </div>
+            </div>
+          </section>
+
+          {/* System Audit Log */}
+          <section className="glass-panel ambient-shadow rounded-xl p-8 border border-outline-variant/20">
+            <div className="flex items-center gap-3 mb-6">
+              <span className="material-symbols-outlined text-primary">history</span>
+              <h2 className="text-on-primary-container font-extrabold tracking-tight text-lg">Audit Log</h2>
+            </div>
+            <div className="space-y-6">
+              <div className="p-4 bg-surface-container-low/50 rounded-lg">
+                <p className="text-[10px] uppercase tracking-widest text-on-surface-variant mb-2">Created By</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-xs">{purchaseOrder.created_by}</div>
+                  <div>
+                    <p className="text-sm font-bold text-on-surface">Operator ID: {purchaseOrder.created_by}</p>
+                    <p className="text-[10px] text-on-surface-variant">{formatDateTime(purchaseOrder.created_at)}</p>
+                  </div>
                 </div>
               </div>
-           </div>
+              {purchaseOrder.approved_by && (
+                <div className="p-4 bg-surface-container-low/50 rounded-lg">
+                  <p className="text-[10px] uppercase tracking-widest text-on-surface-variant mb-2">Approved By</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-xs">{purchaseOrder.approved_by}</div>
+                    <div>
+                      <p className="text-sm font-bold text-on-surface">Approver ID: {purchaseOrder.approved_by}</p>
+                      <p className="text-[10px] text-on-surface-variant">System Verified</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div className="p-4 bg-surface-container-low/50 rounded-lg">
+                <p className="text-[10px] uppercase tracking-widest text-on-surface-variant mb-2">Last Modified</p>
+                <p className="text-sm font-bold text-on-surface">System Auto-Save</p>
+                <p className="text-[10px] text-on-surface-variant">{formatDateTime(purchaseOrder.updated_at)}</p>
+              </div>
+            </div>
+          </section>
+
+          {/* Help Link */}
+          <a className="group flex items-center justify-between p-6 glass-panel ambient-shadow rounded-xl border border-outline-variant/20 hover:bg-primary/5 transition-colors" href="#">
+            <div className="flex items-center gap-4">
+              <span className="material-symbols-outlined text-primary">help_center</span>
+              <span className="font-bold text-sm">Need Help with this PO?</span>
+            </div>
+            <span className="material-symbols-outlined text-primary-container group-hover:translate-x-1 transition-transform">arrow_forward</span>
+          </a>
         </div>
       </div>
     </div>
