@@ -9,7 +9,7 @@ import type { UserResponse, EntityResponse } from '../../types/api'
 export function UserListPage() {
   const isAuth = useRequireAuth()
   const navigate = useNavigate()
-  const { canManageUsers, canManageAllUsers, user: currentUser } = useAuth()
+  const { canManageUsers, user: currentUser } = useAuth()
 
   const [users, setUsers] = useState<UserResponse[]>([])
   const [entities, setEntities] = useState<Map<number, EntityResponse>>(new Map())
@@ -80,10 +80,10 @@ export function UserListPage() {
 
   const getRoleBadgeClasses = (role: string): string => {
     switch (role) {
-      case 'super': return 'bg-red-50 text-red-700 border-red-100'
-      case 'admin': return 'bg-amber-50 text-amber-700 border-amber-100'
-      case 'employee': return 'bg-blue-50 text-blue-700 border-blue-100'
-      default: return 'bg-slate-50 text-slate-700 border-slate-100'
+      case 'super': return 'bg-error-container/20 text-error'
+      case 'admin': return 'bg-tertiary-container text-on-tertiary-container'
+      case 'employee': return 'bg-primary-container text-on-primary-container'
+      default: return 'bg-surface-container-highest text-on-surface-variant'
     }
   }
 
@@ -107,146 +107,201 @@ export function UserListPage() {
   })
 
   const getSortIndicator = (key: keyof UserResponse) => {
-    if (sortKey !== key) return <span className="material-symbols-outlined text-slate-300 text-xs ml-1">unfold_more</span>
-    return <span className="material-symbols-outlined text-blue-600 text-xs ml-1">{sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward'}</span>
+    if (sortKey !== key) return <span className="material-symbols-outlined text-outline text-xs ml-1">unfold_more</span>
+    return <span className="material-symbols-outlined text-primary text-xs ml-1">{sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward'}</span>
   }
 
   if (!isAuth || isLoading) return <LoadingSpinner />
   if (!canManageUsers() && !currentUser) return <AlertMessage variant="danger" message="Access denied" />
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-0 max-w-screen-2xl mx-auto px-8 py-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Editorial Header Section */}
+      <section className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 font-headline">Users</h1>
-          <p className="mt-1 text-slate-500 font-medium">Manage platform users and their access permissions</p>
+          <h1 className="text-4xl font-extrabold tracking-tight text-on-primary-container mb-2 font-headline">User Management</h1>
+          <p className="text-on-surface-variant font-light tracking-wide">Manage platform users, roles and their access permissions.</p>
         </div>
-        {canManageUsers() && (
-          <button
-            onClick={() => navigate('/users/new')}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 active:scale-95"
-          >
-            <span className="material-symbols-outlined">person_add</span>
-            Add New User
-          </button>
-        )}
-      </div>
-
-      {error && <AlertMessage variant="danger" message={error} onClose={() => setError(null)} />}
-
-      {/* Search and Filters Card */}
-      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
-        <div className="max-w-md relative">
-          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
-          <input
-            className="w-full pl-12 pr-4 py-3 bg-slate-50 border-none rounded-xl text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 transition-all font-medium"
-            placeholder="Search by name, email, or role..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        <div className="flex gap-4">
+          {canManageUsers() && (
+            <button
+              onClick={() => navigate('/users/new')}
+              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-lg font-bold ambient-shadow hover:scale-[1.02] transition-transform"
+            >
+              <span className="material-symbols-outlined">person_add</span>
+              <span>Add User</span>
+            </button>
+          )}
         </div>
-      </div>
+      </section>
 
-      {/* Table Section */}
-      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-        <div className="px-8 py-5 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
-          <div className="text-sm font-semibold text-slate-600">
-            Showing <span className="text-blue-600 font-bold">{filteredUsers.length}</span> platform users
+      {/* Summary Metrics: Glass Bento */}
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+        <div className="glass-panel p-8 rounded-xl ambient-shadow flex flex-col justify-between h-44">
+          <div className="flex justify-between items-start">
+            <span className="p-3 bg-primary-container/30 text-primary rounded-xl material-symbols-outlined">group</span>
+          </div>
+          <div>
+            <p className="text-on-surface-variant text-sm font-light uppercase tracking-widest mb-1">Total Users</p>
+            <h3 className="text-3xl font-extrabold text-on-primary-container">{users.length}</h3>
           </div>
         </div>
+        <div className="glass-panel p-8 rounded-xl ambient-shadow flex flex-col justify-between h-44">
+          <div className="flex justify-between items-start">
+            <span className="p-3 bg-tertiary-container/30 text-tertiary rounded-xl material-symbols-outlined">admin_panel_settings</span>
+          </div>
+          <div>
+            <p className="text-on-surface-variant text-sm font-light uppercase tracking-widest mb-1">Admins</p>
+            <h3 className="text-3xl font-extrabold text-on-primary-container">
+              {users.filter(u => u.roles.includes('super') || u.roles.includes('admin')).length}
+            </h3>
+          </div>
+        </div>
+        <div className="glass-panel p-8 rounded-xl ambient-shadow flex flex-col justify-between h-44">
+          <div className="flex justify-between items-start">
+            <span className="p-3 bg-secondary-container/30 text-secondary rounded-xl material-symbols-outlined">domain</span>
+          </div>
+          <div>
+            <p className="text-on-surface-variant text-sm font-light uppercase tracking-widest mb-1">Active Entities</p>
+            <h3 className="text-3xl font-extrabold text-on-primary-container">{entities.size}</h3>
+          </div>
+        </div>
+      </section>
 
-        {filteredUsers.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
-            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4">
-              <span className="material-symbols-outlined text-4xl text-slate-300">group_off</span>
+      {error && <div className="mb-6"><AlertMessage variant="danger" message={error} onClose={() => setError(null)} /></div>}
+
+      {/* Filters & Data Table Container */}
+      <section className="glass-panel rounded-2xl ambient-shadow overflow-hidden">
+        {/* Table Controls */}
+        <div className="p-6 bg-surface-container-low flex flex-col lg:flex-row justify-between items-center gap-6">
+          <div className="flex gap-4 w-full lg:w-auto">
+            <div className="relative flex-grow lg:flex-none">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline text-lg">search</span>
+              <input
+                className="pl-12 pr-4 py-3 bg-surface-container-lowest rounded-lg border-none ring-1 ring-outline-variant/20 focus:ring-primary-container w-full lg:w-96 font-light text-sm"
+                placeholder="Search by name or email..."
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
-            <h3 className="text-lg font-bold text-slate-900 mb-1">No users found</h3>
-            <p className="text-slate-500 max-w-xs mx-auto">Try adjusting your search criteria or add a new user to the platform.</p>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50/30">
-                  <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest cursor-pointer group" onClick={() => toggleSort('first_name')}>
-                    <div className="flex items-center">Name {getSortIndicator('first_name')}</div>
-                  </th>
-                  <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest cursor-pointer group" onClick={() => toggleSort('email')}>
-                    <div className="flex items-center">Account {getSortIndicator('email')}</div>
-                  </th>
-                  <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Entity</th>
-                  <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Permissions</th>
-                  <th className="px-8 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Actions</th>
+          <div className="flex items-center gap-4 text-sm text-on-surface-variant font-light">
+            <span>Showing {filteredUsers.length} platform users</span>
+          </div>
+        </div>
+
+        {/* Modern Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-surface-container-low/50">
+                <th 
+                  className="px-8 py-5 text-xs font-extrabold uppercase tracking-widest text-on-surface-variant cursor-pointer group"
+                  onClick={() => toggleSort('first_name')}
+                >
+                  <div className="flex items-center gap-1">Name {getSortIndicator('first_name')}</div>
+                </th>
+                <th 
+                  className="px-8 py-5 text-xs font-extrabold uppercase tracking-widest text-on-surface-variant cursor-pointer group"
+                  onClick={() => toggleSort('email')}
+                >
+                  <div className="flex items-center gap-1">Account {getSortIndicator('email')}</div>
+                </th>
+                <th className="px-8 py-5 text-xs font-extrabold uppercase tracking-widest text-on-surface-variant">Entity</th>
+                <th className="px-8 py-5 text-xs font-extrabold uppercase tracking-widest text-on-surface-variant">Permissions</th>
+                <th className="px-8 py-5 text-xs font-extrabold uppercase tracking-widest text-on-surface-variant text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-outline-variant/5">
+              {filteredUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-8 py-20 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="w-20 h-20 bg-surface-container-low rounded-full flex items-center justify-center mb-4">
+                        <span className="material-symbols-outlined text-4xl text-outline">group_off</span>
+                      </div>
+                      <h3 className="text-lg font-bold text-on-surface mb-1">No users found</h3>
+                      <p className="text-on-surface-variant max-w-xs mx-auto mb-6 font-medium">
+                        Try adjusting your search criteria or add a new user to the platform.
+                      </p>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {filteredUsers.map((u) => (
+              ) : (
+                filteredUsers.map((u) => (
                   <tr 
                     key={u.id} 
-                    className="hover:bg-slate-50/80 transition-all cursor-pointer group"
+                    className="hover:bg-surface-container-low transition-all duration-200 group cursor-pointer"
                     onClick={() => navigate(`/users/${u.id}`)}
                   >
-                    <td className="px-8 py-5">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 flex items-center justify-center text-blue-600 font-black text-sm shadow-sm">
+                    <td className="px-8 py-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center text-xs font-bold text-on-surface-variant">
                           {u.first_name.charAt(0)}{u.last_name.charAt(0)}
                         </div>
                         <div>
-                          <div className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{u.first_name} {u.last_name}</div>
-                          <div className="text-xs font-bold text-slate-400 uppercase tracking-tight">{u.phone || 'No Phone'}</div>
+                          <div className="font-bold text-on-primary-container group-hover:text-primary transition-colors">{u.first_name} {u.last_name}</div>
+                          <div className="text-[10px] font-extrabold text-outline uppercase tracking-wider">{u.phone || 'No Phone'}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-8 py-5">
-                      <div className="text-sm font-semibold text-slate-700">{u.email}</div>
+                    <td className="px-8 py-6">
+                      <div className="text-sm font-medium text-on-surface">{u.email}</div>
                       <div className="flex items-center gap-2 mt-1">
-                        {u.email_enabled && <span className="w-2 h-2 rounded-full bg-emerald-500" title="Email Enabled"></span>}
-                        {u.wa_enabled && <span className="w-2 h-2 rounded-full bg-green-400" title="WhatsApp Enabled"></span>}
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Verified</span>
+                        {u.email_enabled && <span className="w-1.5 h-1.5 rounded-full bg-primary" title="Email Enabled"></span>}
+                        {u.wa_enabled && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" title="WhatsApp Enabled"></span>}
+                        <span className="text-[10px] font-extrabold text-outline uppercase tracking-widest">Verified</span>
                       </div>
                     </td>
-                    <td className="px-8 py-5">
-                      <span className="inline-flex items-center px-3 py-1 rounded-lg bg-slate-100 border border-slate-200 text-xs font-bold text-slate-600">
+                    <td className="px-8 py-6">
+                      <span className="px-2 py-1 bg-surface-container-high rounded text-[10px] font-extrabold uppercase tracking-wider text-on-surface-variant">
                         {entities.get(u.entity_id)?.name || 'Central Admin'}
                       </span>
                     </td>
-                    <td className="px-8 py-5">
+                    <td className="px-8 py-6">
                       <div className="flex items-center gap-2 flex-wrap">
                         {u.roles.map((role) => (
                           <span 
                             key={role} 
-                            className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${getRoleBadgeClasses(role)}`}
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest ${getRoleBadgeClasses(role)}`}
                           >
                             {role}
                           </span>
                         ))}
                       </div>
                     </td>
-                    <td className="px-8 py-5 text-right" onClick={(e) => e.stopPropagation()}>
-                       <div className="flex items-center justify-end gap-2">
+                    <td className="px-8 py-6 text-right" onClick={(e) => e.stopPropagation()}>
+                       <div className="flex items-center justify-end gap-1">
                           <button 
                             onClick={() => navigate(`/users/${u.id}/edit`)}
-                            className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all"
-                            title="Edit User"
+                            className="p-2 opacity-40 group-hover:opacity-100 hover:text-secondary transition-all"
                           >
-                            <span className="material-symbols-outlined text-[20px]">edit</span>
+                            <span className="material-symbols-outlined text-xl">edit</span>
                           </button>
                           <button 
                             onClick={() => handleDelete(u.id)}
-                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
-                            title="Delete User"
+                            className="p-2 opacity-40 group-hover:opacity-100 hover:text-error transition-all"
                           >
-                            <span className="material-symbols-outlined text-[20px]">delete</span>
+                            <span className="material-symbols-outlined text-xl">delete</span>
                           </button>
                        </div>
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Footer of Table */}
+        <div className="p-8 border-t border-outline-variant/10 flex justify-center">
+          <button className="text-sm font-bold text-primary hover:text-on-primary-container flex items-center gap-2 transition-colors">
+            View Complete Activity Logs
+            <span className="material-symbols-outlined text-sm">arrow_forward</span>
+          </button>
+        </div>
+      </section>
 
       <ConfirmationModal
         show={showDeleteConfirm}

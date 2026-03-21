@@ -1,63 +1,99 @@
 @import "tailwindcss";
 
 @theme {
-  --color-secondary-dim: #684678;
-  --color-error: #ac3434;
-  --color-tertiary: #33685f;
-  --color-tertiary-container: #b0e8dd;
-  --color-on-tertiary-container: #20574f;
-  --color-surface-container-highest: #cee5ff;
-  --color-error-container: #f56965;
-  --color-primary-fixed-dim: #96caed;
-  --color-on-surface-variant: #3d6284;
-  --color-primary-container: #a4d8fc;
-  --color-on-secondary-fixed: #533262;
-  --color-tertiary-fixed: #b0e8dd;
-  --color-primary-fixed: #a4d8fc;
+  --color-surface-container-highest: #e0e3e5;
+  --color-on-secondary-fixed: #131b2e;
+  --color-tertiary-fixed: #fedeaa;
+  --color-on-tertiary-fixed: #271900;
   --color-surface-container-lowest: #ffffff;
-  --color-secondary: #755284;
-  --color-primary-dim: #1e5877;
-  --color-primary: #2d6583;
-  --color-surface-tint: #2d6583;
-  --color-tertiary-dim: #255c53;
-  --color-on-tertiary-fixed: #04443c;
-  --color-inverse-on-surface: #8c9fb4;
-  --color-outline-variant: #91b5dc;
-  --color-on-tertiary: #e2fff8;
-  --color-on-background: #063555;
-  --color-on-primary-container: #0b4c6a;
-  --color-surface-container-high: #d9eaff;
-  --color-on-error-container: #65000b;
-  --color-background: #f7f9ff;
-  --color-secondary-container: #f6d9ff;
-  --color-on-primary-fixed: #003851;
-  --color-on-tertiary-fixed-variant: #2b6158;
-  --color-on-error: #fff7f6;
-  --color-surface-container-low: #edf4ff;
-  --color-surface: #f7f9ff;
-  --color-on-secondary-container: #664476;
-  --color-surface-container: #e3efff;
-  --color-tertiary-fixed-dim: #a3dacf;
-  --color-on-primary: #f5f9ff;
-  --color-inverse-surface: #000f1e;
-  --color-surface-variant: #cee5ff;
-  --color-on-secondary: #fff7fc;
-  --color-surface-dim: #bfddff;
-  --color-on-surface: #063555;
-  --color-outline: #5a7ea2;
-  --color-inverse-primary: #a4d8fc;
-  --color-secondary-fixed-dim: #f0c6ff;
-  --color-on-primary-fixed-variant: #1b5674;
-  --color-secondary-fixed: #f6d9ff;
-  --color-surface-bright: #f7f9ff;
-  --color-error-dim: #70030f;
-  --color-on-secondary-fixed-variant: #714e81;
+  --color-on-surface: #191c1e;
+  --color-surface-container: #eceef0;
+  --color-on-primary: #ffffff;
+  --color-tertiary-fixed-dim: #e1c290;
+  --color-secondary-container: #dae2fd;
+  --color-on-secondary-fixed-variant: #3f465c;
+  --color-secondary-fixed: #dae2fd;
+  --color-surface: #f7f9fb;
+  --color-outline: #6f7973;
+  --color-surface-container-high: #e6e8ea;
+  --color-primary-fixed-dim: #8bd6b4;
+  --color-on-surface-variant: #3f4943;
+  --color-secondary-fixed-dim: #bec6e0;
+  --color-surface-tint: #1b6b4f;
+  --color-surface-bright: #f7f9fb;
+  --color-on-secondary-container: #5c647a;
+  --color-tertiary: #725b32;
+  --color-surface-dim: #d8dadc;
+  --color-inverse-on-surface: #eff1f3;
+  --color-on-error: #ffffff;
+  --color-surface-variant: #e0e3e5;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #ffdfab;
+  --color-on-secondary: #ffffff;
+  --color-on-primary-container: #247156;
+  --color-error: #ba1a1a;
+  --color-on-primary-fixed-variant: #00513a;
+  --color-outline-variant: #bec9c2;
+  --color-background: #f7f9fb;
+  --color-primary-fixed: #a6f2cf;
+  --color-on-error-container: #93000a;
+  --color-primary-container: #a7f3d0;
+  --color-on-tertiary-fixed-variant: #58431d;
+  --color-on-tertiary-container: #796138;
+  --color-error-container: #ffdad6;
+  --color-primary: #1b6b4f;
+  --color-surface-container-low: #f2f4f6;
+  --color-inverse-surface: #2d3133;
+  --color-on-primary-fixed: #002115;
+  --color-inverse-primary: #8bd6b4;
+  --color-on-background: #191c1e;
+  --color-secondary: #565e74;
 
   --font-headline: "Plus Jakarta Sans";
-  --font-body: "Be Vietnam Pro";
-  --font-label: "Be Vietnam Pro";
+  --font-body: "Plus Jakarta Sans";
+  --font-label: "Plus Jakarta Sans";
 
   --radius-DEFAULT: 0.25rem;
   --radius-lg: 0.5rem;
   --radius-xl: 0.75rem;
+}
+
+@layer base {
+  body {
+    @apply bg-surface text-on-surface;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+  }
+
+  .tonal-transition {
+    transition: background-color 0.3s ease;
+  }
+
+  .ambient-shadow {
+    box-shadow: 0 24px 48px -12px rgba(19, 27, 46, 0.08);
+  }
+}
+
+/* Custom scrollbar for clean editorial look */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #bec9c2;
+  border-radius: 10px;
 }
