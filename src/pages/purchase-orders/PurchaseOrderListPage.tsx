@@ -212,7 +212,7 @@ export function PurchaseOrderListPage() {
           setPoTypeFilter(value as PurchaseOrderType)
           break
         case 'method':
-          setShippingMethod(value)
+          setShippingMethod(value.toLowerCase())
           break
         case 'carrier':
           setCarrier(value)
@@ -374,6 +374,18 @@ export function PurchaseOrderListPage() {
     carrier ||
     trackingNumber
 
+  const hasAdvancedFilters =
+    poTypeFilter !== 'all' ||
+    vendorId ||
+    orderDateFrom ||
+    orderDateTo ||
+    poNumber ||
+    totalAmountMin ||
+    totalAmountMax ||
+    shippingMethod ||
+    carrier ||
+    trackingNumber
+
   const getSortIndicator = (key: string) => {
     if (sortKey !== key) return <span className="material-symbols-outlined text-slate-300 ml-1 text-sm">unfold_more</span>
     return <span className="material-symbols-outlined text-blue-600 ml-1 text-sm">{sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward'}</span>
@@ -489,12 +501,18 @@ export function PurchaseOrderListPage() {
             </div>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 showFilters ? 'bg-primary text-on-primary' : 'bg-surface-container-lowest ring-1 ring-outline-variant/20 text-on-surface-variant hover:bg-surface-container-low'
               }`}
             >
               <span className="material-symbols-outlined text-sm">{showFilters ? 'close' : 'tune'}</span>
               Advanced
+              {hasAdvancedFilters && !showFilters && (
+                <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-primary border-2 border-surface-container-low"></span>
+                </span>
+              )}
             </button>
           </div>
           <div className="flex items-center gap-4 text-sm text-on-surface-variant font-light">
