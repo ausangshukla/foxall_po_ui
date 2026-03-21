@@ -46,7 +46,7 @@ export function PurchaseOrderShowPage() {
         setIsLoading(true)
         const [data, definitions] = await Promise.all([
           getPurchaseOrder(poId),
-          getCustomFieldDefinitions('purchase_order'),
+          getPurchaseOrder(poId).then(po => getCustomFieldDefinitions('purchase_order', (po as any).po_type)),
         ])
         setPurchaseOrder(data)
         setFieldDefinitions(definitions)
@@ -206,6 +206,20 @@ export function PurchaseOrderShowPage() {
                   <div className="text-muted fw-medium" style={labelStyle}>Entity ID</div>
                   <div className="fw-semibold mt-1" style={{ color: 'var(--bs-heading-color)' }}>
                     {purchaseOrder.entity_id}
+                  </div>
+                </div>
+              </div>
+            </Col>
+
+            <Col md={6} lg={4}>
+              <div className="d-flex align-items-start gap-3 p-3 rounded-3" style={detailItemStyle}>
+                <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={iconCircleStyle('var(--bs-info-bg-subtle)')}>
+                  🏷️
+                </div>
+                <div>
+                  <div className="text-muted fw-medium" style={labelStyle}>PO Type</div>
+                  <div className="fw-semibold mt-1 text-capitalize" style={{ color: 'var(--bs-heading-color)' }}>
+                    {purchaseOrder.po_type}
                   </div>
                 </div>
               </div>

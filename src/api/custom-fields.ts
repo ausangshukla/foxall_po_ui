@@ -3,9 +3,11 @@ import { api } from './client'
 import type { CustomFieldDefinition } from '../types/api'
 
 export async function getCustomFieldDefinitions(
-  modelName: string
+  modelName: string,
+  tag?: string
 ): Promise<CustomFieldDefinition[]> {
-  return api.get<CustomFieldDefinition[]>(
-    `${API_ROUTES.CUSTOM_FIELD_DEFINITIONS}?model_name=${modelName}`
-  )
+  const url = tag
+    ? `${API_ROUTES.CUSTOM_FIELD_DEFINITIONS}?model_name=${modelName}&tag=${tag}`
+    : `${API_ROUTES.CUSTOM_FIELD_DEFINITIONS}?model_name=${modelName}`
+  return api.get<CustomFieldDefinition[]>(url)
 }

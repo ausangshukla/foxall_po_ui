@@ -1,5 +1,5 @@
-import { useState, FormEvent } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useState, type FormEvent } from 'react'
+import { useNavigate, Navigate } from 'react-router-dom'
 import {
   Container,
   Row,
@@ -23,8 +23,7 @@ export function LoginPage() {
 
   // Redirect if already authenticated
   if (isAuthenticated) {
-    navigate('/dashboard', { replace: true })
-    return null
+    return <Navigate to="/dashboard" replace />
   }
 
   const handleSubmit = async (e: FormEvent) => {

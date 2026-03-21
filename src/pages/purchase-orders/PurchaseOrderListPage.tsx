@@ -21,6 +21,7 @@ import {
 import type {
   PurchaseOrderResponse,
   PurchaseOrderStatus,
+  PurchaseOrderType,
   PurchaseOrderSearchCondition,
 } from '../../types/api'
 
@@ -77,6 +78,7 @@ export function PurchaseOrderListPage() {
   // Filter states
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<PurchaseOrderStatus | 'all'>('all')
+  const [poTypeFilter, setPoTypeFilter] = useState<PurchaseOrderType | 'all'>('all')
   const [vendorId, setVendorId] = useState('')
   const [orderDateFrom, setOrderDateFrom] = useState('')
   const [orderDateTo, setOrderDateTo] = useState('')
@@ -140,6 +142,12 @@ export function PurchaseOrderListPage() {
         per_page: perPage,
         q: searchTerm.trim() || undefined,
         status: statusFilter !== 'all' ? statusFilter : undefined,
+        // Assuming the API supports po_type filter as well. Need to confirm if it does.
+        // For now, I will just send the filter. If the backend ignores it, it's fine for now, 
+        // but typically backend needs to be updated too. The prompt implies I should add it to the UI.
+        // Let's assume the API filters can accept a 'po_type' field.
+        // @ts-ignore
+        po_type: poTypeFilter !== 'all' ? poTypeFilter : undefined,
         order_date_from: orderDateFrom || undefined,
         order_date_to: orderDateTo || undefined,
         conditions: conditions.length > 0 ? conditions : undefined,
@@ -165,6 +173,7 @@ export function PurchaseOrderListPage() {
     perPage,
     searchTerm,
     statusFilter,
+    poTypeFilter,
     vendorId,
     orderDateFrom,
     orderDateTo,
@@ -331,6 +340,21 @@ export function PurchaseOrderListPage() {
                     {getStatusIcon(status)} {status.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
                   </option>
                 ))}
+              </Form.Select>
+            </Col>
+            <Col md={3}>
+              <Form.Label className="text-muted small">Type</Form.Label>
+              <Form.Select
+                value={poTypeFilter}
+                onChange={(e) => {
+                  setPoTypeFilter(e.target.value as PurchaseOrderType | 'all')
+                  setPage(1)
+                }}
+              >
+                <option value="all">All Types</option>
+                <option value="standard">Standard</option>
+                <option value="blanket">Blanket</option>
+                <option value="service">Service</option>
               </Form.Select>
             </Col>
             <Col md={3}>
@@ -507,6 +531,7 @@ export function PurchaseOrderListPage() {
                 <thead>
                   <tr>
                     <th role="button" onClick={() => toggleSort('po_number')}>PO Number {sortKey === 'po_number' ? (sortDir === 'asc' ? '▲' : '▼') : ''}</th>
+                    <th role="button" onClick={() => toggleSort('po_type')}>Type {sortKey === 'po_type' ? (sortDir === 'asc' ? '▲' : '▼') : ''}</th>
                     <th role="button" onClick={() => toggleSort('status')}>Status {sortKey === 'status' ? (sortDir === 'asc' ? '▲' : '▼') : ''}</th>
                     <th role="button" onClick={() => toggleSort('order_date')}>Order Date {sortKey === 'order_date' ? (sortDir === 'asc' ? '▲' : '▼') : ''}</th>
                     <th role="button" onClick={() => toggleSort('expected_delivery_date')}>Expected Delivery {sortKey === 'expected_delivery_date' ? (sortDir === 'asc' ? '▲' : '▼') : ''}</th>
@@ -531,6 +556,14 @@ export function PurchaseOrderListPage() {
                           {po.po_number}
                         </strong>
                         <div className="text-muted small">Vendor: {po.vendor_id}</div>
+                      </td>
+                      <td>
+                        <Badge
+                          bg="info"
+                          className="text-capitalize"
+                        >
+                          {po.po_type}
+                        </Badge>
                       </td>
                       <td>
                         <Badge

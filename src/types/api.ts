@@ -41,6 +41,7 @@ export interface CustomFieldDefinition {
   field_type: 'text' | 'number' | 'checkbox' | 'select'
   hint: string | null
   possible_values: string | null
+  is_mandatory: boolean
 }
 
 // ============================================
@@ -124,6 +125,8 @@ export type PurchaseOrderStatus =
   | 'closed'
   | 'cancelled'
 
+export type PurchaseOrderType = 'standard' | 'blanket' | 'service'
+
 export type ShippingMethod = 'air' | 'sea' | 'ground' | 'express'
 
 export type ShippingTerm = 'FOB' | 'CIF' | 'EXW' | 'DDP' | 'DAP' | 'FCA' | 'CPT' | 'CIP'
@@ -134,6 +137,7 @@ export interface PurchaseOrderResponse {
   po_number: string
   vendor_id: number
   status: PurchaseOrderStatus
+  po_type: PurchaseOrderType
   order_date: string
   expected_delivery_date: string | null
   actual_delivery_date: string | null
@@ -162,6 +166,7 @@ export interface CreatePurchaseOrderRequest {
   po_number: string
   vendor_id: number
   status?: PurchaseOrderStatus
+  po_type: PurchaseOrderType
   order_date: string
   expected_delivery_date?: string | null
   actual_delivery_date?: string | null
@@ -183,6 +188,7 @@ export interface UpdatePurchaseOrderRequest {
   po_number?: string
   vendor_id?: number
   status?: PurchaseOrderStatus
+  po_type?: PurchaseOrderType
   order_date?: string
   expected_delivery_date?: string | null
   actual_delivery_date?: string | null
