@@ -20,21 +20,21 @@ export function AppNavbar() {
 
   const linkClass = (path: string) => {
     return isActive(path)
-      ? "text-sky-900 font-extrabold border-b-2 border-sky-600 pb-1 tracking-tight text-sm transition-all"
-      : "text-slate-500 hover:text-sky-700 transition-colors font-bold tracking-tight text-sm"
+      ? "text-emerald-900 font-extrabold border-b-2 border-emerald-500 pb-1 tracking-tight text-sm transition-all"
+      : "text-slate-500 hover:text-emerald-700 transition-colors font-bold tracking-tight text-sm"
   }
 
   const mobileLinkClass = (path: string) => {
     return isActive(path)
-      ? "block px-4 py-3 rounded-xl text-base font-bold text-sky-900 bg-sky-50"
+      ? "block px-4 py-3 rounded-xl text-base font-bold text-emerald-900 bg-emerald-50"
       : "block px-4 py-3 rounded-xl text-base font-bold text-slate-700 hover:bg-slate-50"
   }
 
   return (
-    <nav className="fixed top-0 w-full z-50 bg-slate-50/60 backdrop-blur-xl shadow-sm border-b border-slate-200/50">
+    <nav className="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-xl shadow-sm border-b border-slate-200/50">
       <div className="flex justify-between items-center w-full px-8 py-4 max-w-screen-2xl mx-auto">
         <div className="flex items-center gap-12">
-          <Link to="/" className="text-2xl font-extrabold tracking-tighter text-sky-900 font-headline">Foxall PO</Link>
+          <Link to="/" className="text-2xl font-extrabold tracking-tighter text-emerald-900 font-headline">Logistics Portal</Link>
           <div className="hidden md:flex gap-8 items-center">
             {isAuthenticated && (
               <Link to="/dashboard" className={linkClass('/dashboard')}>
@@ -62,10 +62,10 @@ export function AppNavbar() {
         <div className="flex items-center gap-4">
           {isAuthenticated ? (
             <>
-              <button className="p-2 hover:bg-white/40 rounded-lg transition-all text-sky-800">
+              <button className="p-2 hover:bg-emerald-50/50 rounded-lg transition-all text-emerald-800">
                 <span className="material-symbols-outlined">notifications</span>
               </button>
-              <button className="p-2 hover:bg-white/40 rounded-lg transition-all text-sky-800">
+              <button className="p-2 hover:bg-emerald-50/50 rounded-lg transition-all text-emerald-800">
                 <span className="material-symbols-outlined">settings</span>
               </button>
               <div className="relative">
@@ -76,7 +76,7 @@ export function AppNavbar() {
                   <img 
                     alt="User profile avatar" 
                     className="w-full h-full object-cover" 
-                    src={user?.avatar_url || "https://lh3.googleusercontent.com/aida-public/AB6AXuCkQpqFGsGu2vYWL_sJXeZef9uv4bnig84mURO1jkA7NAd6atprCRjzh5SJR-7pRKOr6-Op5AgpYAJUG453w6SIjDXyw5g6aO064crlKBSEWECWDH4TwsmVBVX8g28NYO2t89Fx_EejmbaVpu19JHVTW_CgrAhsJxUaCVlRJGmQjHFhxQdWZFRBfDhVlm0LxT7yjSFb801tib8WB03oofOszMTbHYUKt7zq1rmrFdj4CZw1vray4oYcF5xcDtJWVFQ1klRGK8Jm6GTO"} 
+                    src={user?.avatar_url || "https://lh3.googleusercontent.com/aida-public/AB6AXuDqhH4zzXl5JY4J-O9n5T3MXPbaK6qDXxrZl_Rh-tFDXht-miZnqQiYpKkbvGly-31nwDUAira6ibIh0uI_zOCnncgP1XC82CepYoGRH_o8BfXSGmy6xn3m8oCm86eO92AbpUcDvtgsrXcwFLBnWMXEvMtvT-fTrY2qD2UFm-YIzY7M-c9ZloxzYPXksULd8VQjIlafMgc0Zu8PSkcxSezsXAtJZoo7HKJKLm7XFr1h5Igzy8EkzpJfJ5pGARE9MXuQFxjzt0vjIw2y"} 
                   />
                 </button>
                 {isProfileOpen && (
@@ -87,7 +87,7 @@ export function AppNavbar() {
                     </div>
                     <Link 
                       to="/profile" 
-                      className="block px-4 py-2 text-sm font-bold hover:bg-slate-50 hover:text-sky-700 transition-colors"
+                      className="block px-4 py-2 text-sm font-bold hover:bg-slate-50 hover:text-emerald-700 transition-colors"
                       onClick={() => setIsProfileOpen(false)}
                     >
                       Your Profile
@@ -109,7 +109,7 @@ export function AppNavbar() {
           )}
           <button 
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 text-sky-800"
+            className="md:hidden p-2 text-emerald-800"
           >
             <span className="material-symbols-outlined">{isMobileMenuOpen ? 'close' : 'menu'}</span>
           </button>

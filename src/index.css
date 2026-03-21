@@ -79,6 +79,10 @@
     transition: background-color 0.3s ease;
   }
 
+  .editorial-shadow {
+    box-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.08);
+  }
+
   .ambient-shadow {
     box-shadow: 0 24px 48px -12px rgba(19, 27, 46, 0.08);
   }

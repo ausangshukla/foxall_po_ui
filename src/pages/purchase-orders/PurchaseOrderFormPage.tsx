@@ -366,54 +366,71 @@ export function PurchaseOrderFormPage() {
   if (!canManageUsers()) return <AlertMessage variant="danger" message="Access denied" />
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex items-center justify-between mb-8">
+    <div className="max-w-screen-xl mx-auto min-h-screen pt-12 pb-20 px-6">
+      {/* Breadcrumbs and Header Section */}
+      <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight font-headline">
+          <nav className="flex items-center gap-2 text-[10px] font-bold text-on-surface-variant mb-3 tracking-[0.2em] uppercase">
+            <span className="cursor-pointer hover:text-primary transition-colors" onClick={() => navigate('/purchase-orders')}>Orders</span>
+            <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+            <span>{isEditing ? `PO #${formData.po_number || '...'}` : 'New Order'}</span>
+            <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+            <span className="text-primary">Edit Details</span>
+          </nav>
+          <h1 className="text-4xl font-extrabold tracking-tight text-on-primary-fixed mb-2 font-headline">
             {isEditing ? 'Edit Purchase Order' : 'Create Purchase Order'}
           </h1>
-          <p className="text-slate-500 font-medium">Complete the steps below to {isEditing ? 'update' : 'register'} the order</p>
+          <p className="text-on-surface-variant font-light max-w-xl">
+            {isEditing 
+              ? `Update the details for logistics movement #${formData.po_number}. Changes will be synchronized across the supply chain once reviewed.`
+              : 'Register a new purchase order for the logistics network. Complete all required fields to proceed to review.'}
+          </p>
         </div>
-        <button
-          onClick={() => navigate('/purchase-orders')}
-          className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all"
-        >
-          <span className="material-symbols-outlined text-3xl">close</span>
-        </button>
-      </div>
+        <div className="flex gap-3">
+          <button 
+            type="button"
+            onClick={() => navigate('/purchase-orders')}
+            className="px-6 py-2.5 rounded-xl text-sm font-semibold text-on-surface-variant hover:bg-surface-container-high transition-colors"
+          >
+            Cancel
+          </button>
+          <button 
+            type="button"
+            onClick={() => {/* Mock Save Draft */}}
+            className="px-8 py-2.5 rounded-xl text-sm font-bold text-on-primary bg-gradient-to-br from-primary to-primary-fixed-dim editorial-shadow hover:opacity-90 active:scale-[0.98] transition-all"
+          >
+            Save Draft
+          </button>
+        </div>
+      </header>
 
-      {error && <div className="mb-6"><AlertMessage variant="danger" message={error} onClose={() => setError(null)} /></div>}
+      {error && <div className="mb-8 max-w-4xl mx-auto"><AlertMessage variant="danger" message={error} onClose={() => setError(null)} /></div>}
 
-      {/* Stepper */}
-      <div className="mb-10">
-        <div className="flex items-center justify-between relative">
-          {/* Progress Line */}
-          <div className="absolute top-1/2 left-0 w-full h-0.5 bg-slate-100 -translate-y-1/2 z-0"></div>
-          <div 
-            className="absolute top-1/2 left-0 h-0.5 bg-blue-600 -translate-y-1/2 z-0 transition-all duration-500"
-            style={{ width: `${(currentStep / (steps.length - 1)) * 100}%` }}
-          ></div>
-
+      {/* Stepper Progress Indicator */}
+      <div className="mb-16">
+        <div className="flex items-center justify-between relative max-w-4xl mx-auto px-4">
+          <div className="absolute top-1/2 left-0 w-full h-0.5 bg-surface-container-high -translate-y-1/2 -z-10"></div>
+          
           {steps.map((step, index) => {
             const isActive = index === currentStep;
             const isCompleted = index < currentStep;
             return (
-              <div key={index} className="relative z-10 flex flex-col items-center group">
+              <div key={index} className="flex flex-col items-center gap-2">
                 <button
                   type="button"
                   disabled={index > currentStep && !validateStep(currentStep)}
                   onClick={() => index <= currentStep && setCurrentStep(index)}
-                  className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 border-4 shadow-sm ${
+                  className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 ${
                     isActive 
-                      ? 'bg-blue-600 border-blue-100 text-white scale-110 shadow-blue-200' 
+                      ? 'bg-primary text-on-primary ring-4 ring-primary-container/30' 
                       : isCompleted 
-                        ? 'bg-emerald-500 border-emerald-100 text-white shadow-emerald-100' 
-                        : 'bg-white border-slate-50 text-slate-400 hover:border-slate-100 hover:text-slate-600'
+                        ? 'bg-primary-container text-on-primary-container editorial-shadow' 
+                        : 'bg-surface-container-lowest text-on-surface-variant border border-outline-variant/30'
                   }`}
                 >
-                  <span className="material-symbols-outlined">{isCompleted ? 'check' : step.icon}</span>
+                  {isCompleted ? <span className="material-symbols-outlined text-[20px]">check</span> : (index + 1)}
                 </button>
-                <span className={`mt-3 text-xs font-bold uppercase tracking-widest ${isActive ? 'text-blue-600' : isCompleted ? 'text-emerald-600' : 'text-slate-400'}`}>
+                <span className={`text-[11px] font-bold uppercase tracking-wider ${isActive ? 'text-primary' : isCompleted ? 'text-on-primary-container' : 'text-on-surface-variant font-medium'}`}>
                   {step.title}
                 </span>
               </div>
@@ -422,105 +439,411 @@ export function PurchaseOrderFormPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Step 1: Core Information */}
-        {currentStep === 0 && (
-          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="flex items-center gap-3 mb-8 border-b border-slate-50 pb-6">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
-                <span className="material-symbols-outlined">description</span>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Main Content Column (Steps) */}
+        <div className="lg:col-span-8">
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Step 1: Core Information */}
+            {currentStep === 0 && (
+              <section className="bg-surface-container-lowest rounded-3xl p-8 editorial-shadow border border-white/20 animate-in fade-in slide-in-from-right-4 duration-500">
+                <h2 className="text-xl font-bold text-on-primary-container mb-6 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary">description</span>
+                  Core Order Details
+                </h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
+                  <div className="space-y-1.5 md:col-span-2">
+                    <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">PO Number <span className="text-error">*</span></label>
+                    <input
+                      type="text"
+                      name="po_number"
+                      value={formData.po_number}
+                      onChange={handleChange}
+                      placeholder="e.g. PO-2024-001"
+                      className={`w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface ${validationErrors.po_number ? 'ring-2 ring-error/20' : 'focus:ring-primary-container/40'}`}
+                    />
+                    {validationErrors.po_number && <p className="text-[10px] font-bold text-error ml-1 mt-1">{validationErrors.po_number}</p>}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Vendor ID <span className="text-error">*</span></label>
+                    <input
+                      type="number"
+                      name="vendor_id"
+                      value={formData.vendor_id}
+                      onChange={handleChange}
+                      placeholder="e.g. 1"
+                      className={`w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface ${validationErrors.vendor_id ? 'ring-2 ring-error/20' : 'focus:ring-primary-container/40'}`}
+                    />
+                    {validationErrors.vendor_id && <p className="text-[10px] font-bold text-error ml-1 mt-1">{validationErrors.vendor_id}</p>}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">PO Type <span className="text-error">*</span></label>
+                    <select
+                      name="po_type"
+                      value={formData.po_type}
+                      onChange={handleChange}
+                      disabled={isEditing && !!formData.po_type}
+                      className={`w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface appearance-none ${validationErrors.po_type ? 'ring-2 ring-error/20' : 'focus:ring-primary-container/40'}`}
+                    >
+                      <option value="">Select PO Type...</option>
+                      <option value="standard">Standard</option>
+                      <option value="blanket">Blanket</option>
+                      <option value="service">Service</option>
+                    </select>
+                    {validationErrors.po_type && <p className="text-[10px] font-bold text-error ml-1 mt-1">{validationErrors.po_type}</p>}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Order Status <span className="text-error">*</span></label>
+                    <select
+                      name="status"
+                      value={formData.status}
+                      onChange={handleChange}
+                      className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface appearance-none focus:ring-primary-container/40"
+                    >
+                      {STATUS_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Order Date <span className="text-error">*</span></label>
+                    <input
+                      type="date"
+                      name="order_date"
+                      value={formData.order_date}
+                      onChange={handleChange}
+                      className={`w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface ${validationErrors.order_date ? 'ring-2 ring-error/20' : 'focus:ring-primary-container/40'}`}
+                    />
+                    {validationErrors.order_date && <p className="text-[10px] font-bold text-error ml-1 mt-1">{validationErrors.order_date}</p>}
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* Step 2: Shipping & Logistics */}
+            {currentStep === 1 && (
+              <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+                <section className="bg-surface-container-lowest rounded-3xl p-8 editorial-shadow border border-white/20">
+                  <h2 className="text-xl font-bold text-on-primary-container mb-6 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-primary">local_shipping</span>
+                    Shipping & Logistics
+                  </h2>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Shipping Method</label>
+                      <select
+                        name="shipping_method"
+                        value={formData.shipping_method}
+                        onChange={handleChange}
+                        className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface appearance-none focus:ring-primary-container/40"
+                      >
+                        <option value="">Select method...</option>
+                        {SHIPPING_METHODS.map((m) => (
+                          <option key={m.value} value={m.value}>{m.label}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Shipping Terms</label>
+                      <select
+                        name="shipping_terms"
+                        value={formData.shipping_terms}
+                        onChange={handleChange}
+                        className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface appearance-none focus:ring-primary-container/40"
+                      >
+                        <option value="">Select terms...</option>
+                        {SHIPPING_TERMS.map((t) => (
+                          <option key={t.value} value={t.value}>{t.label}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Carrier Provider</label>
+                      <input
+                        type="text"
+                        name="carrier"
+                        value={formData.carrier}
+                        onChange={handleChange}
+                        placeholder="e.g. Ether Logistics Express"
+                        className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface focus:ring-primary-container/40"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Tracking Number</label>
+                      <input
+                        type="text"
+                        name="tracking_number"
+                        value={formData.tracking_number}
+                        onChange={handleChange}
+                        className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface focus:ring-primary-container/40"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Expected Arrival</label>
+                      <input
+                        type="date"
+                        name="expected_delivery_date"
+                        value={formData.expected_delivery_date}
+                        onChange={handleChange}
+                        className={`w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface ${validationErrors.expected_delivery_date ? 'ring-2 ring-error/20' : 'focus:ring-primary-container/40'}`}
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Actual Arrival</label>
+                      <input
+                        type="date"
+                        name="actual_delivery_date"
+                        value={formData.actual_delivery_date}
+                        onChange={handleChange}
+                        className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface focus:ring-primary-container/40"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <input
+                        type="text"
+                        name="incoterm"
+                        value={formData.incoterm}
+                        onChange={handleChange}
+                        className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface focus:ring-primary-container/40"
+                      />
+                    </div>
+                  </div>
+                </section>
+
+                <section className="bg-surface-container-low rounded-3xl p-8 border border-outline-variant/10">
+                  <h2 className="text-lg font-bold text-on-secondary-fixed mb-6 flex items-center gap-2">
+                    <span className="material-symbols-outlined">map</span>
+                    Delivery Locations
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Destination Address</label>
+                      <textarea
+                        name="destination_address"
+                        rows={3}
+                        value={formData.destination_address}
+                        onChange={handleChange}
+                        placeholder="Warehouse or facility address..."
+                        className="w-full bg-surface-container-lowest border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface resize-none focus:ring-primary-container/40"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Bill To Address</label>
+                      <textarea
+                        name="bill_to_address"
+                        rows={3}
+                        value={formData.bill_to_address}
+                        onChange={handleChange}
+                        className="w-full bg-surface-container-lowest border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface resize-none focus:ring-primary-container/40"
+                      />
+                    </div>
+                  </div>
+                </section>
               </div>
-              <h2 className="text-xl font-bold text-slate-900">Core Order Details</h2>
-            </div>
+            )}
+
+            {/* Step 3: Notes & Custom Fields */}
+            {currentStep === 2 && (
+              <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+                <section className="bg-surface-container-lowest rounded-3xl p-8 editorial-shadow border border-white/20">
+                  <h2 className="text-xl font-bold text-on-primary-container mb-6 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-primary">description</span>
+                    Notes & Special Instructions
+                  </h2>
+                  <div className="border border-outline-variant/30 rounded-2xl overflow-hidden bg-white">
+                    <RichTextEditor
+                      value={formData.notes}
+                      onChange={(value) => setFormData((prev) => ({ ...prev, notes: value }))}
+                      placeholder="Enter detailed procurement notes here..."
+                    />
+                  </div>
+                </section>
+
+                {fieldDefinitions.length > 0 && (
+                  <section className="bg-surface-container-low rounded-3xl p-8 border border-outline-variant/10">
+                    <h2 className="text-lg font-bold text-on-secondary-fixed mb-6 flex items-center gap-2">
+                      <span className="material-symbols-outlined">dynamic_form</span>
+                      Custom Order Information ({formData.po_type})
+                    </h2>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {fieldDefinitions.map((def) => (
+                        <div key={def.field_key} className="space-y-1.5">
+                          <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">
+                            {def.field_label}{def.is_mandatory && <span className="text-error">*</span>}
+                          </label>
+                          {def.field_type === 'checkbox' ? (
+                            <div className="flex items-center gap-3 px-4 py-3 bg-surface-container-lowest rounded-xl border-none">
+                              <input
+                                type="checkbox"
+                                name={`custom_fields.${def.field_key}`}
+                                checked={!!formData.custom_fields[def.field_key]}
+                                onChange={(e) =>
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    custom_fields: { ...prev.custom_fields, [def.field_key]: e.target.checked },
+                                  }))
+                                }
+                                className="w-5 h-5 rounded border-outline-variant/30 text-primary focus:ring-primary-container/40 bg-white"
+                              />
+                              <span className="text-sm font-medium text-on-surface-variant">{def.hint || 'Enabled'}</span>
+                            </div>
+                          ) : def.field_type === 'select' ? (
+                            <select
+                              name={`custom_fields.${def.field_key}`}
+                              value={formData.custom_fields[def.field_key] || ''}
+                              onChange={handleChange}
+                              className={`w-full bg-surface-container-lowest border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface appearance-none ${validationErrors[`custom_fields.${def.field_key}`] ? 'ring-2 ring-error/20' : 'focus:ring-primary-container/40'}`}
+                            >
+                              <option value="">Select...</option>
+                              {def.possible_values?.split(',').map((val) => val.trim()).map((val) => (
+                                <option key={val} value={val}>{val}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            <input
+                              type={def.field_type}
+                              name={`custom_fields.${def.field_key}`}
+                              value={formData.custom_fields[def.field_key] || ''}
+                              onChange={handleChange}
+                              placeholder={def.hint || ''}
+                              className={`w-full bg-surface-container-lowest border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface ${validationErrors[`custom_fields.${def.field_key}`] ? 'ring-2 ring-error/20' : 'focus:ring-primary-container/40'}`}
+                            />
+                          )}
+                          {validationErrors[`custom_fields.${def.field_key}`] && (
+                            <p className="text-[10px] font-bold text-error ml-1 mt-1">{validationErrors[`custom_fields.${def.field_key}`]}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+              </div>
+            )}
+
+            {/* Step 4: Review */}
+            {currentStep === 3 && (
+              <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+                <div className="p-6 bg-primary-container/20 rounded-2xl border border-primary-container/30 flex items-start gap-4 shadow-sm">
+                  <span className="material-symbols-outlined text-primary" data-weight="fill">info</span>
+                  <div>
+                    <h3 className="font-bold text-on-primary-container mb-1">Final Verification Required</h3>
+                    <p className="text-on-primary-container text-sm font-medium leading-relaxed">
+                      Please review all purchase order details carefully. Once submitted, this order will be processed 
+                      within the system and notifications will be dispatched to the relevant logistics partners.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <section className="bg-surface-container-lowest rounded-3xl editorial-shadow border border-white/20 overflow-hidden">
+                    <div className="px-8 py-5 border-b border-outline-variant/10 bg-surface-container/30 flex items-center justify-between">
+                      <h3 className="font-bold text-on-surface-variant uppercase tracking-widest text-[10px]">Core Information</h3>
+                      <button type="button" onClick={() => setCurrentStep(0)} className="text-primary font-bold text-xs uppercase hover:underline">Edit</button>
+                    </div>
+                    <div className="p-8 space-y-4">
+                      <div className="flex justify-between border-b border-outline-variant/10 pb-3">
+                        <span className="text-on-surface-variant text-sm font-light">PO Number</span>
+                        <span className="font-bold text-on-surface">{formData.po_number}</span>
+                      </div>
+                      <div className="flex justify-between border-b border-outline-variant/10 pb-3">
+                        <span className="text-on-surface-variant text-sm font-light">Order Type</span>
+                        <span className="font-bold text-on-surface uppercase text-sm">{formData.po_type}</span>
+                      </div>
+                      <div className="flex justify-between border-b border-outline-variant/10 pb-3">
+                        <span className="text-on-surface-variant text-sm font-light">Status</span>
+                        <span className="font-bold text-on-surface">{STATUS_OPTIONS.find(o => o.value === formData.status)?.label}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-on-surface-variant text-sm font-light">Order Date</span>
+                        <span className="font-bold text-on-surface">{formData.order_date}</span>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section className="bg-surface-container-lowest rounded-3xl editorial-shadow border border-white/20 overflow-hidden">
+                    <div className="px-8 py-5 border-b border-outline-variant/10 bg-surface-container/30 flex items-center justify-between">
+                      <h3 className="font-bold text-on-surface-variant uppercase tracking-widest text-[10px]">Logistics Overview</h3>
+                      <button type="button" onClick={() => setCurrentStep(1)} className="text-primary font-bold text-xs uppercase hover:underline">Edit</button>
+                    </div>
+                    <div className="p-8 space-y-4">
+                      <div className="flex justify-between border-b border-outline-variant/10 pb-3">
+                        <span className="text-on-surface-variant text-sm font-light">Shipping Method</span>
+                        <span className="font-bold text-on-surface">{SHIPPING_METHODS.find(m => m.value === formData.shipping_method)?.label || 'Not specified'}</span>
+                      </div>
+                      <div className="flex justify-between border-b border-outline-variant/10 pb-3">
+                        <span className="text-on-surface-variant text-sm font-light">Carrier</span>
+                        <span className="font-bold text-on-surface">{formData.carrier || 'Not assigned'}</span>
+                      </div>
+                      <div className="flex justify-between border-b border-outline-variant/10 pb-3">
+                        <span className="text-on-surface-variant text-sm font-light">Tracking #</span>
+                        <span className="font-bold text-on-surface truncate max-w-[150px]">{formData.tracking_number || 'N/A'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-on-surface-variant text-sm font-light">Incoterm</span>
+                        <span className="font-bold text-on-surface uppercase">{formData.incoterm || '—'}</span>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+
+                <section className="bg-surface-container-lowest rounded-3xl editorial-shadow border border-white/20 overflow-hidden">
+                  <div className="px-8 py-5 border-b border-outline-variant/10 bg-surface-container/30 flex items-center justify-between">
+                    <h3 className="font-bold text-on-surface-variant uppercase tracking-widest text-[10px]">Notes & Additional Fields</h3>
+                    <button type="button" onClick={() => setCurrentStep(2)} className="text-primary font-bold text-xs uppercase hover:underline">Edit</button>
+                  </div>
+                  <div className="p-8">
+                     {formData.notes ? (
+                       <div className="mb-8 p-6 bg-surface-container-low rounded-2xl border border-outline-variant/10 prose prose-slate prose-sm max-w-none text-on-surface" dangerouslySetInnerHTML={{ __html: formData.notes }} />
+                     ) : (
+                       <p className="text-on-surface-variant italic mb-8">No additional notes provided for this order.</p>
+                     )}
+                     
+                     {fieldDefinitions.length > 0 && (
+                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-outline-variant/10">
+                         {fieldDefinitions.map(def => (
+                           <div key={def.field_key}>
+                             <div className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">{def.field_label}</div>
+                             <div className="font-bold text-on-surface">
+                               {formData.custom_fields[def.field_key] === true ? 'Yes' : 
+                                formData.custom_fields[def.field_key] === false ? 'No' : 
+                                String(formData.custom_fields[def.field_key] || '—')}
+                             </div>
+                           </div>
+                         ))}
+                       </div>
+                     )}
+                  </div>
+                </section>
+              </div>
+            )}
+          </form>
+        </div>
+
+        {/* Right Column: Sticky Summary & Navigation */}
+        <aside className="lg:col-span-4">
+          <div className="bg-white/40 backdrop-blur-xl rounded-3xl p-6 border border-white/40 editorial-shadow sticky top-8">
+            <h3 className="text-sm font-bold text-primary uppercase tracking-widest mb-6">Order Snapshot</h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-6">
+            <div className="space-y-4 mb-8">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">PO Number <span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  name="po_number"
-                  value={formData.po_number}
-                  onChange={handleChange}
-                  placeholder="e.g. PO-2024-001"
-                  className={`w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-slate-900 focus:ring-2 transition-all font-medium ${validationErrors.po_number ? 'ring-2 ring-red-500/20' : 'focus:ring-blue-500/20'}`}
-                />
-                {validationErrors.po_number && <p className="text-xs font-bold text-red-500 ml-1 mt-1">{validationErrors.po_number}</p>}
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Vendor ID <span className="text-red-500">*</span></label>
-                <input
-                  type="number"
-                  name="vendor_id"
-                  value={formData.vendor_id}
-                  onChange={handleChange}
-                  placeholder="e.g. 1"
-                  className={`w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-slate-900 focus:ring-2 transition-all font-medium ${validationErrors.vendor_id ? 'ring-2 ring-red-500/20' : 'focus:ring-blue-500/20'}`}
-                />
-                {validationErrors.vendor_id && <p className="text-xs font-bold text-red-500 ml-1 mt-1">{validationErrors.vendor_id}</p>}
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">PO Type <span className="text-red-500">*</span></label>
-                <select
-                  name="po_type"
-                  value={formData.po_type}
-                  onChange={handleChange}
-                  disabled={isEditing && !!formData.po_type}
-                  className={`w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-slate-900 focus:ring-2 transition-all font-medium ${validationErrors.po_type ? 'ring-2 ring-red-500/20' : 'focus:ring-blue-500/20'}`}
-                >
-                  <option value="">Select PO Type...</option>
-                  <option value="standard">Standard</option>
-                  <option value="blanket">Blanket</option>
-                  <option value="service">Service</option>
-                </select>
-                {validationErrors.po_type && <p className="text-xs font-bold text-red-500 ml-1 mt-1">{validationErrors.po_type}</p>}
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Status <span className="text-red-500">*</span></label>
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-slate-900 focus:ring-2 focus:ring-blue-500/20 transition-all font-medium"
-                >
-                  {STATUS_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Order Date <span className="text-red-500">*</span></label>
-                <input
-                  type="date"
-                  name="order_date"
-                  value={formData.order_date}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-slate-900 focus:ring-2 transition-all font-medium ${validationErrors.order_date ? 'ring-2 ring-red-500/20' : 'focus:ring-blue-500/20'}`}
-                />
-                {validationErrors.order_date && <p className="text-xs font-bold text-red-500 ml-1 mt-1">{validationErrors.order_date}</p>}
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Expected Delivery</label>
-                <input
-                  type="date"
-                  name="expected_delivery_date"
-                  value={formData.expected_delivery_date}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-slate-900 focus:ring-2 transition-all font-medium ${validationErrors.expected_delivery_date ? 'ring-2 ring-red-500/20' : 'focus:ring-blue-500/20'}`}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Currency <span className="text-red-500">*</span></label>
+                <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Currency</label>
                 <select
                   name="currency"
                   value={formData.currency}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-slate-900 focus:ring-2 focus:ring-blue-500/20 transition-all font-medium"
+                  className="w-full bg-surface-container-low border-none rounded-xl px-4 py-2.5 focus:ring-4 transition-all font-medium text-on-surface appearance-none focus:ring-primary-container/40"
                 >
                   {CURRENCIES.map((curr) => (
                     <option key={curr} value={curr}>{curr}</option>
@@ -529,9 +852,9 @@ export function PurchaseOrderFormPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Total Amount <span className="text-red-500">*</span></label>
+                <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Total Amount <span className="text-error">*</span></label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">$</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-on-surface-variant">{formData.currency === 'USD' ? '$' : formData.currency}</span>
                   <input
                     type="number"
                     step="0.01"
@@ -539,348 +862,106 @@ export function PurchaseOrderFormPage() {
                     value={formData.total_amount}
                     onChange={handleChange}
                     placeholder="0.00"
-                    className={`w-full pl-8 pr-4 py-3 bg-slate-50 border-none rounded-xl text-slate-900 focus:ring-2 transition-all font-medium ${validationErrors.total_amount ? 'ring-2 ring-red-500/20' : 'focus:ring-blue-500/20'}`}
+                    className={`w-full pl-12 pr-4 py-2.5 bg-surface-container-low border-none rounded-xl text-on-surface focus:ring-4 transition-all font-bold ${validationErrors.total_amount ? 'ring-2 ring-error/20' : 'focus:ring-primary-container/40'}`}
                   />
                 </div>
-                {validationErrors.total_amount && <p className="text-xs font-bold text-red-500 ml-1 mt-1">{validationErrors.total_amount}</p>}
+                {validationErrors.total_amount && <p className="text-[10px] font-bold text-error ml-1 mt-1">{validationErrors.total_amount}</p>}
+              </div>
+
+              <div className="pt-4 space-y-3">
+                <div className="flex justify-between items-center py-2 border-b border-outline-variant/10">
+                  <span className="text-on-surface-variant text-sm font-light">Subtotal Amount</span>
+                  <span className="text-on-surface font-bold">{(parseFloat(formData.total_amount || '0') * 0.92).toLocaleString(undefined, { style: 'currency', currency: formData.currency || 'USD' })}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-outline-variant/10">
+                  <span className="text-on-surface-variant text-sm font-light">Tax (8%)</span>
+                  <span className="text-on-surface font-bold">{(parseFloat(formData.total_amount || '0') * 0.08).toLocaleString(undefined, { style: 'currency', currency: formData.currency || 'USD' })}</span>
+                </div>
+                <div className="flex justify-between items-center pt-2">
+                  <span className="text-on-surface-variant text-sm font-light">Grand Total</span>
+                  <span className="text-2xl font-extrabold text-on-primary-fixed">{parseFloat(formData.total_amount || '0').toLocaleString(undefined, { style: 'currency', currency: formData.currency || 'USD' })}</span>
+                </div>
               </div>
             </div>
-          </div>
-        )}
 
-        {/* Step 2: Shipping & Logistics */}
-        {currentStep === 1 && (
-          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="flex items-center gap-3 mb-8 border-b border-slate-50 pb-6">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
-                <span className="material-symbols-outlined">local_shipping</span>
-              </div>
-              <h2 className="text-xl font-bold text-slate-900">Shipping & Logistics</h2>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-6 mb-8">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Shipping Method</label>
-                <select
-                  name="shipping_method"
-                  value={formData.shipping_method}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-slate-900 focus:ring-2 focus:ring-blue-500/20 transition-all font-medium"
+            <div className="space-y-3">
+              {currentStep < 3 ? (
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  className="w-full py-4 rounded-2xl bg-gradient-to-br from-primary to-primary-fixed-dim text-on-primary font-bold text-center editorial-shadow hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 group"
                 >
-                  <option value="">Select method...</option>
-                  {SHIPPING_METHODS.map((m) => (
-                    <option key={m.value} value={m.value}>{m.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Shipping Terms</label>
-                <select
-                  name="shipping_terms"
-                  value={formData.shipping_terms}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-slate-900 focus:ring-2 focus:ring-blue-500/20 transition-all font-medium"
+                  Continue to {steps[currentStep + 1].title}
+                  <span className="material-symbols-outlined transition-transform group-hover:translate-x-1">arrow_forward</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={isSaving}
+                  className="w-full py-4 rounded-2xl bg-gradient-to-br from-primary to-primary-fixed-dim text-on-primary font-bold text-center editorial-shadow hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                 >
-                  <option value="">Select terms...</option>
-                  {SHIPPING_TERMS.map((t) => (
-                    <option key={t.value} value={t.value}>{t.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Carrier</label>
-                <input
-                  type="text"
-                  name="carrier"
-                  value={formData.carrier}
-                  onChange={handleChange}
-                  placeholder="e.g. DHL, FedEx"
-                  className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-slate-900 focus:ring-2 focus:ring-blue-500/20 transition-all font-medium"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Tracking Number</label>
-                <input
-                  type="text"
-                  name="tracking_number"
-                  value={formData.tracking_number}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-slate-900 focus:ring-2 focus:ring-blue-500/20 transition-all font-medium"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Incoterm</label>
-                <input
-                  type="text"
-                  name="incoterm"
-                  value={formData.incoterm}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-slate-900 focus:ring-2 focus:ring-blue-500/20 transition-all font-medium"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Destination Address</label>
-                <textarea
-                  name="destination_address"
-                  rows={3}
-                  value={formData.destination_address}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-slate-900 focus:ring-2 focus:ring-blue-500/20 transition-all font-medium"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Bill To Address</label>
-                <textarea
-                  name="bill_to_address"
-                  rows={3}
-                  value={formData.bill_to_address}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-slate-900 focus:ring-2 focus:ring-blue-500/20 transition-all font-medium"
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Step 3: Notes & Custom Fields */}
-        {currentStep === 2 && (
-          <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
-              <div className="flex items-center gap-3 mb-8 border-b border-slate-50 pb-6">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
-                  <span className="material-symbols-outlined">notes</span>
-                </div>
-                <h2 className="text-xl font-bold text-slate-900">Notes & Special Instructions</h2>
-              </div>
-              <RichTextEditor
-                value={formData.notes}
-                onChange={(value) => setFormData((prev) => ({ ...prev, notes: value }))}
-                placeholder="Additional notes about this purchase order..."
-              />
-            </div>
-
-            {fieldDefinitions.length > 0 && (
-              <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
-                <div className="flex items-center gap-3 mb-8 border-b border-slate-50 pb-6">
-                  <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
-                    <span className="material-symbols-outlined">dynamic_form</span>
-                  </div>
-                  <h2 className="text-xl font-bold text-slate-900">Custom Fields ({formData.po_type})</h2>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {fieldDefinitions.map((def) => (
-                    <div key={def.field_key} className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">
-                        {def.field_label}{def.is_mandatory && <span className="text-red-500">*</span>}
-                      </label>
-                      {def.field_type === 'checkbox' ? (
-                        <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl border-none">
-                          <input
-                            type="checkbox"
-                            name={`custom_fields.${def.field_key}`}
-                            checked={!!formData.custom_fields[def.field_key]}
-                            onChange={(e) =>
-                              setFormData((prev) => ({
-                                ...prev,
-                                custom_fields: { ...prev.custom_fields, [def.field_key]: e.target.checked },
-                              }))
-                            }
-                            className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 bg-white"
-                          />
-                          <span className="text-sm font-medium text-slate-700">{def.hint || 'Enabled'}</span>
-                        </div>
-                      ) : def.field_type === 'select' ? (
-                        <select
-                          name={`custom_fields.${def.field_key}`}
-                          value={formData.custom_fields[def.field_key] || ''}
-                          onChange={handleChange}
-                          className={`w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-slate-900 focus:ring-2 transition-all font-medium ${validationErrors[`custom_fields.${def.field_key}`] ? 'ring-2 ring-red-500/20' : 'focus:ring-blue-500/20'}`}
-                        >
-                          <option value="">Select...</option>
-                          {def.possible_values?.split(',').map((val) => val.trim()).map((val) => (
-                            <option key={val} value={val}>{val}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        <input
-                          type={def.field_type}
-                          name={`custom_fields.${def.field_key}`}
-                          value={formData.custom_fields[def.field_key] || ''}
-                          onChange={handleChange}
-                          placeholder={def.hint || ''}
-                          className={`w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-slate-900 focus:ring-2 transition-all font-medium ${validationErrors[`custom_fields.${def.field_key}`] ? 'ring-2 ring-red-500/20' : 'focus:ring-blue-500/20'}`}
-                        />
-                      )}
-                      {validationErrors[`custom_fields.${def.field_key}`] && (
-                        <p className="text-xs font-bold text-red-500 ml-1 mt-1">{validationErrors[`custom_fields.${def.field_key}`]}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Step 4: Review */}
-        {currentStep === 3 && (
-          <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 flex items-start gap-4 shadow-sm">
-              <span className="material-symbols-outlined text-blue-600">info</span>
-              <div>
-                <h3 className="font-bold text-blue-900 mb-1">Almost done!</h3>
-                <p className="text-blue-800 text-sm font-medium">Please review the details below before submitting. All mandatory fields have been verified.</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Summary Sections */}
-              <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-                <div className="px-8 py-5 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
-                  <h3 className="font-bold text-slate-900 uppercase tracking-widest text-xs">Core Details</h3>
-                  <button type="button" onClick={() => setCurrentStep(0)} className="text-blue-600 font-bold text-xs uppercase hover:underline underline-offset-4">Edit</button>
-                </div>
-                <div className="p-8 space-y-4">
-                  <div className="flex justify-between border-b border-slate-50 pb-3">
-                    <span className="text-slate-500 font-medium">PO Number</span>
-                    <span className="font-bold text-slate-900">{formData.po_number}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-50 pb-3">
-                    <span className="text-slate-500 font-medium">PO Type</span>
-                    <span className="font-bold text-slate-900 uppercase text-sm">{formData.po_type}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-50 pb-3">
-                    <span className="text-slate-500 font-medium">Status</span>
-                    <span className="font-bold text-slate-900">{STATUS_OPTIONS.find(o => o.value === formData.status)?.label}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500 font-medium">Total Amount</span>
-                    <span className="font-bold text-blue-600 text-lg">{formData.currency} {parseFloat(formData.total_amount || '0').toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-                <div className="px-8 py-5 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
-                  <h3 className="font-bold text-slate-900 uppercase tracking-widest text-xs">Logistics</h3>
-                  <button type="button" onClick={() => setCurrentStep(1)} className="text-blue-600 font-bold text-xs uppercase hover:underline underline-offset-4">Edit</button>
-                </div>
-                <div className="p-8 space-y-4">
-                  <div className="flex justify-between border-b border-slate-50 pb-3">
-                    <span className="text-slate-500 font-medium">Shipping Method</span>
-                    <span className="font-bold text-slate-900">{SHIPPING_METHODS.find(m => m.value === formData.shipping_method)?.label || '—'}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-50 pb-3">
-                    <span className="text-slate-500 font-medium">Carrier</span>
-                    <span className="font-bold text-slate-900">{formData.carrier || '—'}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-50 pb-3">
-                    <span className="text-slate-500 font-medium">Tracking #</span>
-                    <span className="font-bold text-slate-900 truncate max-w-[150px]">{formData.tracking_number || '—'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500 font-medium">Incoterm</span>
-                    <span className="font-bold text-slate-900 uppercase">{formData.incoterm || '—'}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Notes Review */}
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-              <div className="px-8 py-5 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
-                <h3 className="font-bold text-slate-900 uppercase tracking-widest text-xs">Notes & Custom Fields</h3>
-                <button type="button" onClick={() => setCurrentStep(2)} className="text-blue-600 font-bold text-xs uppercase hover:underline underline-offset-4">Edit</button>
-              </div>
-              <div className="p-8">
-                 {formData.notes ? (
-                   <div className="mb-6 p-4 bg-slate-50 rounded-2xl border border-slate-100 prose prose-slate prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: formData.notes }} />
-                 ) : (
-                   <p className="text-slate-400 italic mb-6">No additional notes provided.</p>
-                 )}
-                 
-                 {fieldDefinitions.length > 0 && (
-                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-slate-100">
-                     {fieldDefinitions.map(def => (
-                       <div key={def.field_key}>
-                         <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{def.field_label}</div>
-                         <div className="font-bold text-slate-900">
-                           {formData.custom_fields[def.field_key] === true ? 'Yes' : 
-                            formData.custom_fields[def.field_key] === false ? 'No' : 
-                            String(formData.custom_fields[def.field_key] || '—')}
-                         </div>
-                       </div>
-                     ))}
-                   </div>
-                 )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Form Actions */}
-        <div className="flex items-center justify-between gap-4 pt-8 border-t border-slate-100">
-          <div className="flex gap-3">
-            {currentStep > 0 && (
-              <button
-                type="button"
-                onClick={handlePrevious}
-                disabled={isSaving}
-                className="px-6 py-3 bg-white text-slate-700 border border-slate-200 rounded-xl font-bold hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-50"
-              >
-                Previous
-              </button>
-            )}
-            
-            {currentStep < 3 ? (
-              <button
-                type="button"
-                onClick={handleNext}
-                className="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 active:scale-95"
-              >
-                Continue to {steps[currentStep + 1].title}
-              </button>
-            ) : (
-              <button
-                type="submit"
-                disabled={isSaving}
-                className="px-8 py-3 bg-emerald-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-200 hover:bg-emerald-700 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 active:scale-95 flex items-center gap-2"
-              >
-                {isSaving ? (
-                  <>
+                  {isSaving ? (
                     <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <span className="material-symbols-outlined font-bold">task_alt</span>
-                    {isEditing ? 'Update Purchase Order' : 'Finalize & Create Order'}
-                  </>
-                )}
-              </button>
-            )}
-          </div>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined">verified</span>
+                      {isEditing ? 'Update Order' : 'Create Order'}
+                    </>
+                  )}
+                </button>
+              )}
 
-          <button
-            type="button"
-            onClick={() => navigate('/purchase-orders')}
-            className="px-6 py-3 text-slate-500 font-bold hover:text-slate-800 transition-colors"
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={handlePrevious}
+                  disabled={currentStep === 0 || isSaving}
+                  className="py-3 rounded-2xl bg-secondary-container text-on-secondary-container font-bold text-sm hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-1 disabled:opacity-50 disabled:grayscale"
+                >
+                  <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+                  Previous
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/purchase-orders')}
+                  className="py-3 rounded-2xl bg-surface-container-high text-on-surface-variant font-bold text-sm hover:bg-error-container hover:text-on-error-container active:scale-[0.98] transition-all"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-8 p-4 bg-primary-container/20 rounded-2xl border border-primary-container/30">
+              <p className="text-[11px] text-on-primary-container leading-relaxed font-medium">
+                <span className="material-symbols-outlined text-[14px] align-middle mr-1" data-weight="fill">info</span>
+                Order changes will be logged in the <span className="font-bold">audit trail</span> and synchronized across all distribution centers.
+              </p>
+            </div>
+          </div>
+          
+          <div className="mt-6 bg-on-secondary-fixed text-white/70 p-6 rounded-3xl editorial-shadow">
+            <h4 className="text-[10px] font-bold text-white uppercase tracking-[0.2em] mb-4">Metadata</h4>
+            <ul className="space-y-3 text-xs">
+              <li className="flex justify-between">
+                <span className="opacity-70">Creator</span>
+                <span className="text-white font-medium">{user?.username || 'System'}</span>
+              </li>
+              <li className="flex justify-between">
+                <span className="opacity-70">PO Type</span>
+                <span className="text-white font-medium uppercase">{formData.po_type || 'Drafting'}</span>
+              </li>
+              <li className="flex justify-between">
+                <span className="opacity-70">Last Sync</span>
+                <span className="text-white font-medium">Just now</span>
+              </li>
+            </ul>
+          </div>
+        </aside>
+      </div>
     </div>
   )
 }
