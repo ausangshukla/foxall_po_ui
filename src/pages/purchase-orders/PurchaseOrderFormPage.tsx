@@ -621,9 +621,9 @@ export function PurchaseOrderFormPage() {
                   </div>
                 </section>
 
-                <section className="bg-surface-container-low rounded-3xl p-8 border border-outline-variant/10">
-                  <h2 className="text-lg font-bold text-on-secondary-fixed mb-6 flex items-center gap-2">
-                    <span className="material-symbols-outlined">map</span>
+                <section className="bg-surface-container-lowest rounded-3xl p-8 editorial-shadow border border-white/20">
+                  <h2 className="text-xl font-bold text-on-primary-container mb-6 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-primary">map</span>
                     Delivery Locations
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -635,7 +635,7 @@ export function PurchaseOrderFormPage() {
                         value={formData.destination_address}
                         onChange={handleChange}
                         placeholder="Warehouse or facility address..."
-                        className="w-full bg-surface-container-lowest border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface resize-none focus:ring-primary-container/40"
+                        className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface resize-none focus:ring-primary-container/40"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -645,7 +645,7 @@ export function PurchaseOrderFormPage() {
                         rows={3}
                         value={formData.bill_to_address}
                         onChange={handleChange}
-                        className="w-full bg-surface-container-lowest border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface resize-none focus:ring-primary-container/40"
+                        className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface resize-none focus:ring-primary-container/40"
                       />
                     </div>
                   </div>
@@ -671,9 +671,9 @@ export function PurchaseOrderFormPage() {
                 </section>
 
                 {fieldDefinitions.length > 0 && (
-                  <section className="bg-surface-container-low rounded-3xl p-8 border border-outline-variant/10">
-                    <h2 className="text-lg font-bold text-on-secondary-fixed mb-6 flex items-center gap-2">
-                      <span className="material-symbols-outlined">dynamic_form</span>
+                  <section className="bg-surface-container-lowest rounded-3xl p-8 editorial-shadow border border-white/20">
+                    <h2 className="text-xl font-bold text-on-primary-container mb-6 flex items-center gap-2">
+                      <span className="material-symbols-outlined text-primary">dynamic_form</span>
                       Custom Order Information ({formData.po_type})
                     </h2>
                     
@@ -684,7 +684,7 @@ export function PurchaseOrderFormPage() {
                             {def.field_label}{def.is_mandatory && <span className="text-error">*</span>}
                           </label>
                           {def.field_type === 'checkbox' ? (
-                            <div className="flex items-center gap-3 px-4 py-3 bg-surface-container-lowest rounded-xl border-none">
+                            <div className="flex items-center gap-3 px-4 py-3 bg-surface-container-low rounded-xl border-none">
                               <input
                                 type="checkbox"
                                 name={`custom_fields.${def.field_key}`}
@@ -704,7 +704,7 @@ export function PurchaseOrderFormPage() {
                               name={`custom_fields.${def.field_key}`}
                               value={formData.custom_fields[def.field_key] || ''}
                               onChange={handleChange}
-                              className={`w-full bg-surface-container-lowest border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface appearance-none ${validationErrors[`custom_fields.${def.field_key}`] ? 'ring-2 ring-error/20' : 'focus:ring-primary-container/40'}`}
+                              className={`w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface appearance-none ${validationErrors[`custom_fields.${def.field_key}`] ? 'ring-2 ring-error/20' : 'focus:ring-primary-container/40'}`}
                             >
                               <option value="">Select...</option>
                               {def.possible_values?.split(',').map((val) => val.trim()).map((val) => (
@@ -718,7 +718,7 @@ export function PurchaseOrderFormPage() {
                               value={formData.custom_fields[def.field_key] || ''}
                               onChange={handleChange}
                               placeholder={def.hint || ''}
-                              className={`w-full bg-surface-container-lowest border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface ${validationErrors[`custom_fields.${def.field_key}`] ? 'ring-2 ring-error/20' : 'focus:ring-primary-container/40'}`}
+                              className={`w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface ${validationErrors[`custom_fields.${def.field_key}`] ? 'ring-2 ring-error/20' : 'focus:ring-primary-container/40'}`}
                             />
                           )}
                           {validationErrors[`custom_fields.${def.field_key}`] && (

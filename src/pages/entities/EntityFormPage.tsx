@@ -131,123 +131,201 @@ export function EntityFormPage() {
   if (!canManageUsers()) return <AlertMessage variant="danger" message="Access denied" />
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex items-center justify-between mb-8">
+    <div className="max-w-screen-xl mx-auto min-h-screen pt-12 pb-20 px-6">
+      {/* Breadcrumbs and Header Section */}
+      <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight font-headline">
+          <nav className="flex items-center gap-2 text-[10px] font-bold text-on-surface-variant mb-3 tracking-[0.2em] uppercase">
+            <span className="cursor-pointer hover:text-primary transition-colors" onClick={() => navigate('/entities')}>Entities</span>
+            <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+            <span>{isEditing ? formData.name : 'New Entity'}</span>
+            <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+            <span className="text-primary">Edit Configuration</span>
+          </nav>
+          <h1 className="text-4xl font-extrabold tracking-tight text-on-primary-fixed mb-2 font-headline">
             {isEditing ? 'Configure Entity' : 'Register New Entity'}
           </h1>
-          <p className="text-slate-500 font-medium">Define organization structure and digital identity</p>
+          <p className="text-on-surface-variant font-light max-w-xl">
+            Define organization structure and digital identity for subsidiaries or distribution nodes within the supply chain.
+          </p>
         </div>
-        <button
-          onClick={() => navigate('/entities')}
-          className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all"
-        >
-          <span className="material-symbols-outlined text-3xl">close</span>
-        </button>
-      </div>
-
-      {error && <div className="mb-6"><AlertMessage variant="danger" message={error} onClose={() => setError(null)} /></div>}
-
-      <form onSubmit={handleSubmit} className="space-y-8">
-        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
-          <div className="flex items-center gap-3 mb-8 border-b border-slate-50 pb-6">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
-              <span className="material-symbols-outlined">corporate_fare</span>
-            </div>
-            <h2 className="text-xl font-bold text-slate-900">Entity Details</h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Entity Name <span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="e.g. Foxall Global Logistics"
-                className={`w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-slate-900 focus:ring-2 transition-all font-medium ${validationErrors.name ? 'ring-2 ring-red-500/20' : 'focus:ring-blue-500/20'}`}
-              />
-              {validationErrors.name && <p className="text-xs font-bold text-red-500 ml-1 mt-1">{validationErrors.name}</p>}
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Entity Category <span className="text-red-500">*</span></label>
-              <select
-                name="entity_type"
-                value={formData.entity_type}
-                onChange={handleChange}
-                className={`w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-slate-900 focus:ring-2 transition-all font-medium ${validationErrors.entity_type ? 'ring-2 ring-red-500/20' : 'focus:ring-blue-500/20'}`}
-              >
-                {ENTITY_TYPES.map(type => (
-                  <option key={type} value={type}>
-                    {type.charAt(0).toUpperCase() + type.slice(1)}
-                  </option>
-                ))}
-              </select>
-              {validationErrors.entity_type && <p className="text-xs font-bold text-red-500 ml-1 mt-1">{validationErrors.entity_type}</p>}
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Digital Presence (URL)</label>
-              <input
-                type="url"
-                name="url"
-                value={formData.url}
-                onChange={handleChange}
-                placeholder="https://foxall-logistics.com"
-                className={`w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-slate-900 focus:ring-2 transition-all font-medium ${validationErrors.url ? 'ring-2 ring-red-500/20' : 'focus:ring-blue-500/20'}`}
-              />
-              <p className="text-[10px] font-bold text-slate-400 mt-1 ml-1 uppercase">Optional: Must include http:// or https://</p>
-              {validationErrors.url && <p className="text-xs font-bold text-red-500 ml-1 mt-1">{validationErrors.url}</p>}
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Physical Address</label>
-              <textarea
-                name="address"
-                rows={1}
-                value={formData.address}
-                onChange={handleChange}
-                placeholder="HQ or Branch Address"
-                className="w-full px-4 py-3 bg-slate-50 border-none rounded-xl text-slate-900 focus:ring-2 focus:ring-blue-500/20 transition-all font-medium"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-end gap-4">
-          <button
+        <div className="flex gap-3">
+          <button 
             type="button"
             onClick={() => navigate('/entities')}
-            disabled={isSaving}
-            className="px-8 py-3 text-slate-500 font-bold hover:text-slate-800 transition-colors"
+            className="px-6 py-2.5 rounded-xl text-sm font-semibold text-on-surface-variant hover:bg-surface-container-high transition-colors"
           >
             Cancel
           </button>
-          <button
+          <button 
             type="submit"
+            form="entity-form"
             disabled={isSaving}
-            className="px-10 py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 active:scale-95 flex items-center gap-2"
+            className="px-8 py-2.5 rounded-xl text-sm font-bold text-on-primary bg-gradient-to-br from-primary to-primary-fixed-dim editorial-shadow hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2"
           >
             {isSaving ? (
-              <>
-                <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                Processing...
-              </>
+              <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
             ) : (
               <>
-                <span className="material-symbols-outlined font-bold">save</span>
-                {isEditing ? 'Save Changes' : 'Finalize & Register'}
+                <span className="material-symbols-outlined text-[18px]">save</span>
+                {isEditing ? 'Save Changes' : 'Register Entity'}
               </>
             )}
           </button>
         </div>
-      </form>
+      </header>
+
+      {error && <div className="mb-8 max-w-4xl mx-auto"><AlertMessage variant="danger" message={error} onClose={() => setError(null)} /></div>}
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Main Content Column */}
+        <div className="lg:col-span-8">
+          <form id="entity-form" onSubmit={handleSubmit} className="space-y-8">
+            <section className="bg-surface-container-lowest rounded-3xl p-8 editorial-shadow border border-white/20 animate-in fade-in slide-in-from-right-4 duration-500">
+              <h2 className="text-xl font-bold text-on-primary-container mb-6 flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary">corporate_fare</span>
+                Core Entity Identity
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
+                <div className="space-y-1.5 md:col-span-2">
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Official Name <span className="text-error">*</span></label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="e.g. Foxall Global Logistics"
+                    className={`w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface ${validationErrors.name ? 'ring-2 ring-error/20' : 'focus:ring-primary-container/40'}`}
+                  />
+                  {validationErrors.name && <p className="text-[10px] font-bold text-error ml-1 mt-1">{validationErrors.name}</p>}
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Entity Category <span className="text-error">*</span></label>
+                  <select
+                    name="entity_type"
+                    value={formData.entity_type}
+                    onChange={handleChange}
+                    className={`w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface appearance-none ${validationErrors.entity_type ? 'ring-2 ring-error/20' : 'focus:ring-primary-container/40'}`}
+                  >
+                    {ENTITY_TYPES.map(type => (
+                      <option key={type} value={type}>
+                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                  {validationErrors.entity_type && <p className="text-[10px] font-bold text-error ml-1 mt-1">{validationErrors.entity_type}</p>}
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Digital Presence (URL)</label>
+                  <input
+                    type="url"
+                    name="url"
+                    value={formData.url}
+                    onChange={handleChange}
+                    placeholder="https://logistics-hub.com"
+                    className={`w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface ${validationErrors.url ? 'ring-2 ring-error/20' : 'focus:ring-primary-container/40'}`}
+                  />
+                </div>
+
+                <div className="space-y-1.5 md:col-span-2">
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Physical Address</label>
+                  <textarea
+                    name="address"
+                    rows={3}
+                    value={formData.address}
+                    onChange={handleChange}
+                    placeholder="HQ or Branch Facility Address"
+                    className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface resize-none focus:ring-primary-container/40"
+                  />
+                </div>
+              </div>
+            </section>
+          </form>
+        </div>
+
+        {/* Right Column: Contextual Info & Actions */}
+        <aside className="lg:col-span-4 space-y-6">
+          <div className="bg-white/40 backdrop-blur-xl rounded-3xl p-6 border border-white/40 editorial-shadow sticky top-8">
+            <h3 className="text-sm font-bold text-primary uppercase tracking-widest mb-6">Entity Profile</h3>
+            
+            <div className="space-y-4 mb-8">
+              <div className="p-4 bg-surface-container-low rounded-2xl">
+                <div className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Entity UUID</div>
+                <div className="font-mono text-[11px] font-bold text-on-surface truncate">{isEditing ? `ENT-HUB-2024-${entityId?.toString().padStart(6, '0')}` : 'GENERATING...'}</div>
+              </div>
+
+              <div className="space-y-3 pt-2">
+                <div className="flex justify-between items-center py-2 border-b border-outline-variant/10">
+                   <span className="text-on-surface-variant text-sm font-light">Status</span>
+                   <span className="bg-primary-container/30 text-primary px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider">Active</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-outline-variant/10">
+                   <span className="text-on-surface-variant text-sm font-light">Compliance</span>
+                   <span className="text-on-surface font-bold text-xs flex items-center gap-1">
+                     <span className="material-symbols-outlined text-primary text-[14px]">verified</span>
+                     Verified
+                   </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                type="submit"
+                form="entity-form"
+                disabled={isSaving}
+                className="w-full py-4 rounded-2xl bg-gradient-to-br from-primary to-primary-fixed-dim text-on-primary font-bold text-center editorial-shadow hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+              >
+                {isSaving ? (
+                  <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined">verified</span>
+                    {isEditing ? 'Update Configuration' : 'Finalize & Register'}
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/entities')}
+                className="w-full py-3 rounded-2xl bg-surface-container-high text-on-surface-variant font-bold text-sm hover:bg-error-container hover:text-on-error-container active:scale-[0.98] transition-all"
+              >
+                Discard Changes
+              </button>
+            </div>
+
+            <div className="mt-8 p-4 bg-primary-container/20 rounded-2xl border border-primary-container/30">
+              <p className="text-[11px] text-on-primary-container leading-relaxed font-medium">
+                <span className="material-symbols-outlined text-[14px] align-middle mr-1" data-weight="fill">info</span>
+                Entity modifications affect <span className="font-bold">user associations</span> and reporting hierarchies throughout the regional distribution system.
+              </p>
+            </div>
+          </div>
+          
+          <div className="bg-on-secondary-fixed text-white/70 p-6 rounded-3xl editorial-shadow">
+            <h4 className="text-[10px] font-bold text-white uppercase tracking-[0.2em] mb-4">Distribution Meta</h4>
+            <ul className="space-y-3 text-xs">
+              <li className="flex justify-between">
+                <span className="opacity-70">Type</span>
+                <span className="text-white font-medium uppercase">{formData.entity_type}</span>
+              </li>
+              <li className="flex justify-between">
+                <span className="opacity-70">Region</span>
+                <span className="text-white font-medium">Global North</span>
+              </li>
+            </ul>
+          </div>
+        </aside>
+      </div>
     </div>
   )
 }
