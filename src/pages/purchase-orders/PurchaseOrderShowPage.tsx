@@ -4,7 +4,8 @@ import { Row, Col, Card, Badge, Button } from 'react-bootstrap'
 import { useAuth, useRequireAuth } from '../../contexts/AuthContext'
 import { LoadingSpinner, AlertMessage } from '../../components/common'
 import { getPurchaseOrder } from '../../api/purchase-orders'
-import type { PurchaseOrderResponse, PurchaseOrderStatus } from '../../types/api'
+import { getCustomFieldDefinitions } from '../../api/custom-fields'
+import type { PurchaseOrderResponse, PurchaseOrderStatus, CustomFieldDefinition } from '../../types/api'
 
 const STATUS_ICONS: Record<PurchaseOrderStatus, string> = {
   draft: '📝',
@@ -33,6 +34,7 @@ export function PurchaseOrderShowPage() {
   const poId = id ? parseInt(id, 10) : null
 
   const [purchaseOrder, setPurchaseOrder] = useState<PurchaseOrderResponse | null>(null)
+  const [fieldDefinitions, setFieldDefinitions] = useState<CustomFieldDefinition[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -42,8 +44,12 @@ export function PurchaseOrderShowPage() {
     const fetchData = async () => {
       try {
         setIsLoading(true)
-        const data = await getPurchaseOrder(poId)
+        const [data, definitions] = await Promise.all([
+          getPurchaseOrder(poId),
+          getCustomFieldDefinitions('purchase_order'),
+        ])
         setPurchaseOrder(data)
+        setFieldDefinitions(definitions)
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to load purchase order'
         setError(message)
@@ -400,6 +406,39 @@ export function PurchaseOrderShowPage() {
                   </div>
                 </Col>
               )}
+            </Row>
+          </Card.Body>
+        </Card>
+      )}
+
+      {/* ===== Custom Fields Card ===== */}
+      {purchaseOrder.custom_fields && Object.keys(purchaseOrder.custom_fields).length > 0 && (
+        <Card className="border-0 shadow-sm mb-4">
+          <Card.Header className="d-flex align-items-center gap-2 border-bottom" style={{ background: 'transparent', padding: '1rem 1.5rem' }}>
+            <span style={{ fontSize: '1.25rem' }}>✨</span>
+            <h5 className="mb-0 fw-semibold">Custom Information</h5>
+          </Card.Header>
+          <Card.Body className="p-4">
+            <Row className="g-3">
+              {fieldDefinitions.map((def) => (
+                <Col md={6} lg={4} key={def.field_key}>
+                  <div className="d-flex align-items-start gap-3 p-3 rounded-3" style={detailItemStyle}>
+                    <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={iconCircleStyle('var(--bs-tertiary-bg)')}>
+                      {def.field_type === 'checkbox' ? '☑️' : '📝'}
+                    </div>
+                    <div>
+                      <div className="text-muted fw-medium" style={labelStyle}>{def.field_label}</div>
+                      <div className="fw-semibold mt-1" style={{ color: 'var(--bs-heading-color)' }}>
+                        {def.field_type === 'checkbox'
+                          ? purchaseOrder.custom_fields![def.field_key]
+                            ? 'Yes'
+                            : 'No'
+                          : String(purchaseOrder.custom_fields![def.field_key] || '-')}
+                      </div>
+                    </div>
+                  </div>
+                </Col>
+              ))}
             </Row>
           </Card.Body>
         </Card>

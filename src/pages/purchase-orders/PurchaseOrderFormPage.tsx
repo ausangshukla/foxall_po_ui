@@ -8,12 +8,14 @@ import {
   updatePurchaseOrder,
   getPurchaseOrder,
 } from '../../api/purchase-orders'
+import { getCustomFieldDefinitions } from '../../api/custom-fields'
 import type {
   CreatePurchaseOrderRequest,
   UpdatePurchaseOrderRequest,
   PurchaseOrderStatus,
   ShippingMethod,
   ShippingTerm,
+  CustomFieldDefinition,
 } from '../../types/api'
 
 interface FormData {
@@ -34,6 +36,7 @@ interface FormData {
   incoterm: string
   tracking_number: string
   carrier: string
+  custom_fields: Record<string, any>
 }
 
 const initialFormData: FormData = {
@@ -54,6 +57,7 @@ const initialFormData: FormData = {
   incoterm: '',
   tracking_number: '',
   carrier: '',
+  custom_fields: {},
 }
 
 const STATUS_OPTIONS: { value: PurchaseOrderStatus; label: string }[] = [
@@ -97,6 +101,7 @@ export function PurchaseOrderFormPage() {
   const poId = id ? parseInt(id, 10) : null
 
   const [formData, setFormData] = useState<FormData>(initialFormData)
+  const [fieldDefinitions, setFieldDefinitions] = useState<CustomFieldDefinition[]>([])
   const [isLoading, setIsLoading] = useState(isEditing)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -106,8 +111,15 @@ export function PurchaseOrderFormPage() {
     if (!isAuth || !user) return
 
     const loadData = async () => {
-      if (isEditing && poId) {
-        try {
+      try {
+        const definitions = await getCustomFieldDefinitions('purchase_order')
+        setFieldDefinitions(definitions)
+        const customFields: Record<string, any> = {}
+        definitions.forEach((def) => {
+          customFields[def.field_key] = ''
+        })
+
+        if (isEditing && poId) {
           const poData = await getPurchaseOrder(poId)
           setFormData({
             entity_id: poData.entity_id.toString(),
@@ -131,17 +143,18 @@ export function PurchaseOrderFormPage() {
             incoterm: poData.incoterm || '',
             tracking_number: poData.tracking_number || '',
             carrier: poData.carrier || '',
+            custom_fields: { ...customFields, ...poData.custom_fields },
           })
-        } catch {
-          setError('Failed to load purchase order')
-        } finally {
-          setIsLoading(false)
+        } else {
+          setFormData((prev) => ({
+            ...prev,
+            entity_id: user.entity_id.toString(),
+            custom_fields: customFields,
+          }))
         }
-      } else {
-        setFormData((prev) => ({
-          ...prev,
-          entity_id: user.entity_id.toString(),
-        }))
+      } catch {
+        setError('Failed to load purchase order or field definitions')
+      } finally {
         setIsLoading(false)
       }
     }
@@ -212,6 +225,7 @@ export function PurchaseOrderFormPage() {
           incoterm: formData.incoterm || null,
           tracking_number: formData.tracking_number || null,
           carrier: formData.carrier || null,
+          custom_fields: formData.custom_fields,
         }
         await updatePurchaseOrder(poId, updateData)
       } else {
@@ -233,6 +247,7 @@ export function PurchaseOrderFormPage() {
           incoterm: formData.incoterm || null,
           tracking_number: formData.tracking_number || null,
           carrier: formData.carrier || null,
+          custom_fields: formData.custom_fields,
         }
         await createPurchaseOrder(createData)
       }
@@ -254,10 +269,19 @@ export function PurchaseOrderFormPage() {
   ) => {
     const { name, value } = e.target
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
+    if (name.startsWith('custom_fields.')) {
+      const fieldKey = name.split('.')[1]
+      const fieldValue = e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+      setFormData((prev) => ({
+        ...prev,
+        custom_fields: { ...prev.custom_fields, [fieldKey]: fieldValue },
+      }))
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }))
+    }
 
     if (validationErrors[name]) {
       setValidationErrors((prev) => ({ ...prev, [name]: '' }))
@@ -540,6 +564,65 @@ export function PurchaseOrderFormPage() {
                 </Form.Group>
               </Col>
             </Row>
+
+            {fieldDefinitions.length > 0 && (
+              <>
+                <hr className="my-4" />
+                <h5 className="mb-3 text-primary">Custom Fields</h5>
+                <Row>
+                  {fieldDefinitions.map((def) => (
+                    <Col md={6} lg={4} key={def.field_key}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>{def.field_label}</Form.Label>
+                        {def.field_type === 'checkbox' ? (
+                          <Form.Check
+                            type="checkbox"
+                            name={`custom_fields.${def.field_key}`}
+                            checked={!!formData.custom_fields[def.field_key]}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                custom_fields: {
+                                  ...prev.custom_fields,
+                                  [def.field_key]: e.target.checked,
+                                },
+                              }))
+                            }
+                            label={def.hint || ''}
+                          />
+                        ) : def.field_type === 'select' ? (
+                          <Form.Select
+                            name={`custom_fields.${def.field_key}`}
+                            value={formData.custom_fields[def.field_key] || ''}
+                            onChange={handleChange}
+                          >
+                            <option value="">Select...</option>
+                            {def.possible_values
+                              ? def.possible_values.split(',').map((val) => val.trim()).map((val) => (
+                                <option key={val} value={val}>
+                                  {val}
+                                </option>
+                              ))
+                              : null}
+                          </Form.Select>
+                        ) : (
+                          <Form.Control
+                            type={def.field_type}
+                            name={`custom_fields.${def.field_key}`}
+                            value={formData.custom_fields[def.field_key] || ''}
+                            onChange={handleChange}
+                            placeholder={def.hint || ''}
+                          />
+                        )}
+                        {def.hint && def.field_type !== 'checkbox' && (
+                          <Form.Text className="text-muted">{def.hint}</Form.Text>
+                        )}
+                      </Form.Group>
+                    </Col>
+                  ))}
+                </Row>
+              </>
+            )}
 
             <div className="d-flex gap-2 mt-4">
               <Button variant="primary" type="submit" disabled={isSaving}>

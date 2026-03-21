@@ -31,6 +31,19 @@ export interface JWTPayload {
 }
 
 // ============================================
+// Custom Field Types
+// ============================================
+export interface CustomFieldDefinition {
+  id: number
+  model_name: string
+  field_key: string
+  field_label: string
+  field_type: 'text' | 'number' | 'checkbox' | 'select'
+  hint: string | null
+  possible_values: string | null
+}
+
+// ============================================
 // User Types
 // ============================================
 export interface UserResponse {
@@ -135,6 +148,7 @@ export interface PurchaseOrderResponse {
   incoterm: string | null
   tracking_number: string | null
   carrier: string | null
+  custom_fields: Record<string, any> | null
   // Audit Fields
   created_by: number
   approved_by: number | null
@@ -161,6 +175,7 @@ export interface CreatePurchaseOrderRequest {
   incoterm?: string | null
   tracking_number?: string | null
   carrier?: string | null
+  custom_fields?: Record<string, any> | null
 }
 
 export interface UpdatePurchaseOrderRequest {
@@ -181,6 +196,7 @@ export interface UpdatePurchaseOrderRequest {
   incoterm?: string | null
   tracking_number?: string | null
   carrier?: string | null
+  custom_fields?: Record<string, any> | null
   approved_by?: number | null
 }
 

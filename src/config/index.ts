@@ -20,6 +20,9 @@ export const API_ROUTES = {
   // Purchase Orders
   PURCHASE_ORDERS: '/api/purchase-orders',
   PURCHASE_ORDER: (id: number) => `/api/purchase-orders/${id}`,
+
+  // Custom Fields
+  CUSTOM_FIELD_DEFINITIONS: '/api/custom_field_definitions',
 } as const
 
 // Storage Keys
