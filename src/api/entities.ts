@@ -17,14 +17,14 @@ export async function getEntity(id: number): Promise<EntityResponse> {
 export async function createEntity(
   data: EntityCreateRequest
 ): Promise<EntityResponse> {
-  return api.post<EntityResponse>(API_ROUTES.ENTITIES, data)
+  return api.post<EntityResponse>(API_ROUTES.ENTITIES, { entity: data })
 }
 
 export async function updateEntity(
   id: number,
   data: EntityUpdateRequest
 ): Promise<EntityResponse> {
-  return api.put<EntityResponse>(API_ROUTES.ENTITY(id), data)
+  return api.put<EntityResponse>(API_ROUTES.ENTITY(id), { entity: data })
 }
 
 export async function deleteEntity(id: number): Promise<string> {

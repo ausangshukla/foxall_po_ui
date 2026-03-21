@@ -48,10 +48,10 @@ export function EntityFormPage() {
         try {
           const entityData = await getEntity(entityId)
           setFormData({
-            name: entityData.name,
-            url: entityData.url,
-            entity_type: entityData.entity_type,
-            address: entityData.address,
+            name: entityData.name || '',
+            url: entityData.url || '',
+            entity_type: entityData.entity_type || 'company',
+            address: entityData.address || '',
           })
         } catch {
           setError('Failed to load entity data')
@@ -69,7 +69,7 @@ export function EntityFormPage() {
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {}
 
-    if (!formData.name.trim()) errors.name = 'Entity name is required'
+    if (!(formData.name || '').trim()) errors.name = 'Entity name is required'
     if (!formData.entity_type) errors.entity_type = 'Entity category is required'
     if (formData.url && !/^https?:\/\/.+/.test(formData.url)) {
       errors.url = 'URL must start with http:// or https://'

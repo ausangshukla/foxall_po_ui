@@ -17,14 +17,14 @@ export async function getUser(id: number): Promise<UserResponse> {
 export async function createUser(
   data: CreateUserRequest
 ): Promise<UserResponse> {
-  return api.post<UserResponse>(API_ROUTES.USERS, data)
+  return api.post<UserResponse>(API_ROUTES.USERS, { user: data })
 }
 
 export async function updateUser(
   id: number,
   data: UpdateUserRequest
 ): Promise<UserResponse> {
-  return api.put<UserResponse>(API_ROUTES.USER(id), data)
+  return api.put<UserResponse>(API_ROUTES.USER(id), { user: data })
 }
 
 export async function deleteUser(id: number): Promise<string> {

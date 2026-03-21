@@ -127,7 +127,7 @@ export function PurchaseOrderFormPage() {
           poData = await getPurchaseOrder(poId);
         }
 
-        const definitions = await getCustomFieldDefinitions('purchase_orders', poData?.po_type || undefined);
+        const definitions = await getCustomFieldDefinitions('PurchaseOrder', poData?.po_type || undefined);
         setFieldDefinitions(definitions)
         const customFields: Record<string, any> = {}
         definitions.forEach((def) => {
@@ -182,12 +182,12 @@ export function PurchaseOrderFormPage() {
     const errors: Record<string, string> = {}
 
     if (step === 0) {
-      if (!formData.po_number.trim()) errors.po_number = 'PO Number is required'
+      if (!(formData.po_number || '').trim()) errors.po_number = 'PO Number is required'
       if (!formData.po_type) errors.po_type = 'PO Type is required'
-      if (!formData.vendor_id.trim()) errors.vendor_id = 'Vendor ID is required'
+      if (!(formData.vendor_id || '').trim()) errors.vendor_id = 'Vendor ID is required'
       if (!formData.order_date) errors.order_date = 'Order date is required'
       if (!formData.currency) errors.currency = 'Currency is required'
-      if (!formData.total_amount.trim()) {
+      if (!(formData.total_amount || '').trim()) {
         errors.total_amount = 'Total amount is required'
       } else if (isNaN(parseFloat(formData.total_amount)) || parseFloat(formData.total_amount) < 0) {
         errors.total_amount = 'Total amount must be a valid positive number'
@@ -323,7 +323,7 @@ export function PurchaseOrderFormPage() {
     if (!value) return
 
     try {
-      const definitions = await getCustomFieldDefinitions('purchase_orders', value)
+      const definitions = await getCustomFieldDefinitions('PurchaseOrder', value)
       setFieldDefinitions(definitions)
       const newCustomFields: Record<string, any> = {}
       definitions.forEach((def) => {
@@ -707,7 +707,10 @@ export function PurchaseOrderFormPage() {
                               className={`w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface appearance-none ${validationErrors[`custom_fields.${def.field_key}`] ? 'ring-2 ring-error/20' : 'focus:ring-primary-container/40'}`}
                             >
                               <option value="">Select...</option>
-                              {def.possible_values?.split(',').map((val) => val.trim()).map((val) => (
+                              {(Array.isArray(def.possible_values) 
+                                ? def.possible_values 
+                                : (def.possible_values as string)?.split?.(',') || []
+                               ).map((val: string) => val.trim()).map((val) => (
                                 <option key={val} value={val}>{val}</option>
                               ))}
                             </select>

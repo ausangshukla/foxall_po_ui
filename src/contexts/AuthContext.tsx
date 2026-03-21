@@ -86,8 +86,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Login function
   const login = useCallback(async (credentials: LoginRequest) => {
     const result = await loginApi(credentials)
-    const currentUser = await getCurrentUser()
-    setUser(currentUser)
+    // Map result (which is LoginResponse, having user data) to UserResponse
+    // We try to get current user info for more details if available, but trust login result first
+    const mappedUser: UserResponse = {
+      id: result.id || (result.user_id as number) || 0,
+      entity_id: result.entity_id || 0,
+      first_name: result.first_name || '',
+      last_name: result.last_name || '',
+      email: result.email || '',
+      phone: result.phone || '',
+      wa_enabled: result.wa_enabled || false,
+      email_enabled: result.email_enabled || false,
+      roles: result.roles || [],
+    }
+
+    // Try to get current user to refresh full user info
+    try {
+      const currentUser = await getCurrentUser()
+      if (currentUser) {
+        setUser(currentUser)
+      } else if (mappedUser.email) {
+        setUser(mappedUser)
+      }
+    } catch {
+      if (mappedUser.email) {
+        setUser(mappedUser)
+      }
+    }
+
     return result
   }, [])
 

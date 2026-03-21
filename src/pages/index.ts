@@ -1,7 +1,7 @@
 export { HomePage } from './HomePage'
 export { LoginPage } from './LoginPage'
 export { DashboardPage } from './DashboardPage'
-export { ProfilePage } from './ProfilePage'
 export * from './users'
 export * from './entities'
 export * from './purchase-orders'
+export * from './custom-field-definitions'

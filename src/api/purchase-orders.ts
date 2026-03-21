@@ -1,5 +1,5 @@
 import { API_ROUTES } from '../config'
-import { api } from './client'
+import { api, apiRequest } from './client'
 import type {
   PurchaseOrderResponse,
   CreatePurchaseOrderRequest,
@@ -19,14 +19,14 @@ export async function getPurchaseOrder(id: number): Promise<PurchaseOrderRespons
 export async function createPurchaseOrder(
   data: CreatePurchaseOrderRequest
 ): Promise<PurchaseOrderResponse> {
-  return api.post<PurchaseOrderResponse>(API_ROUTES.PURCHASE_ORDERS, data)
+  return api.post<PurchaseOrderResponse>(API_ROUTES.PURCHASE_ORDERS, { purchase_order: data })
 }
 
 export async function updatePurchaseOrder(
   id: number,
   data: UpdatePurchaseOrderRequest
 ): Promise<PurchaseOrderResponse> {
-  return api.put<PurchaseOrderResponse>(API_ROUTES.PURCHASE_ORDER(id), data)
+  return api.put<PurchaseOrderResponse>(API_ROUTES.PURCHASE_ORDER(id), { purchase_order: data })
 }
 
 export async function deletePurchaseOrder(id: number): Promise<string> {
@@ -36,8 +36,13 @@ export async function deletePurchaseOrder(id: number): Promise<string> {
 export async function searchPurchaseOrders(
   params: PurchaseOrderSearchRequest
 ): Promise<{ data: PurchaseOrderResponse[]; meta: PurchaseOrderSearchMeta }> {
-  return api.post<{ data: PurchaseOrderResponse[]; meta: PurchaseOrderSearchMeta }>(
+  const result = await apiRequest<PurchaseOrderResponse[], PurchaseOrderSearchMeta>(
     `${API_ROUTES.PURCHASE_ORDERS}/search`,
-    params
+    {
+      method: 'POST',
+      body: JSON.stringify(params),
+    },
+    true
   )
+  return result as { data: PurchaseOrderResponse[]; meta: PurchaseOrderSearchMeta }
 }

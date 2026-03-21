@@ -4,7 +4,6 @@ import {
   HomePage,
   LoginPage,
   DashboardPage,
-  ProfilePage,
   UserListPage,
   UserFormPage,
   UserShowPage,
@@ -14,6 +13,8 @@ import {
   PurchaseOrderListPage,
   PurchaseOrderFormPage,
   PurchaseOrderShowPage,
+  CustomFieldDefinitionListPage,
+  CustomFieldDefinitionFormPage,
 } from '../pages'
 import { NotFound } from '../components/common'
 
@@ -27,7 +28,8 @@ export function AppRouter() {
       <Route element={<Layout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/profile" element={<UserShowPage />} />
+        <Route path="/profile/edit" element={<UserFormPage />} />
         <Route path="/users" element={<UserListPage />} />
         <Route path="/users/new" element={<UserFormPage />} />
         <Route path="/users/:id" element={<UserShowPage />} />
@@ -40,6 +42,12 @@ export function AppRouter() {
         <Route path="/purchase-orders/new" element={<PurchaseOrderFormPage />} />
         <Route path="/purchase-orders/:id" element={<PurchaseOrderShowPage />} />
         <Route path="/purchase-orders/:id/edit" element={<PurchaseOrderFormPage />} />
+
+        {/* Custom Field Definitions */}
+        <Route path="/custom-field-definitions" element={<CustomFieldDefinitionListPage />} />
+        <Route path="/custom-field-definitions/new" element={<CustomFieldDefinitionFormPage />} />
+        <Route path="/custom-field-definitions/:id/edit" element={<CustomFieldDefinitionFormPage />} />
+
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

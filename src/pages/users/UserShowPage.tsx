@@ -18,7 +18,7 @@ export function UserShowPage() {
   const isAuth = useRequireAuth()
   const { user: currentUser } = useAuth()
 
-  const userId = id ? parseInt(id, 10) : null
+  const userId = id ? parseInt(id, 10) : currentUser?.id
 
   const [user, setUser] = useState<UserResponse | null>(null)
   const [entity, setEntity] = useState<EntityResponse | null>(null)
@@ -44,7 +44,7 @@ export function UserShowPage() {
     }
 
     fetchData()
-  }, [isAuth, userId])
+  }, [isAuth, userId, currentUser?.id])
 
   const canManageThisUser = (): boolean => {
     if (!user || !currentUser) return false
@@ -52,6 +52,8 @@ export function UserShowPage() {
     if (currentUser.roles.includes('admin') && currentUser.entity_id === user.entity_id) return true
     return currentUser.id === user.id
   }
+
+  const isProfileView = window.location.pathname === '/profile'
 
   if (!isAuth || isLoading) return <LoadingSpinner />
 
@@ -85,16 +87,16 @@ export function UserShowPage() {
             <span className="text-on-surface-variant font-light tracking-widest text-sm">USR-{user.id.toString().padStart(4, '0')}</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tighter text-on-primary-fixed mb-2">
-            {user.first_name} {user.last_name}
+            {isProfileView ? 'My Profile' : `${user.first_name} ${user.last_name}`}
           </h1>
           <p className="text-on-surface-variant font-light tracking-wide max-w-md">
-            {user.email} • Assigned to {entity?.name || 'Central Foxall Administration'}
+            {isProfileView ? 'Manage your account identity and notification preferences' : `${user.email} • Assigned to ${entity?.name || 'Central Administration'}`}
           </p>
         </div>
         <div className="relative z-10 mt-6 md:mt-0">
           {canManageThisUser() && (
             <button 
-              onClick={() => navigate(`/users/${user.id}/edit`)}
+              onClick={() => navigate(isProfileView ? '/profile/edit' : `/users/${user.id}/edit`)}
               className="px-8 py-3 bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold rounded-lg shadow-lg hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2"
             >
               <span className="material-symbols-outlined text-sm">edit</span>

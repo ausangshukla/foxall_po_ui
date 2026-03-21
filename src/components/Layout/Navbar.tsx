@@ -56,6 +56,11 @@ export function AppNavbar() {
                 Users
               </Link>
             )}
+            {canManageUsers() && (
+              <Link to="/custom-field-definitions" className={linkClass('/custom-field-definitions')}>
+                Custom Fields
+              </Link>
+            )}
           </div>
         </div>
         
@@ -129,6 +134,7 @@ export function AppNavbar() {
             <>
               <Link to="/entities" className={mobileLinkClass('/entities')}>Entities</Link>
               <Link to="/users" className={mobileLinkClass('/users')}>Users</Link>
+              <Link to="/custom-field-definitions" className={mobileLinkClass('/custom-field-definitions')}>Custom Fields</Link>
             </>
           )}
           <hr className="border-slate-100 my-2" />

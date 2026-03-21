@@ -35,9 +35,13 @@ export const storage = {
     }
   },
 
-  setUserId: (userId: number): void => {
+  setUserId: (userId: number | null): void => {
     try {
-      localStorage.setItem(STORAGE_KEYS.USER_ID, userId.toString())
+      if (userId === null) {
+        localStorage.removeItem(STORAGE_KEYS.USER_ID)
+      } else {
+        localStorage.setItem(STORAGE_KEYS.USER_ID, userId.toString())
+      }
     } catch {
       // Ignore storage errors
     }

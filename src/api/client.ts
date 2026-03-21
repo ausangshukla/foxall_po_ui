@@ -39,10 +39,21 @@ function notifyAuthRequired(): void {
 // ============================================
 // Base API Request Function
 // ============================================
-export async function apiRequest<T>(
+export async function apiRequest<T, M = unknown>(
   endpoint: string,
-  options: RequestInit = {}
-): Promise<T> {
+  options?: RequestInit,
+  returnFull?: false
+): Promise<T>;
+export async function apiRequest<T, M = unknown>(
+  endpoint: string,
+  options: RequestInit,
+  returnFull: true
+): Promise<ApiResponse<T, M>>;
+export async function apiRequest<T, M = unknown>(
+  endpoint: string,
+  options: RequestInit = {},
+  returnFull: boolean = false
+): Promise<T | ApiResponse<T, M>> {
   const url = `${API_BASE_URL}${endpoint}`
 
   // Prepare headers
@@ -69,8 +80,15 @@ export async function apiRequest<T>(
     headers,
   })
 
+  // Capture Authorization header (for devise-jwt login)
+  const authHeader = response.headers.get('Authorization')
+  let tokenFromHeader: string | null = null
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    tokenFromHeader = authHeader.substring(7)
+  }
+
   // Parse the response body
-  let body: ApiResponse<T>
+  let body: ApiResponse<T, M>
   try {
     body = await response.json()
   } catch {
@@ -85,9 +103,65 @@ export async function apiRequest<T>(
     throw new ApiError('PARSE_ERROR', `Failed to parse server response (HTTP ${response.status})`)
   }
 
+  // If token is in header, inject it into data for login responses
+  if (tokenFromHeader && body.data) {
+    // @ts-ignore
+    body.data.token = tokenFromHeader
+    // Also if it's a login response from devise, we might need to map user.id to user_id
+    // Check for id even if it's null (it should be set if available)
+    // We'll trust the server that it's a login response
+    if (Object.prototype.hasOwnProperty.call(body.data, 'id') && !Object.prototype.hasOwnProperty.call(body.data, 'user_id')) {
+      // @ts-ignore
+      body.data.user_id = body.data.id
+    }
+  }
+
   // Handle error responses
-  if (body.error) {
-    const { code, message } = body.error
+  const hasError = !response.ok || body.error || (body as any).errors || (body.status && body.status.code >= 400)
+  if (hasError) {
+    let code = 'UNKNOWN_ERROR'
+    let message = 'An unexpected error occurred'
+    const errorBody = body.error || (body as any).errors || body.status
+
+    // Prioritize HTTP status code for determining error type
+    if (response.status === 401) code = 'UNAUTHORIZED'
+    else if (response.status === 403) code = 'FORBIDDEN'
+    else if (response.status === 404) code = 'NOT_FOUND'
+    else if (response.status === 422) code = 'VALIDATION_ERROR'
+
+    if (typeof errorBody === 'string') {
+      message = errorBody
+    } else if (errorBody && typeof errorBody === 'object') {
+      // If it's a Rails-style errors object (e.g., { email: ["is invalid"] })
+      if (!(errorBody as any).code && !(errorBody as any).message) {
+        code = 'VALIDATION_ERROR'
+        message = Object.entries(errorBody)
+          .map(([field, msgs]) => `${field} ${(msgs as string[]).join(', ')}`)
+          .join('; ')
+      } else {
+        // Only use the body's code if it's actually an error code
+        const bodyCode = (errorBody as any).code?.toString()
+        if (bodyCode && bodyCode !== '200' && bodyCode !== '0') {
+          code = bodyCode
+        }
+        
+        // If the body has a message, use it unless it's misleading (like "Logged in successfully" on a 422)
+        const bodyMessage = (errorBody as any).message
+        if (bodyMessage && !(response.status === 422 && bodyMessage.includes('successfully'))) {
+          message = bodyMessage
+        } else if (response.status === 422) {
+          message = 'Invalid credentials or validation error'
+        }
+      }
+    } else if (response.status === 422) {
+      message = 'Unprocessable Content'
+    }
+
+    // Map certain endpoints to specific error types
+    if (endpoint.includes('/login') && (code === 'VALIDATION_ERROR' || response.status === 422)) {
+      code = 'LOGIN_FAILED'
+      message = 'Invalid email or password'
+    }
 
     switch (code) {
       case 'UNAUTHORIZED':
@@ -116,8 +190,12 @@ export async function apiRequest<T>(
   }
 
   // Return the data
-  if (body.data === null) {
+  if (body.data === null && !returnFull) {
     throw new ApiError('NULL_DATA', 'Response data is null')
+  }
+
+  if (returnFull) {
+    return body as ApiResponse<T, M>
   }
 
   return body.data as T
@@ -144,6 +222,10 @@ export const api = {
 
   delete: <T>(endpoint: string) =>
     apiRequest<T>(endpoint, { method: 'DELETE' }),
+
+  // For when you need the whole envelope (like for pagination meta)
+  requestFull: <T, M = any>(endpoint: string, options: RequestInit = {}) =>
+    apiRequest<T, M>(endpoint, options, true),
 }
 
 export { storage }

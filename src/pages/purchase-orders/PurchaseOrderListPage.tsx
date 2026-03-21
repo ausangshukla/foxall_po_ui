@@ -157,15 +157,13 @@ export function PurchaseOrderListPage() {
         order_date_from: orderDateFrom || undefined,
         order_date_to: orderDateTo || undefined,
         conditions: conditions.length > 0 ? conditions : undefined,
-        // @ts-expect-error - Assuming backend supports sorting
         sort_by: sortKey,
-        // @ts-expect-error - Assuming backend supports sorting
         sort_dir: sortDir,
       })
 
-      setPurchaseOrders(response.data)
-      setTotalPages(response.meta.total_pages)
-      setTotalCount(response.meta.total_count)
+      setPurchaseOrders(response.data || [])
+      setTotalPages(response.meta?.total_pages || 1)
+      setTotalCount(response.meta?.total_count || 0)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load purchase orders'
       console.error('Failed to load purchase orders:', err)
@@ -237,7 +235,7 @@ export function PurchaseOrderListPage() {
     try {
       setIsLoading(true)
       await deletePurchaseOrder(deletingId)
-      setPurchaseOrders(purchaseOrders.filter((po) => po.id !== deletingId))
+      setPurchaseOrders((purchaseOrders || []).filter((po) => po.id !== deletingId))
       setShowDeleteConfirm(false)
     } catch {
       setError('Failed to delete purchase order')
@@ -279,7 +277,7 @@ export function PurchaseOrderListPage() {
     })
   }
 
-  const getStatusClasses = (status: PurchaseOrderStatus | undefined): string => {
+  const getStatusClasses = (status: PurchaseOrderStatus | 'late' | undefined): string => {
     switch (status) {
       case 'approved':
       case 'received':
@@ -301,7 +299,7 @@ export function PurchaseOrderListPage() {
     }
   }
 
-  const getStatusIcon = (status: PurchaseOrderStatus | undefined): string => {
+  const getStatusIcon = (status: PurchaseOrderStatus | 'late' | undefined): string => {
     switch (status) {
       case 'approved':
         return 'check_circle'
@@ -330,11 +328,10 @@ export function PurchaseOrderListPage() {
 
     const renderStatusBadge = (status: PurchaseOrderStatus | undefined, expectedDeliveryDate?: string | null) => {
       // Check if late
-      let currentStatus = status
+      let currentStatus: PurchaseOrderStatus | 'late' | undefined = status
       if (status === 'sent' || status === 'pending') {
         if (expectedDeliveryDate && new Date(expectedDeliveryDate) < new Date()) {
           // Just for visual effect in this demo/update
-          // @ts-ignore
           currentStatus = 'late'
         }
       }
@@ -425,7 +422,7 @@ export function PurchaseOrderListPage() {
           <div>
             <p className="text-on-surface-variant text-sm font-light uppercase tracking-widest mb-1">Pending Approval</p>
             <h3 className="text-3xl font-extrabold text-on-primary-container">
-              {purchaseOrders.filter(po => po.status === 'pending').length}
+              {(purchaseOrders || []).filter(po => po.status === 'pending').length}
             </h3>
           </div>
         </div>
@@ -437,7 +434,7 @@ export function PurchaseOrderListPage() {
           <div>
             <p className="text-on-surface-variant text-sm font-light uppercase tracking-widest mb-1">Total Spend</p>
             <h3 className="text-3xl font-extrabold text-on-primary-container">
-              {formatCurrency(purchaseOrders.reduce((sum, po) => sum + Number(po.total_amount), 0), 'USD')}
+              {formatCurrency((purchaseOrders || []).reduce((sum, po) => sum + Number(po.total_amount), 0), 'USD')}
             </h3>
           </div>
         </div>
@@ -449,7 +446,7 @@ export function PurchaseOrderListPage() {
           <div>
             <p className="text-on-surface-variant text-sm font-light uppercase tracking-widest mb-1">Delayed Items</p>
             <h3 className="text-3xl font-extrabold text-on-primary-container">
-              {purchaseOrders.filter(po => po.expected_delivery_date && new Date(po.expected_delivery_date) < new Date() && po.status !== 'received' && po.status !== 'closed').length.toString().padStart(2, '0')}
+              {(purchaseOrders || []).filter(po => po.expected_delivery_date && new Date(po.expected_delivery_date) < new Date() && po.status !== 'received' && po.status !== 'closed').length.toString().padStart(2, '0')}
             </h3>
           </div>
         </div>
@@ -501,7 +498,7 @@ export function PurchaseOrderListPage() {
             </button>
           </div>
           <div className="flex items-center gap-4 text-sm text-on-surface-variant font-light">
-            <span>Showing {purchaseOrders.length > 0 ? (page - 1) * perPage + 1 : 0}-{Math.min(page * perPage, totalCount)} of {totalCount.toLocaleString()} results</span>
+            <span>Showing {(purchaseOrders || []).length > 0 ? (page - 1) * perPage + 1 : 0}-{Math.min(page * perPage, totalCount)} of {totalCount.toLocaleString()} results</span>
             <div className="flex gap-2">
               <button
                 disabled={page <= 1}
@@ -654,7 +651,7 @@ export function PurchaseOrderListPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/5">
-              {purchaseOrders.length === 0 && !isLoading ? (
+              {(!purchaseOrders || purchaseOrders.length === 0) && !isLoading ? (
                 <tr>
                   <td colSpan={9} className="px-8 py-20 text-center">
                     <div className="flex flex-col items-center justify-center">
@@ -669,7 +666,7 @@ export function PurchaseOrderListPage() {
                   </td>
                 </tr>
               ) : (
-                purchaseOrders.map((po) => (
+                (purchaseOrders || []).map((po) => (
                   <tr 
                     key={po.id} 
                     className="hover:bg-surface-container-low transition-all duration-200 group cursor-pointer"
@@ -681,9 +678,9 @@ export function PurchaseOrderListPage() {
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center text-xs font-bold text-on-surface-variant">
-                          {po.vendor_id.toString().substring(0, 2).toUpperCase()}
+                          {po.vendor_id ? po.vendor_id.toString().substring(0, 2).toUpperCase() : '??'}
                         </div>
-                        <span className="font-medium text-sm">Vendor #{po.vendor_id}</span>
+                        <span className="font-medium text-sm">Vendor #{po.vendor_id || 'N/A'}</span>
                       </div>
                     </td>
                     <td className="px-8 py-6">

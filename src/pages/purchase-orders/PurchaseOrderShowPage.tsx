@@ -45,7 +45,7 @@ export function PurchaseOrderShowPage() {
         setIsLoading(true)
         const data = await getPurchaseOrder(poId)
         setPurchaseOrder(data)
-        const definitions = await getCustomFieldDefinitions('purchase_orders', (data as any).po_type)
+        const definitions = await getCustomFieldDefinitions('PurchaseOrder', (data as any).po_type)
         setFieldDefinitions(definitions)
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to load purchase order'

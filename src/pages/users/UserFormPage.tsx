@@ -45,10 +45,12 @@ export function UserFormPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const isAuth = useRequireAuth()
-  const { canManageUsers, user: currentUser } = useAuth()
+  const { canManageUsers, user: currentUser, refreshUser } = useAuth()
 
-  const isEditing = !!id
-  const userId = id ? parseInt(id, 10) : null
+  const isProfileEdit = window.location.pathname === '/profile/edit'
+  const isEditing = !!id || isProfileEdit
+  const userId = id ? parseInt(id, 10) : currentUser?.id
+  const isSelf = userId === currentUser?.id
 
   const [formData, setFormData] = useState<FormData>(initialFormData)
   const [entities, setEntities] = useState<EntityResponse[]>([])
@@ -68,15 +70,15 @@ export function UserFormPage() {
         if (isEditing && userId) {
           const userData = await getUser(userId)
           setFormData({
-            first_name: userData.first_name,
-            last_name: userData.last_name,
-            email: userData.email,
-            phone: userData.phone,
+            first_name: userData.first_name || '',
+            last_name: userData.last_name || '',
+            email: userData.email || '',
+            phone: userData.phone || '',
             password: '',
-            entity_id: userData.entity_id.toString(),
-            wa_enabled: userData.wa_enabled,
-            email_enabled: userData.email_enabled,
-            roles: userData.roles as UserRole[],
+            entity_id: (userData.entity_id || '').toString(),
+            wa_enabled: !!userData.wa_enabled,
+            email_enabled: !!userData.email_enabled,
+            roles: (userData.roles as UserRole[]) || [],
           })
         } else if (currentUser?.entity_id) {
           setFormData(prev => ({
@@ -97,16 +99,16 @@ export function UserFormPage() {
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {}
 
-    if (!formData.first_name.trim()) errors.first_name = 'First name is required'
-    if (!formData.last_name.trim()) errors.last_name = 'Last name is required'
-    if (!formData.email.trim()) {
+    if (!(formData.first_name || '').trim()) errors.first_name = 'First name is required'
+    if (!(formData.last_name || '').trim()) errors.last_name = 'Last name is required'
+    if (!(formData.email || '').trim()) {
       errors.email = 'Email is required'
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       errors.email = 'Invalid email format'
     }
-    if (!formData.phone.trim()) {
+    if (!(formData.phone || '').trim()) {
       errors.phone = 'Phone is required'
-    } else if (formData.phone.length < 10) {
+    } else if ((formData.phone || '').length < 10) {
       errors.phone = 'Phone must be at least 10 characters'
     }
     if (!isEditing && !formData.password) {
@@ -142,6 +144,9 @@ export function UserFormPage() {
           roles: formData.roles,
         }
         await updateUser(userId, updateData)
+        if (isSelf) {
+          await refreshUser()
+        }
       } else {
         const createData: CreateUserRequest = {
           first_name: formData.first_name,
@@ -157,7 +162,7 @@ export function UserFormPage() {
         await createUser(createData)
       }
 
-      navigate('/users')
+      navigate(isProfileEdit ? '/profile' : '/users')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save user')
     } finally {
@@ -192,7 +197,7 @@ export function UserFormPage() {
   }
 
   if (!isAuth || isLoading) return <LoadingSpinner />
-  if (!canManageUsers()) return <AlertMessage variant="danger" message="Access denied" />
+  if (!canManageUsers() && !isSelf) return <AlertMessage variant="danger" message="Access denied" />
 
   return (
     <div className="max-w-screen-xl mx-auto min-h-screen pt-12 pb-20 px-6">
@@ -200,23 +205,33 @@ export function UserFormPage() {
       <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <nav className="flex items-center gap-2 text-[10px] font-bold text-on-surface-variant mb-3 tracking-[0.2em] uppercase">
-            <span className="cursor-pointer hover:text-primary transition-colors" onClick={() => navigate('/users')}>Users</span>
+            {isProfileEdit ? (
+              <>
+                <span className="cursor-pointer hover:text-primary transition-colors" onClick={() => navigate('/profile')}>My Profile</span>
+              </>
+            ) : (
+              <>
+                <span className="cursor-pointer hover:text-primary transition-colors" onClick={() => navigate('/users')}>Users</span>
+                <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+                <span>{isEditing ? `${formData.first_name} ${formData.last_name}` : 'New User'}</span>
+              </>
+            )}
             <span className="material-symbols-outlined text-[14px]">chevron_right</span>
-            <span>{isEditing ? `${formData.first_name} ${formData.last_name}` : 'New User'}</span>
-            <span className="material-symbols-outlined text-[14px]">chevron_right</span>
-            <span className="text-primary">Edit Account</span>
+            <span className="text-primary">{isProfileEdit ? 'Edit Profile' : 'Edit Account'}</span>
           </nav>
           <h1 className="text-4xl font-extrabold tracking-tight text-on-primary-fixed mb-2 font-headline">
-            {isEditing ? 'Modify User Account' : 'Register New User'}
+            {isProfileEdit ? 'My Profile Settings' : isEditing ? 'Modify User Account' : 'Register New User'}
           </h1>
           <p className="text-on-surface-variant font-light max-w-xl">
-            Configure identity, subsidiary associations, and platform access permissions for the logistics network.
+            {isProfileEdit 
+              ? 'Update your personal details, contact information and communication preferences.'
+              : 'Configure identity, subsidiary associations, and platform access permissions for the logistics network.'}
           </p>
         </div>
         <div className="flex gap-3">
           <button 
             type="button"
-            onClick={() => navigate('/users')}
+            onClick={() => navigate(isProfileEdit ? '/profile' : '/users')}
             className="px-6 py-2.5 rounded-xl text-sm font-semibold text-on-surface-variant hover:bg-surface-container-high transition-colors"
           >
             Cancel
@@ -235,7 +250,7 @@ export function UserFormPage() {
             ) : (
               <>
                 <span className="material-symbols-outlined text-[18px]">save</span>
-                {isEditing ? 'Update User' : 'Register User'}
+                {isProfileEdit ? 'Save Changes' : isEditing ? 'Update User' : 'Register User'}
               </>
             )}
           </button>
@@ -336,6 +351,7 @@ export function UserFormPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {AVAILABLE_ROLES.map(role => {
                       const isSelected = formData.roles.includes(role.value);
+                      const isDisabled = isSelf && !currentUser?.roles.includes('super');
                       return (
                         <label 
                           key={role.value} 
@@ -343,13 +359,14 @@ export function UserFormPage() {
                             isSelected 
                             ? 'bg-surface-container-lowest border-primary ring-4 ring-primary-container/20 shadow-sm' 
                             : 'bg-surface-container-lowest border-outline-variant/30 hover:border-outline-variant/60'
-                          }`}
+                          } ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                           <input
                             type="checkbox"
                             className="sr-only"
                             checked={isSelected}
-                            onChange={e => handleRoleChange(role.value, e.target.checked)}
+                            onChange={e => !isDisabled && handleRoleChange(role.value, e.target.checked)}
+                            disabled={isDisabled}
                           />
                           <span className={`material-symbols-outlined text-3xl mb-3 ${isSelected ? 'text-primary' : 'text-on-surface-variant opacity-40 group-hover:opacity-100'}`}>
                             {role.icon}
@@ -425,7 +442,8 @@ export function UserFormPage() {
                   name="entity_id"
                   value={formData.entity_id}
                   onChange={handleChange}
-                  className={`w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface appearance-none ${validationErrors.entity_id ? 'ring-2 ring-error/20' : 'focus:ring-primary-container/40'}`}
+                  disabled={isSelf && !currentUser?.roles.includes('super')}
+                  className={`w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface appearance-none ${validationErrors.entity_id ? 'ring-2 ring-error/20' : 'focus:ring-primary-container/40'} ${isSelf && !currentUser?.roles.includes('super') ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <option value="">Select Subsidiary Entity...</option>
                   {entities.map(entity => (
@@ -458,13 +476,13 @@ export function UserFormPage() {
                 ) : (
                   <>
                     <span className="material-symbols-outlined">verified</span>
-                    {isEditing ? 'Update Profile' : 'Finalize & Register'}
+                    {isProfileEdit ? 'Save Changes' : isEditing ? 'Update Profile' : 'Finalize & Register'}
                   </>
                 )}
               </button>
               <button
                 type="button"
-                onClick={() => navigate('/users')}
+                onClick={() => navigate(isProfileEdit ? '/profile' : '/users')}
                 className="w-full py-3 rounded-2xl bg-surface-container-high text-on-surface-variant font-bold text-sm hover:bg-error-container hover:text-on-error-container active:scale-[0.98] transition-all"
               >
                 Cancel Changes

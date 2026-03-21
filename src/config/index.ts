@@ -3,26 +3,28 @@ console.log('Environment:', import.meta.env.MODE);
 console.log('API_BASE_URL:', import.meta.env.VITE_API_URL);
 
 export const API_BASE_URL =
-  import.meta.env.VITE_API_URL || 'http://127.0.0.1:8081'
+  import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
 export const API_ROUTES = {
   // Auth
-  LOGIN: '/api/auth/login',
+  LOGIN: '/login',
+  LOGOUT: '/logout',
 
   // Users
-  USERS: '/api/users',
-  USER: (id: number) => `/api/users/${id}`,
+  USERS: '/api/v1/users',
+  USER: (id: number) => `/api/v1/users/${id}`,
 
   // Entities
-  ENTITIES: '/api/entities',
-  ENTITY: (id: number) => `/api/entities/${id}`,
+  ENTITIES: '/api/v1/entities',
+  ENTITY: (id: number) => `/api/v1/entities/${id}`,
 
   // Purchase Orders
-  PURCHASE_ORDERS: '/api/purchase-orders',
-  PURCHASE_ORDER: (id: number) => `/api/purchase-orders/${id}`,
+  PURCHASE_ORDERS: '/api/v1/purchase_orders',
+  PURCHASE_ORDER: (id: number) => `/api/v1/purchase_orders/${id}`,
 
   // Custom Fields
-  CUSTOM_FIELD_DEFINITIONS: '/api/custom_field_definitions',
+  CUSTOM_FIELD_DEFINITIONS: '/api/v1/custom_field_definitions',
+  CUSTOM_FIELD_DEFINITION: (id: number) => `/api/v1/custom_field_definitions/${id}`,
 } as const
 
 // Storage Keys

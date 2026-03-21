@@ -3,8 +3,12 @@
 // ============================================
 export interface ApiResponse<T, M = unknown> {
   data: T | null
-  meta: M | null
-  error: AppErrorResponse | null
+  meta?: M | null
+  error?: AppErrorResponse | null
+  status?: {
+    code: number
+    message: string
+  }
 }
 
 export interface AppErrorResponse {
@@ -22,7 +26,13 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   token: string
-  user_id: number
+  user_id: number | null
+  id: number | null
+  email: string
+  first_name: string | null
+  last_name: string | null
+  roles: string[] | null
+  [key: string]: any
 }
 
 export interface JWTPayload {
@@ -35,13 +45,36 @@ export interface JWTPayload {
 // ============================================
 export interface CustomFieldDefinition {
   id: number
-  model_name: string
+  resource_name: string
   field_key: string
   field_label: string
   field_type: 'text' | 'number' | 'checkbox' | 'select'
   hint: string | null
-  possible_values: string | null
+  possible_values: string | string[] | null
   is_mandatory: boolean
+  tag: string | null
+}
+
+export interface CustomFieldDefinitionCreateRequest {
+  resource_name: string
+  field_key: string
+  field_label: string
+  field_type: 'text' | 'number' | 'checkbox' | 'select'
+  hint?: string | null
+  possible_values?: string | string[] | null
+  is_mandatory?: boolean
+  tag?: string | null
+}
+
+export interface CustomFieldDefinitionUpdateRequest {
+  resource_name?: string
+  field_key?: string
+  field_label?: string
+  field_type?: 'text' | 'number' | 'checkbox' | 'select'
+  hint?: string | null
+  possible_values?: string | string[] | null
+  is_mandatory?: boolean
+  tag?: string | null
 }
 
 // ============================================
