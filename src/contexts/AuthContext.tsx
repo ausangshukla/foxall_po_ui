@@ -1,0 +1,201 @@
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  ReactNode,
+} from 'react'
+import { useNavigate } from 'react-router-dom'
+import { onAuthRequired } from '../api/client'
+import {
+  login as loginApi,
+  logout as logoutApi,
+  getCurrentUser,
+  isAuthenticated as checkIsAuthenticated,
+} from '../api/auth'
+import type {
+  LoginRequest,
+  LoginResponse,
+  UserResponse,
+  UserRole,
+} from '../types/api'
+
+// ============================================
+// Auth Context Types
+// ============================================
+interface AuthContextType {
+  user: UserResponse | null
+  isAuthenticated: boolean
+  isLoading: boolean
+  login: (credentials: LoginRequest) => Promise<LoginResponse>
+  logout: () => void
+  hasRole: (role: UserRole) => boolean
+  hasAnyRole: (roles: UserRole[]) => boolean
+  canManageUsers: () => boolean
+  canManageAllUsers: () => boolean
+  refreshUser: () => Promise<void>
+}
+
+// ============================================
+// Create Context
+// ============================================
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+// ============================================
+// Auth Provider Component
+// ============================================
+interface AuthProviderProps {
+  children: ReactNode
+}
+
+export function AuthProvider({ children }: AuthProviderProps) {
+  const navigate = useNavigate()
+  const [user, setUser] = useState<UserResponse | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Initialize auth state on mount
+  useEffect(() => {
+    const initAuth = async () => {
+      if (checkIsAuthenticated()) {
+        try {
+          const currentUser = await getCurrentUser()
+          setUser(currentUser)
+        } catch {
+          // Failed to get current user, logout
+          logoutApi()
+          setUser(null)
+        }
+      }
+      setIsLoading(false)
+    }
+
+    initAuth()
+  }, [])
+
+  // Listen for auth required events (e.g., token expired)
+  useEffect(() => {
+    const unsubscribe = onAuthRequired(() => {
+      setUser(null)
+      navigate('/login', { replace: true })
+    })
+
+    return unsubscribe
+  }, [navigate])
+
+  // Login function
+  const login = useCallback(async (credentials: LoginRequest) => {
+    const result = await loginApi(credentials)
+    const currentUser = await getCurrentUser()
+    setUser(currentUser)
+    return result
+  }, [])
+
+  // Logout function
+  const logout = useCallback(() => {
+    logoutApi()
+    setUser(null)
+    navigate('/login', { replace: true })
+  }, [navigate])
+
+  // Refresh user data
+  const refreshUser = useCallback(async () => {
+    if (checkIsAuthenticated()) {
+      try {
+        const currentUser = await getCurrentUser()
+        setUser(currentUser)
+      } catch {
+        setUser(null)
+      }
+    }
+  }, [])
+
+  // Role checking helpers
+  const hasRole = useCallback(
+    (role: UserRole): boolean => {
+      return user?.roles.includes(role) ?? false
+    },
+    [user]
+  )
+
+  const hasAnyRole = useCallback(
+    (roles: UserRole[]): boolean => {
+      return roles.some(role => user?.roles.includes(role)) ?? false
+    },
+    [user]
+  )
+
+  // Permission helpers based on roles
+  const canManageUsers = useCallback((): boolean => {
+    return hasAnyRole(['super', 'admin'])
+  }, [hasAnyRole])
+
+  const canManageAllUsers = useCallback((): boolean => {
+    return hasRole('super')
+  }, [hasRole])
+
+  const value: AuthContextType = {
+    user,
+    isAuthenticated: !!user,
+    isLoading,
+    login,
+    logout,
+    hasRole,
+    hasAnyRole,
+    canManageUsers,
+    canManageAllUsers,
+    refreshUser,
+  }
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+}
+
+// ============================================
+// Use Auth Hook
+// ============================================
+export function useAuth(): AuthContextType {
+  const context = useContext(AuthContext)
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider')
+  }
+  return context
+}
+
+// ============================================
+// Protected Route Hook
+// ============================================
+export function useRequireAuth(redirectTo: string = '/login'): boolean {
+  const { isAuthenticated, isLoading } = useAuth()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      navigate(redirectTo, { replace: true })
+    }
+  }, [isAuthenticated, isLoading, navigate, redirectTo])
+
+  return isAuthenticated
+}
+
+// ============================================
+// Require Role Hook
+// ============================================
+export function useRequireRole(
+  role: UserRole,
+  redirectTo: string = '/'
+): boolean {
+  const { hasRole, isAuthenticated, isLoading } = useAuth()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        navigate('/login', { replace: true })
+      } else if (!hasRole(role)) {
+        navigate(redirectTo, { replace: true })
+      }
+    }
+  }, [isAuthenticated, hasRole, isLoading, navigate, redirectTo, role])
+
+  return isAuthenticated && hasRole(role)
+}
