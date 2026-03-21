@@ -89,6 +89,9 @@ export function EntityListPage() {
     }
   }
 
+  const [sortKey, setSortKey] = useState<keyof EntityResponse>('name')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
+
   // Filter entities based on search
   const filteredEntities = entities.filter((entity) => {
     const searchLower = searchTerm.toLowerCase()
@@ -97,7 +100,27 @@ export function EntityListPage() {
       entity.entity_type.toLowerCase().includes(searchLower) ||
       entity.address.toLowerCase().includes(searchLower)
     )
+  }).sort((a, b) => {
+    const aVal = a[sortKey]
+    const bVal = b[sortKey]
+    if (typeof aVal === 'string' && typeof bVal === 'string') {
+      return sortDir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal)
+    }
+    if (typeof aVal === 'number' && typeof bVal === 'number') {
+      return sortDir === 'asc' ? aVal - bVal : bVal - aVal
+    }
+    return 0
   })
+
+  const toggleSort = (key: keyof EntityResponse) => {
+    if (sortKey === key) {
+      setSortDir(sortDir === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortKey(key)
+      setSortDir('asc')
+    }
+  }
+
 
   if (!isAuth || isLoading) {
     return <LoadingSpinner />
@@ -142,10 +165,10 @@ export function EntityListPage() {
             <Table responsive hover>
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Type</th>
+                  <th role="button" onClick={() => toggleSort('name')}>Name {sortKey === 'name' ? (sortDir === 'asc' ? '▲' : '▼') : ''}</th>
+                  <th role="button" onClick={() => toggleSort('entity_type')}>Type {sortKey === 'entity_type' ? (sortDir === 'asc' ? '▲' : '▼') : ''}</th>
                   <th>URL</th>
-                  <th>Address</th>
+                  <th role="button" onClick={() => toggleSort('address')}>Address {sortKey === 'address' ? (sortDir === 'asc' ? '▲' : '▼') : ''}</th>
                   <th>Users</th>
                   <th>Actions</th>
                 </tr>

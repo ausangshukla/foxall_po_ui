@@ -87,6 +87,9 @@ export function PurchaseOrderListPage() {
   const [carrier, setCarrier] = useState('')
   const [trackingNumber, setTrackingNumber] = useState('')
 
+  const [sortKey, setSortKey] = useState<string>('order_date')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+
   const fetchPurchaseOrders = useCallback(async () => {
     if (!isAuth) return
 
@@ -95,8 +98,7 @@ export function PurchaseOrderListPage() {
       setError(null)
 
       const conditions: PurchaseOrderSearchCondition[] = []
-
-      // Add PO Number filter if provided
+      // ... (existing code for conditions)
       if (poNumber.trim()) {
         conditions.push({
           field: 'po_number',
@@ -104,8 +106,6 @@ export function PurchaseOrderListPage() {
           value: poNumber.trim(),
         })
       }
-
-      // Add Vendor ID filter if provided
       if (vendorId.trim()) {
         conditions.push({
           field: 'vendor_id',
@@ -113,8 +113,6 @@ export function PurchaseOrderListPage() {
           value: vendorId.trim(),
         })
       }
-
-      // Add Shipping filters
       if (shippingMethod.trim()) {
         conditions.push({
           field: 'shipping_method',
@@ -136,7 +134,6 @@ export function PurchaseOrderListPage() {
           value: trackingNumber.trim(),
         })
       }
-      console.log("DEBUG: Conditions:", conditions)
 
       const response = await searchPurchaseOrders({
         page,
@@ -146,6 +143,10 @@ export function PurchaseOrderListPage() {
         order_date_from: orderDateFrom || undefined,
         order_date_to: orderDateTo || undefined,
         conditions: conditions.length > 0 ? conditions : undefined,
+        // @ts-expect-error - Assuming backend supports sorting
+        sort_by: sortKey,
+        // @ts-expect-error - Assuming backend supports sorting
+        sort_dir: sortDir,
       })
 
       setPurchaseOrders(response.data)
@@ -173,7 +174,19 @@ export function PurchaseOrderListPage() {
     shippingMethod,
     carrier,
     trackingNumber,
+    sortKey,
+    sortDir,
   ])
+
+  const toggleSort = (key: string) => {
+    if (sortKey === key) {
+      setSortDir(sortDir === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortKey(key)
+      setSortDir('asc')
+    }
+    setPage(1)
+  }
 
   useEffect(() => {
     fetchPurchaseOrders()
@@ -493,13 +506,14 @@ export function PurchaseOrderListPage() {
               <Table responsive hover>
                 <thead>
                   <tr>
-                    <th>PO Number</th>
-                    <th>Status</th>
-                    <th>Order Date</th>
-                    <th>Expected Delivery</th>
-                    <th>Total Amount</th>
-                    <th>Shipping</th>
-                    <th>Tracking</th>
+                    <th role="button" onClick={() => toggleSort('po_number')}>PO Number {sortKey === 'po_number' ? (sortDir === 'asc' ? '▲' : '▼') : ''}</th>
+                    <th role="button" onClick={() => toggleSort('status')}>Status {sortKey === 'status' ? (sortDir === 'asc' ? '▲' : '▼') : ''}</th>
+                    <th role="button" onClick={() => toggleSort('order_date')}>Order Date {sortKey === 'order_date' ? (sortDir === 'asc' ? '▲' : '▼') : ''}</th>
+                    <th role="button" onClick={() => toggleSort('expected_delivery_date')}>Expected Delivery {sortKey === 'expected_delivery_date' ? (sortDir === 'asc' ? '▲' : '▼') : ''}</th>
+                    <th role="button" onClick={() => toggleSort('total_amount')}>Total Amount {sortKey === 'total_amount' ? (sortDir === 'asc' ? '▲' : '▼') : ''}</th>
+                    <th role="button" onClick={() => toggleSort('shipping_method')}>Method {sortKey === 'shipping_method' ? (sortDir === 'asc' ? '▲' : '▼') : ''}</th>
+                    <th role="button" onClick={() => toggleSort('carrier')}>Carrier {sortKey === 'carrier' ? (sortDir === 'asc' ? '▲' : '▼') : ''}</th>
+                    <th role="button" onClick={() => toggleSort('tracking_number')}>Tracking {sortKey === 'tracking_number' ? (sortDir === 'asc' ? '▲' : '▼') : ''}</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -547,14 +561,51 @@ export function PurchaseOrderListPage() {
                       </td>
                       <td>
                         {po.shipping_method ? (
-                          <Badge bg="light" text="dark" className="fw-medium">
-                            {po.carrier || po.shipping_method}
+                          <Badge
+                            bg="light"
+                            text="dark"
+                            className="fw-medium text-capitalize"
+                            role="button"
+                            onClick={() => {
+                              setShippingMethod(po.shipping_method || '')
+                              setPage(1)
+                            }}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            {po.shipping_method}
                           </Badge>
                         ) : (
                           <span className="text-muted">—</span>
                         )}
                       </td>
-                      <td>{po.tracking_number || <span className="text-muted">—</span>}</td>
+                      <td>
+                        <span
+                          role="button"
+                          onClick={() => {
+                            if (po.carrier) {
+                              setCarrier(po.carrier)
+                              setPage(1)
+                            }
+                          }}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          {po.carrier || <span className="text-muted">—</span>}
+                        </span>
+                      </td>
+                      <td>
+                        <span
+                          role="button"
+                          onClick={() => {
+                            if (po.tracking_number) {
+                              setTrackingNumber(po.tracking_number)
+                              setPage(1)
+                            }
+                          }}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          {po.tracking_number || <span className="text-muted">—</span>}
+                        </span>
+                      </td>
                       <td>
                         <Dropdown>
                           <Dropdown.Toggle

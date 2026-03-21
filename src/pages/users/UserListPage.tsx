@@ -87,6 +87,9 @@ export function UserListPage() {
     }
   }
 
+  const [sortKey, setSortKey] = useState<keyof UserResponse>('first_name')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
+
   // Filter users based on search
   const filteredUsers = users.filter((user) => {
     const searchLower = searchTerm.toLowerCase()
@@ -95,7 +98,27 @@ export function UserListPage() {
       user.last_name.toLowerCase().includes(searchLower) ||
       user.email.toLowerCase().includes(searchLower)
     )
+  }).sort((a, b) => {
+    const aVal = a[sortKey]
+    const bVal = b[sortKey]
+    if (typeof aVal === 'string' && typeof bVal === 'string') {
+      return sortDir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal)
+    }
+    if (typeof aVal === 'number' && typeof bVal === 'number') {
+      return sortDir === 'asc' ? aVal - bVal : bVal - aVal
+    }
+    return 0
   })
+
+  const toggleSort = (key: keyof UserResponse) => {
+    if (sortKey === key) {
+      setSortDir(sortDir === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortKey(key)
+      setSortDir('asc')
+    }
+  }
+
 
   // Check if user can manage specific user
   const canManageUser = (user: UserResponse): boolean => {
@@ -149,8 +172,8 @@ export function UserListPage() {
             <Table responsive hover>
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Email</th>
+                  <th role="button" onClick={() => toggleSort('first_name')}>Name {sortKey === 'first_name' ? (sortDir === 'asc' ? '▲' : '▼') : ''}</th>
+                  <th role="button" onClick={() => toggleSort('email')}>Email {sortKey === 'email' ? (sortDir === 'asc' ? '▲' : '▼') : ''}</th>
                   <th>Phone</th>
                   <th>Entity</th>
                   <th>Roles</th>
