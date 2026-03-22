@@ -147,6 +147,7 @@ export function UserFormPage() {
         if (isSelf) {
           await refreshUser()
         }
+        navigate(isProfileEdit ? '/profile' : `/users/${userId}`)
       } else {
         const createData: CreateUserRequest = {
           first_name: formData.first_name,
@@ -159,10 +160,9 @@ export function UserFormPage() {
           email_enabled: formData.email_enabled,
           roles: formData.roles,
         }
-        await createUser(createData)
+        const newUser = await createUser(createData)
+        navigate(`/users/${newUser.id}`)
       }
-
-      navigate(isProfileEdit ? '/profile' : '/users')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save user')
     } finally {
