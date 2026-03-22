@@ -31,8 +31,14 @@ export interface LoginResponse {
   email: string
   first_name: string | null
   last_name: string | null
+  phone?: string
+  avatar_url?: string
+  username?: string
+  wa_enabled?: boolean
+  email_enabled?: boolean
+  entity_id?: number
   roles: string[] | null
-  [key: string]: any
+  [key: string]: unknown
 }
 
 export interface JWTPayload {
@@ -90,6 +96,8 @@ export interface UserResponse {
   wa_enabled: boolean
   email_enabled: boolean
   roles: string[]
+  avatar_url?: string
+  username?: string
 }
 
 export interface CreateUserRequest {
@@ -145,6 +153,9 @@ export interface EntityUpdateRequest {
 // ============================================
 export type UserRole = 'super' | 'admin' | 'employee'
 
+// Custom field value types
+export type CustomFieldValue = string | number | boolean | null
+
 // ============================================
 // Purchase Order Types
 // ============================================
@@ -185,7 +196,7 @@ export interface PurchaseOrderResponse {
   incoterm: string | null
   tracking_number: string | null
   carrier: string | null
-  custom_fields: Record<string, any> | null
+  custom_fields: Record<string, CustomFieldValue> | null
   // Audit Fields
   created_by: number
   approved_by: number | null
@@ -213,7 +224,7 @@ export interface CreatePurchaseOrderRequest {
   incoterm?: string | null
   tracking_number?: string | null
   carrier?: string | null
-  custom_fields?: Record<string, any> | null
+  custom_fields?: Record<string, CustomFieldValue> | null
 }
 
 export interface UpdatePurchaseOrderRequest {
@@ -235,7 +246,7 @@ export interface UpdatePurchaseOrderRequest {
   incoterm?: string | null
   tracking_number?: string | null
   carrier?: string | null
-  custom_fields?: Record<string, any> | null
+  custom_fields?: Record<string, CustomFieldValue> | null
   approved_by?: number | null
 }
 
@@ -253,11 +264,14 @@ export interface PurchaseOrderSearchRequest {
   per_page?: number
   q?: string
   status?: string
+  po_type?: PurchaseOrderType
   entity_id?: number
   vendor_id?: number
   order_date_from?: string
   order_date_to?: string
   conditions?: PurchaseOrderSearchCondition[]
+  sort_by?: string
+  sort_dir?: 'asc' | 'desc'
 }
 
 export interface PurchaseOrderSearchMeta {
@@ -271,12 +285,12 @@ export interface PurchaseOrderSearchMeta {
 // API Error Types
 // ============================================
 export class ApiError extends Error {
-  constructor(
-    public code: string,
-    message: string
-  ) {
+  code: string
+
+  constructor(code: string, message: string) {
     super(message)
     this.name = 'ApiError'
+    this.code = code
   }
 }
 

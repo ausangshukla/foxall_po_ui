@@ -1,15 +1,27 @@
-import { useState, type FormEvent } from 'react'
-import { useNavigate, Navigate, Link } from 'react-router-dom'
+import { useState, useEffect, type FormEvent } from 'react'
+import { useNavigate, Navigate, Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { LoginError, ValidationError } from '../types/api'
 
 export function LoginPage() {
   const navigate = useNavigate()
   const { login, isAuthenticated } = useAuth()
+  const [searchParams] = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+
+  // Check for session expired reason from URL
+  const sessionExpiredReason = searchParams.get('reason')
+  const redirectTo = searchParams.get('redirectTo')
+
+  // Show session expired message if reason is present
+  useEffect(() => {
+    if (sessionExpiredReason === 'session_expired') {
+      setError('Session expired or invalid. Please log in again.')
+    }
+  }, [sessionExpiredReason])
 
   // Redirect if already authenticated
   if (isAuthenticated) {
@@ -30,7 +42,12 @@ export function LoginPage() {
 
     try {
       await login({ email, password })
-      navigate('/dashboard', { replace: true })
+      // Redirect to original page if provided, otherwise go to dashboard
+      if (redirectTo) {
+        navigate(redirectTo, { replace: true })
+      } else {
+        navigate('/dashboard', { replace: true })
+      }
     } catch (err) {
       if (err instanceof LoginError) {
         setError(err.message)

@@ -6,14 +6,6 @@ import { getEntity } from '../../api/entities'
 import { listUsers } from '../../api/users'
 import type { EntityResponse, UserResponse } from '../../types/api'
 
-const TYPE_CONFIG: Record<string, { icon: string, bg: string, text: string, border: string, gradient: string }> = {
-  company: { icon: 'corporate_fare', bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-100', gradient: 'from-blue-600 to-indigo-700' },
-  branch: { icon: 'store', bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-100', gradient: 'from-indigo-500 to-purple-600' },
-  department: { icon: 'lan', bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-100', gradient: 'from-emerald-500 to-teal-600' },
-  warehouse: { icon: 'inventory_2', bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-100', gradient: 'from-amber-500 to-orange-600' },
-  store: { icon: 'shopping_basket', bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-100', gradient: 'from-rose-500 to-pink-600' },
-}
-
 export function EntityShowPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -67,7 +59,6 @@ export function EntityShowPage() {
     )
   }
 
-  const typeCfg = TYPE_CONFIG[entity.entity_type.toLowerCase()] || TYPE_CONFIG.company
   const adminCount = users.filter(u => u.roles.includes('admin') || u.roles.includes('super')).length
   const employeeCount = users.length - adminCount
 

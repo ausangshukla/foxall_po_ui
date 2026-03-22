@@ -1,4 +1,4 @@
-import React, { useState, useEffect, type FormEvent } from 'react'
+import { useState, useEffect, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth, useRequireAuth } from '../../contexts/AuthContext'
 import { LoadingSpinner, AlertMessage, RichTextEditor } from '../../components/common'
@@ -11,11 +11,13 @@ import { getCustomFieldDefinitions } from '../../api/custom-fields'
 import type {
   CreatePurchaseOrderRequest,
   UpdatePurchaseOrderRequest,
+  PurchaseOrderResponse,
   PurchaseOrderStatus,
   PurchaseOrderType,
   ShippingMethod,
   ShippingTerm,
   CustomFieldDefinition,
+  CustomFieldValue,
 } from '../../types/api'
 
 interface FormData {
@@ -37,7 +39,7 @@ interface FormData {
   incoterm: string
   tracking_number: string
   carrier: string
-  custom_fields: Record<string, any>
+  custom_fields: Record<string, CustomFieldValue>
 }
 
 const initialFormData: FormData = {
@@ -122,14 +124,14 @@ export function PurchaseOrderFormPage() {
 
     const loadData = async () => {
       try {
-        let poData: any = null;
+        let poData: PurchaseOrderResponse | null = null;
         if (isEditing && poId) {
           poData = await getPurchaseOrder(poId);
         }
 
         const definitions = await getCustomFieldDefinitions('PurchaseOrder', poData?.po_type || undefined);
         setFieldDefinitions(definitions)
-        const customFields: Record<string, any> = {}
+        const customFields: Record<string, CustomFieldValue> = {}
         definitions.forEach((def) => {
           customFields[def.field_key] = ''
         })
@@ -325,7 +327,7 @@ export function PurchaseOrderFormPage() {
     try {
       const definitions = await getCustomFieldDefinitions('PurchaseOrder', value)
       setFieldDefinitions(definitions)
-      const newCustomFields: Record<string, any> = {}
+      const newCustomFields: Record<string, CustomFieldValue> = {}
       definitions.forEach((def) => {
         newCustomFields[def.field_key] = ''
       })
@@ -702,7 +704,7 @@ export function PurchaseOrderFormPage() {
                           ) : def.field_type === 'select' ? (
                             <select
                               name={`custom_fields.${def.field_key}`}
-                              value={formData.custom_fields[def.field_key] || ''}
+                              value={String(formData.custom_fields[def.field_key] ?? '')}
                               onChange={handleChange}
                               className={`w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface appearance-none ${validationErrors[`custom_fields.${def.field_key}`] ? 'ring-2 ring-error/20' : 'focus:ring-primary-container/40'}`}
                             >
@@ -714,11 +716,20 @@ export function PurchaseOrderFormPage() {
                                 <option key={val} value={val}>{val}</option>
                               ))}
                             </select>
+                          ) : def.field_type === 'number' ? (
+                            <input
+                              type="number"
+                              name={`custom_fields.${def.field_key}`}
+                              value={typeof formData.custom_fields[def.field_key] === 'number' ? formData.custom_fields[def.field_key] as number : ''}
+                              onChange={handleChange}
+                              placeholder={def.hint || ''}
+                              className={`w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface ${validationErrors[`custom_fields.${def.field_key}`] ? 'ring-2 ring-error/20' : 'focus:ring-primary-container/40'}`}
+                            />
                           ) : (
                             <input
-                              type={def.field_type}
+                              type="text"
                               name={`custom_fields.${def.field_key}`}
-                              value={formData.custom_fields[def.field_key] || ''}
+                              value={String(formData.custom_fields[def.field_key] ?? '')}
                               onChange={handleChange}
                               placeholder={def.hint || ''}
                               className={`w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface ${validationErrors[`custom_fields.${def.field_key}`] ? 'ring-2 ring-error/20' : 'focus:ring-primary-container/40'}`}

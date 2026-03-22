@@ -1,4 +1,4 @@
-import { useState, useEffect, FormEvent } from 'react'
+import { useState, useEffect, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth, useRequireAuth } from '../../contexts/AuthContext'
 import { LoadingSpinner, AlertMessage } from '../../components/common'
@@ -12,11 +12,13 @@ import type {
   CustomFieldDefinitionUpdateRequest,
 } from '../../types/api'
 
+type FieldType = 'text' | 'number' | 'checkbox' | 'select'
+
 interface FormData {
   resource_name: string
   field_key: string
   field_label: string
-  field_type: 'text' | 'number' | 'checkbox' | 'select'
+  field_type: FieldType
   hint: string
   possible_values: string
   is_mandatory: boolean
@@ -59,11 +61,15 @@ export function CustomFieldDefinitionFormPage() {
       if (isEditing && definitionId) {
         try {
           const data = await getCustomFieldDefinition(definitionId)
+          const validFieldTypes: FieldType[] = ['text', 'number', 'checkbox', 'select']
+          const fieldType = validFieldTypes.includes(data.field_type as FieldType) 
+            ? data.field_type as FieldType 
+            : 'text'
           setFormData({
             resource_name: data.resource_name || 'PurchaseOrder',
             field_key: data.field_key || '',
             field_label: data.field_label || '',
-            field_type: (data.field_type as any) || 'text',
+            field_type: fieldType,
             hint: data.hint || '',
             possible_values: Array.isArray(data.possible_values) 
               ? data.possible_values.join(', ') 

@@ -4,7 +4,7 @@ import {
   useState,
   useEffect,
   useCallback,
-  ReactNode,
+  type ReactNode,
 } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { onAuthRequired } from '../api/client'
@@ -75,9 +75,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Listen for auth required events (e.g., token expired)
   useEffect(() => {
-    const unsubscribe = onAuthRequired(() => {
+    const unsubscribe = onAuthRequired((redirectTo?: string) => {
       setUser(null)
-      navigate('/login', { replace: true })
+      // Build redirect URL with session expired message
+      const params = new URLSearchParams()
+      params.set('reason', 'session_expired')
+      if (redirectTo && redirectTo !== '/login') {
+        params.set('redirectTo', redirectTo)
+      }
+      navigate(`/login?${params.toString()}`, { replace: true })
     })
 
     return unsubscribe
@@ -179,6 +185,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 // ============================================
 // Use Auth Hook
 // ============================================
+// Custom hooks are allowed to be exported from context files (React best practice)
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth(): AuthContextType {
   const context = useContext(AuthContext)
   if (context === undefined) {
@@ -190,6 +198,8 @@ export function useAuth(): AuthContextType {
 // ============================================
 // Protected Route Hook
 // ============================================
+// Custom hooks are allowed to be exported from context files (React best practice)
+// eslint-disable-next-line react-refresh/only-export-components
 export function useRequireAuth(redirectTo: string = '/login'): boolean {
   const { isAuthenticated, isLoading } = useAuth()
   const navigate = useNavigate()
@@ -206,6 +216,8 @@ export function useRequireAuth(redirectTo: string = '/login'): boolean {
 // ============================================
 // Require Role Hook
 // ============================================
+// Custom hooks are allowed to be exported from context files (React best practice)
+// eslint-disable-next-line react-refresh/only-export-components
 export function useRequireRole(
   role: UserRole,
   redirectTo: string = '/'

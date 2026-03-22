@@ -1,5 +1,10 @@
 import { API_BASE_URL } from '../config'
-import type { ApiResponse } from '../types/api'
+import type {
+  ApiResponse,
+  LoginRequest,
+  LoginResponse,
+  JWTPayload,
+} from '../types/api'
 import {
   ApiError,
   AuthError,
@@ -10,7 +15,11 @@ import {
 import { storage } from '../lib/storage'
 import { isTokenExpired } from '../lib/jwt'
 
-// Custom error for auth events
+// Capture current location before clearing auth (for redirect back after login)
+function getCurrentPath(): string {
+  return window.location.pathname + window.location.search
+}
+
 export class AuthRequiredError extends Error {
   constructor() {
     super('Authentication required')
@@ -19,7 +28,7 @@ export class AuthRequiredError extends Error {
 }
 
 // Event emitter for auth events
-type AuthEventListener = () => void
+type AuthEventListener = (redirectTo?: string) => void
 const authListeners: AuthEventListener[] = []
 
 export function onAuthRequired(listener: AuthEventListener): () => void {
@@ -32,24 +41,26 @@ export function onAuthRequired(listener: AuthEventListener): () => void {
   }
 }
 
-function notifyAuthRequired(): void {
-  authListeners.forEach(listener => listener())
+function notifyAuthRequired(redirectTo?: string): void {
+  authListeners.forEach(listener => listener(redirectTo))
 }
 
 // ============================================
 // Base API Request Function
 // ============================================
-export async function apiRequest<T, M = unknown>(
+// Type parameters in overload signatures are used for return type specificity
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function apiRequest<T, M = Record<string, never>>(
   endpoint: string,
   options?: RequestInit,
   returnFull?: false
 ): Promise<T>;
-export async function apiRequest<T, M = unknown>(
+export async function apiRequest<T, M = Record<string, never>>(
   endpoint: string,
   options: RequestInit,
   returnFull: true
 ): Promise<ApiResponse<T, M>>;
-export async function apiRequest<T, M = unknown>(
+export async function apiRequest<T, M = Record<string, never>>(
   endpoint: string,
   options: RequestInit = {},
   returnFull: boolean = false
@@ -68,7 +79,7 @@ export async function apiRequest<T, M = unknown>(
     // Check if token is expired before making request
     if (isTokenExpired(token)) {
       storage.clearAuth()
-      notifyAuthRequired()
+      notifyAuthRequired(getCurrentPath())
       throw new AuthError('Session expired')
     }
     headers['Authorization'] = `Bearer ${token}`
@@ -104,7 +115,7 @@ export async function apiRequest<T, M = unknown>(
     if (response.status === 401) {
       if (token) {
         storage.clearAuth()
-        notifyAuthRequired()
+        notifyAuthRequired(getCurrentPath())
       }
       throw new AuthError('Session expired or invalid')
     }
@@ -113,23 +124,21 @@ export async function apiRequest<T, M = unknown>(
 
   // If token is in header, inject it into data for login responses
   if (tokenFromHeader && body.data) {
-    // @ts-ignore
-    body.data.token = tokenFromHeader
+    const dataWithToken = body.data as T & { token?: string; user_id?: number }
+    dataWithToken.token = tokenFromHeader
     // Also if it's a login response from devise, we might need to map user.id to user_id
     // Check for id even if it's null (it should be set if available)
-    // We'll trust the server that it's a login response
-    if (Object.prototype.hasOwnProperty.call(body.data, 'id') && !Object.prototype.hasOwnProperty.call(body.data, 'user_id')) {
-      // @ts-ignore
-      body.data.user_id = body.data.id
+    if (Object.prototype.hasOwnProperty.call(dataWithToken, 'id') && !Object.prototype.hasOwnProperty.call(dataWithToken, 'user_id')) {
+      dataWithToken.user_id = (dataWithToken as { id?: number }).id ?? undefined
     }
   }
 
   // Handle error responses
-  const hasError = !response.ok || body.error || (body as any).errors || (body.status && body.status.code >= 400)
+  const hasError = !response.ok || body.error || (body as unknown as { errors?: unknown }).errors || (body.status && body.status.code >= 400)
   if (hasError) {
     let code = 'UNKNOWN_ERROR'
     let message = 'An unexpected error occurred'
-    const errorBody = body.error || (body as any).errors || body.status
+    const errorBody = body.error || (body as unknown as { errors?: unknown }).errors || body.status
 
     // Prioritize HTTP status code for determining error type
     if (response.status === 401) code = 'UNAUTHORIZED'
@@ -140,21 +149,22 @@ export async function apiRequest<T, M = unknown>(
     if (typeof errorBody === 'string') {
       message = errorBody
     } else if (errorBody && typeof errorBody === 'object') {
+      const errorBodyObj = errorBody as Record<string, unknown>
       // If it's a Rails-style errors object (e.g., { email: ["is invalid"] })
-      if (!(errorBody as any).code && !(errorBody as any).message) {
+      if (!errorBodyObj.code && !errorBodyObj.message) {
         code = 'VALIDATION_ERROR'
-        message = Object.entries(errorBody)
+        message = Object.entries(errorBody as Record<string, string[]>)
           .map(([field, msgs]) => `${field} ${(msgs as string[]).join(', ')}`)
           .join('; ')
       } else {
         // Only use the body's code if it's actually an error code
-        const bodyCode = (errorBody as any).code?.toString()
+        const bodyCode = (errorBodyObj.code as string | undefined)?.toString()
         if (bodyCode && bodyCode !== '200' && bodyCode !== '0') {
           code = bodyCode
         }
         
         // If the body has a message, use it unless it's misleading (like "Logged in successfully" on a 422)
-        const bodyMessage = (errorBody as any).message
+        const bodyMessage = errorBodyObj.message as string | undefined
         if (bodyMessage && !(response.status === 422 && bodyMessage.includes('successfully'))) {
           message = bodyMessage
         } else if (response.status === 422) {
@@ -176,7 +186,7 @@ export async function apiRequest<T, M = unknown>(
         // Token expired or invalid
         if (token) {
           storage.clearAuth()
-          notifyAuthRequired()
+          notifyAuthRequired(getCurrentPath())
         }
         throw new AuthError(message)
 
@@ -232,8 +242,11 @@ export const api = {
     apiRequest<T>(endpoint, { method: 'DELETE' }),
 
   // For when you need the whole envelope (like for pagination meta)
-  requestFull: <T, M = any>(endpoint: string, options: RequestInit = {}) =>
+  requestFull: <T, M = Record<string, never>>(endpoint: string, options: RequestInit = {}) =>
     apiRequest<T, M>(endpoint, options, true),
 }
 
 export { storage }
+
+// Re-export types for convenience
+export type { ApiResponse, LoginRequest, LoginResponse, JWTPayload }

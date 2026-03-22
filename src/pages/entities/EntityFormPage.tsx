@@ -1,10 +1,9 @@
-import { useState, useEffect, FormEvent } from 'react'
+import { useState, useEffect, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth, useRequireAuth } from '../../contexts/AuthContext'
 import { LoadingSpinner, AlertMessage } from '../../components/common'
 import { createEntity, updateEntity, getEntity } from '../../api/entities'
 import type {
-  EntityResponse,
   EntityCreateRequest,
   EntityUpdateRequest,
 } from '../../types/api'

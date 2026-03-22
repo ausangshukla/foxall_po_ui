@@ -73,7 +73,6 @@ export function UserShowPage() {
   }
 
   const primaryRole = user.roles.includes('super') ? 'super' : user.roles.includes('admin') ? 'admin' : 'employee'
-  const roleStyle = ROLE_CONFIG[primaryRole] || ROLE_CONFIG.employee
 
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-12 animate-in fade-in slide-in-from-bottom-4 duration-700">

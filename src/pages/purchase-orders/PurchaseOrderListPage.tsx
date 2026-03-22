@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth, useRequireAuth } from '../../contexts/AuthContext'
-import { LoadingSpinner, AlertMessage, ConfirmationModal } from '../../components/common'
+import { AlertMessage, ConfirmationModal } from '../../components/common'
 import {
   searchPurchaseOrders,
   deletePurchaseOrder,
@@ -13,28 +13,6 @@ import type {
   PurchaseOrderSearchCondition,
   ShippingMethod,
 } from '../../types/api'
-
-const STATUS_VARIANTS: Record<PurchaseOrderStatus, string> = {
-  draft: 'bg-slate-100 text-slate-700 border-slate-200',
-  pending: 'bg-amber-100 text-amber-700 border-amber-200',
-  approved: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-  sent: 'bg-blue-100 text-blue-700 border-blue-200',
-  partially_received: 'bg-indigo-100 text-indigo-700 border-indigo-200',
-  received: 'bg-green-100 text-green-700 border-green-200',
-  closed: 'bg-gray-100 text-gray-700 border-gray-200',
-  cancelled: 'bg-red-100 text-red-700 border-red-200',
-}
-
-const STATUS_ICONS: Record<PurchaseOrderStatus, string> = {
-  draft: 'edit_note',
-  pending: 'hourglass_empty',
-  approved: 'check_circle',
-  sent: 'send',
-  partially_received: 'package_2',
-  received: 'inventory_2',
-  closed: 'lock',
-  cancelled: 'cancel',
-}
 
 const ALL_STATUSES: PurchaseOrderStatus[] = [
   'draft',
@@ -152,7 +130,6 @@ export function PurchaseOrderListPage() {
         per_page: perPage,
         q: searchTerm.trim() || undefined,
         status: statusFilter !== 'all' ? statusFilter : undefined,
-        // @ts-ignore
         po_type: poTypeFilter !== 'all' ? poTypeFilter : undefined,
         order_date_from: orderDateFrom || undefined,
         order_date_to: orderDateTo || undefined,
@@ -351,31 +328,6 @@ export function PurchaseOrderListPage() {
         </span>
       )
     }
-
-    const renderTypeBadge = (type: PurchaseOrderType | undefined) => {
-      return (
-        <span 
-          onClick={(e) => type && handleFilterClick(e, 'po_type', type)}
-          className="text-xs font-medium px-2 py-1 bg-slate-100 text-slate-600 rounded cursor-pointer hover:bg-primary/10 hover:text-primary transition-all"
-        >
-          {(type || 'standard').replace(/\b\w/g, (l) => l.toUpperCase())}
-        </span>
-      )
-    }
-
-  const hasActiveFilters =
-    searchTerm ||
-    statusFilter !== 'all' ||
-    poTypeFilter !== 'all' ||
-    vendorId ||
-    orderDateFrom ||
-    orderDateTo ||
-    poNumber ||
-    totalAmountMin ||
-    totalAmountMax ||
-    shippingMethod ||
-    carrier ||
-    trackingNumber
 
   const hasAdvancedFilters =
     poTypeFilter !== 'all' ||

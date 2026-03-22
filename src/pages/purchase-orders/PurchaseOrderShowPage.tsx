@@ -4,25 +4,7 @@ import { useAuth, useRequireAuth } from '../../contexts/AuthContext'
 import { LoadingSpinner, AlertMessage } from '../../components/common'
 import { getPurchaseOrder } from '../../api/purchase-orders'
 import { getCustomFieldDefinitions } from '../../api/custom-fields'
-import type { PurchaseOrderResponse, PurchaseOrderStatus, CustomFieldDefinition } from '../../types/api'
-
-const STATUS_CONFIG: Record<PurchaseOrderStatus, { icon: string, color: string, bg: string, border: string, text: string }> = {
-  draft: { icon: 'edit_note', color: 'slate', bg: 'bg-slate-50', border: 'border-slate-200', text: 'text-slate-700' },
-  pending: { icon: 'hourglass_empty', color: 'amber', bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700' },
-  approved: { icon: 'check_circle', color: 'emerald', bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700' },
-  sent: { icon: 'send', color: 'blue', bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700' },
-  partially_received: { icon: 'package_2', color: 'indigo', bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-700' },
-  received: { icon: 'inventory_2', color: 'green', bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-700' },
-  closed: { icon: 'lock', color: 'gray', bg: 'bg-gray-50', border: 'border-gray-200', text: 'text-gray-700' },
-  cancelled: { icon: 'cancel', color: 'red', bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700' },
-}
-
-const SHIPPING_ICONS: Record<string, string> = {
-  air: 'flight',
-  sea: 'directions_boat',
-  ground: 'local_shipping',
-  express: 'bolt',
-}
+import type { PurchaseOrderResponse, PurchaseOrderType, CustomFieldDefinition } from '../../types/api'
 
 export function PurchaseOrderShowPage() {
   const { id } = useParams<{ id: string }>()
@@ -45,7 +27,7 @@ export function PurchaseOrderShowPage() {
         setIsLoading(true)
         const data = await getPurchaseOrder(poId)
         setPurchaseOrder(data)
-        const definitions = await getCustomFieldDefinitions('PurchaseOrder', (data as any).po_type)
+        const definitions = await getCustomFieldDefinitions('PurchaseOrder', data.po_type as PurchaseOrderType)
         setFieldDefinitions(definitions)
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to load purchase order'
@@ -100,10 +82,6 @@ export function PurchaseOrderShowPage() {
       </div>
     )
   }
-
-  const status = STATUS_CONFIG[purchaseOrder.status]
-  const isCancelled = purchaseOrder.status === 'cancelled'
-  const isDelivered = purchaseOrder.status === 'received' || purchaseOrder.status === 'closed'
 
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
