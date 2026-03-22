@@ -241,6 +241,7 @@ export const PurchaseOrderLineItems: React.FC<PurchaseOrderLineItemsProps> = ({ 
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
                 <input
                   type="text"
+                  id="line-items-search"
                   placeholder="Search SKU, description, lot #, HS code..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
