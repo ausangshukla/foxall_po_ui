@@ -361,6 +361,7 @@ export function PurchaseOrderListPage() {
           </button>
           <button
             onClick={() => navigate('/purchase-orders/new')}
+            data-test-id="purchase-order-create"
             className="flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-lg font-bold ambient-shadow hover:scale-[1.02] transition-transform"
           >
             <span className="material-symbols-outlined">add</span>
@@ -710,12 +711,14 @@ export function PurchaseOrderListPage() {
                         {canManageUsers() && (
                           <>
                             <button 
+                              data-test-id={`purchase-order-edit-${po.id}`}
                               onClick={() => navigate(`/purchase-orders/${po.id}/edit`)}
                               className="p-2 opacity-40 group-hover:opacity-100 hover:text-secondary transition-all"
                             >
                               <span className="material-symbols-outlined text-xl">edit</span>
                             </button>
                             <button 
+                              data-test-id={`purchase-order-delete-${po.id}`}
                               onClick={() => handleDelete(po.id)}
                               className="p-2 opacity-40 group-hover:opacity-100 hover:text-error transition-all"
                             >

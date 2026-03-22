@@ -71,6 +71,7 @@ export async function apiRequest<T, M = Record<string, never>>(
 
   // Prepare headers
   const headers: Record<string, string> = {
+    'Accept': 'application/json',
     ...((options.headers as Record<string, string>) || {}),
   }
 
@@ -171,7 +172,7 @@ export async function apiRequest<T, M = Record<string, never>>(
         if (bodyCode && bodyCode !== '200' && bodyCode !== '0') {
           code = bodyCode
         }
-        
+
         // If the body has a message, use it unless it's misleading (like "Logged in successfully" on a 422)
         const bodyMessage = errorBodyObj.message as string | undefined
         if (bodyMessage && !(response.status === 422 && bodyMessage.includes('successfully'))) {

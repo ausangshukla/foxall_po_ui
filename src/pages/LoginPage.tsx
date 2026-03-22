@@ -109,10 +109,11 @@ export function LoginPage() {
             )}
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div>
-                <label className="block font-label text-xs font-semibold uppercase tracking-widest text-on-surface-variant mb-2 ml-1">Email Address</label>
+                <label htmlFor="email" className="block font-label text-xs font-semibold uppercase tracking-widest text-on-surface-variant mb-2 ml-1">Email Address</label>
                 <div className="relative group">
                   <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">mail</span>
                   <input 
+                    id="email"
                     className="w-full bg-surface-container-low border-none rounded-xl py-4 pl-12 pr-4 text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary/20 transition-all" 
                     placeholder="name@foxall.com" 
                     type="email"
@@ -125,12 +126,13 @@ export function LoginPage() {
               </div>
               <div>
                 <div className="flex justify-between items-center mb-2 ml-1">
-                  <label className="block font-label text-xs font-semibold uppercase tracking-widest text-on-surface-variant">Password</label>
+                  <label htmlFor="password" className="block font-label text-xs font-semibold uppercase tracking-widest text-on-surface-variant">Password</label>
                   <a className="text-xs font-bold text-primary hover:underline underline-offset-4" href="#">Forgot?</a>
                 </div>
                 <div className="relative group">
                   <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">lock</span>
                   <input 
+                    id="password"
                     className="w-full bg-surface-container-low border-none rounded-xl py-4 pl-12 pr-4 text-on-surface placeholder:text-outline focus:ring-2 focus:ring-primary/20 transition-all" 
                     placeholder="••••••••" 
                     type="password"
@@ -148,6 +150,7 @@ export function LoginPage() {
               <button 
                 className="w-full bg-primary hover:bg-primary-dim text-on-primary py-4 rounded-full font-headline font-bold text-lg shadow-lg shadow-primary/20 transition-all transform hover:scale-[1.02] active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed" 
                 type="submit"
+                data-test-id="login-submit"
                 disabled={isLoading}
               >
                 {isLoading ? 'Signing In...' : 'Log In to Portal'}

@@ -191,8 +191,9 @@ export function EntityFormPage() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                 <div className="space-y-1.5 md:col-span-2">
-                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Official Name <span className="text-error">*</span></label>
+                  <label htmlFor="name" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Official Name <span className="text-error">*</span></label>
                   <input
+                    id="name"
                     type="text"
                     name="name"
                     value={formData.name}
@@ -204,8 +205,9 @@ export function EntityFormPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Entity Category <span className="text-error">*</span></label>
+                  <label htmlFor="entity_type" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Entity Category <span className="text-error">*</span></label>
                   <select
+                    id="entity_type"
                     name="entity_type"
                     value={formData.entity_type}
                     onChange={handleChange}
@@ -221,8 +223,9 @@ export function EntityFormPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Digital Presence (URL)</label>
+                  <label htmlFor="url" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Digital Presence (URL)</label>
                   <input
+                    id="url"
                     type="url"
                     name="url"
                     value={formData.url}
@@ -233,8 +236,9 @@ export function EntityFormPage() {
                 </div>
 
                 <div className="space-y-1.5 md:col-span-2">
-                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Physical Address</label>
+                  <label htmlFor="address" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Physical Address</label>
                   <textarea
+                    id="address"
                     name="address"
                     rows={3}
                     value={formData.address}
@@ -276,6 +280,7 @@ export function EntityFormPage() {
 
             <div className="space-y-3">
               <button
+                data-test-id="entity-save"
                 type="submit"
                 form="entity-form"
                 disabled={isSaving}

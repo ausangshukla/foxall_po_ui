@@ -131,6 +131,7 @@ export function EntityListPage() {
           </button>
           <button
             onClick={() => navigate('/entities/new')}
+            data-test-id="entity-create"
             className="flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-lg font-bold ambient-shadow hover:scale-[1.02] transition-transform"
           >
             <span className="material-symbols-outlined">add</span>
@@ -319,12 +320,14 @@ export function EntityListPage() {
                             {canManageUsers() && (
                               <>
                                 <button 
+                                  data-test-id={`entity-edit-${e.id}`}
                                   onClick={() => navigate(`/entities/${e.id}/edit`)}
                                   className="p-2 opacity-40 group-hover:opacity-100 hover:text-secondary transition-all"
                                 >
                                   <span className="material-symbols-outlined text-xl">edit</span>
                                 </button>
                                 <button 
+                                  data-test-id={`entity-delete-${e.id}`}
                                   onClick={() => handleDelete(e.id)}
                                   className="p-2 opacity-40 group-hover:opacity-100 hover:text-error transition-all"
                                 >

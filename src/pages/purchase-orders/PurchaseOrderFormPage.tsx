@@ -686,8 +686,9 @@ export function PurchaseOrderFormPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                   <div className="space-y-1.5 md:col-span-2">
-                    <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">PO Number <span className="text-error">*</span></label>
+                    <label htmlFor="po_number" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">PO Number <span className="text-error">*</span></label>
                     <input
+                      id="po_number"
                       type="text"
                       name="po_number"
                       value={formData.po_number}
@@ -699,8 +700,9 @@ export function PurchaseOrderFormPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Vendor ID <span className="text-error">*</span></label>
+                    <label htmlFor="vendor_id" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Vendor ID <span className="text-error">*</span></label>
                     <input
+                      id="vendor_id"
                       type="number"
                       name="vendor_id"
                       value={formData.vendor_id}
@@ -712,8 +714,9 @@ export function PurchaseOrderFormPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Supplier/Vendor Name</label>
+                    <label htmlFor="vendor_name" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Supplier/Vendor Name</label>
                     <input
+                      id="vendor_name"
                       type="text"
                       name="vendor_name"
                       value={formData.vendor_name}
@@ -724,8 +727,9 @@ export function PurchaseOrderFormPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">PO Type <span className="text-error">*</span></label>
+                    <label htmlFor="po_type" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">PO Type <span className="text-error">*</span></label>
                     <select
+                      id="po_type"
                       name="po_type"
                       value={formData.po_type}
                       onChange={handleChange}
@@ -741,8 +745,9 @@ export function PurchaseOrderFormPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Order Status <span className="text-error">*</span></label>
+                    <label htmlFor="status" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Order Status <span className="text-error">*</span></label>
                     <select
+                      id="status"
                       name="status"
                       value={formData.status}
                       onChange={handleChange}
@@ -755,8 +760,9 @@ export function PurchaseOrderFormPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Order Date <span className="text-error">*</span></label>
+                    <label htmlFor="order_date" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Order Date <span className="text-error">*</span></label>
                     <input
+                      id="order_date"
                       type="date"
                       name="order_date"
                       value={formData.order_date}
@@ -790,8 +796,9 @@ export function PurchaseOrderFormPage() {
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Contact Name</label>
+                      <label htmlFor="supplier_contact_name" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Contact Name</label>
                       <input
+                        id="supplier_contact_name"
                         type="text"
                         name="supplier_contact_name"
                         value={formData.supplier_contact_name}
@@ -800,8 +807,9 @@ export function PurchaseOrderFormPage() {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Email <span className="text-error">*</span></label>
+                      <label htmlFor="supplier_email" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Email <span className="text-error">*</span></label>
                       <input
+                        id="supplier_email"
                         type="email"
                         name="supplier_email"
                         value={formData.supplier_email}
@@ -811,8 +819,9 @@ export function PurchaseOrderFormPage() {
                       {validationErrors.supplier_email && <p className="text-[10px] font-bold text-error ml-1 mt-1">{validationErrors.supplier_email}</p>}
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Phone</label>
+                      <label htmlFor="supplier_phone" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Phone</label>
                       <input
+                        id="supplier_phone"
                         type="text"
                         name="supplier_phone"
                         value={formData.supplier_phone}
@@ -821,8 +830,9 @@ export function PurchaseOrderFormPage() {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Country <span className="text-error">*</span></label>
+                      <label htmlFor="supplier_country" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Country <span className="text-error">*</span></label>
                       <select
+                        id="supplier_country"
                         name="supplier_country"
                         value={formData.supplier_country}
                         onChange={handleChange}
@@ -833,8 +843,9 @@ export function PurchaseOrderFormPage() {
                       </select>
                     </div>
                     <div className="space-y-1.5 md:col-span-2">
-                      <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Address</label>
+                      <label htmlFor="supplier_address" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Address</label>
                       <textarea
+                        id="supplier_address"
                         name="supplier_address"
                         rows={2}
                         value={formData.supplier_address}
@@ -843,8 +854,9 @@ export function PurchaseOrderFormPage() {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Origin City / Port <span className="text-error">*</span></label>
+                      <label htmlFor="origin_city_port" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Origin City / Port <span className="text-error">*</span></label>
                       <input
+                        id="origin_city_port"
                         type="text"
                         name="origin_city_port"
                         value={formData.origin_city_port}
@@ -863,8 +875,9 @@ export function PurchaseOrderFormPage() {
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                     <div className="space-y-1.5 md:col-span-2">
-                      <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Cargo Description <span className="text-error">*</span></label>
+                      <label htmlFor="cargo_description" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Cargo Description <span className="text-error">*</span></label>
                       <input
+                        id="cargo_description"
                         type="text"
                         name="cargo_description"
                         value={formData.cargo_description}
@@ -873,8 +886,9 @@ export function PurchaseOrderFormPage() {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">HS Code <span className="text-error">*</span></label>
+                      <label htmlFor="hs_code" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">HS Code <span className="text-error">*</span></label>
                       <input
+                        id="hs_code"
                         type="text"
                         name="hs_code"
                         value={formData.hs_code}
@@ -883,8 +897,9 @@ export function PurchaseOrderFormPage() {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Product Category</label>
+                      <label htmlFor="product_category" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Product Category</label>
                       <select
+                        id="product_category"
                         name="product_category"
                         value={formData.product_category}
                         onChange={handleChange}
@@ -895,8 +910,9 @@ export function PurchaseOrderFormPage() {
                       </select>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Quantity <span className="text-error">*</span></label>
+                      <label htmlFor="quantity" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Quantity <span className="text-error">*</span></label>
                       <input
+                        id="quantity"
                         type="number"
                         name="quantity"
                         value={formData.quantity}
@@ -905,8 +921,9 @@ export function PurchaseOrderFormPage() {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Unit of Measure <span className="text-error">*</span></label>
+                      <label htmlFor="unit_of_measure" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Unit of Measure <span className="text-error">*</span></label>
                       <select
+                        id="unit_of_measure"
                         name="unit_of_measure"
                         value={formData.unit_of_measure}
                         onChange={handleChange}
@@ -931,8 +948,9 @@ export function PurchaseOrderFormPage() {
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Incoterm <span className="text-error">*</span></label>
+                      <label htmlFor="incoterm" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Incoterm <span className="text-error">*</span></label>
                       <select
+                        id="incoterm"
                         name="incoterm"
                         value={formData.incoterm}
                         onChange={handleChange}
@@ -943,8 +961,9 @@ export function PurchaseOrderFormPage() {
                       </select>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Shipping Terms</label>
+                      <label htmlFor="shipping_terms" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Shipping Terms</label>
                       <select
+                        id="shipping_terms"
                         name="shipping_terms"
                         value={formData.shipping_terms}
                         onChange={handleChange}
@@ -957,8 +976,9 @@ export function PurchaseOrderFormPage() {
                       </select>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Payment Terms</label>
+                      <label htmlFor="payment_terms" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Payment Terms</label>
                       <select
+                        id="payment_terms"
                         name="payment_terms"
                         value={formData.payment_terms}
                         onChange={handleChange}
@@ -981,8 +1001,9 @@ export function PurchaseOrderFormPage() {
                       </select>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Number of Cartons / Pallets</label>
+                      <label htmlFor="number_of_cartons_pallets" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Number of Cartons / Pallets</label>
                       <input
+                        id="number_of_cartons_pallets"
                         type="number"
                         name="number_of_cartons_pallets"
                         value={formData.number_of_cartons_pallets}
@@ -993,22 +1014,23 @@ export function PurchaseOrderFormPage() {
 
                     <div className="md:col-span-2 grid grid-cols-3 gap-4">
                       <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Length (cm)</label>
-                        <input type="number" name="dimension_length" value={formData.dimension_length} onChange={handleChange} className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3" />
+                        <label htmlFor="dimension_length" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Length (cm)</label>
+                        <input id="dimension_length" type="number" name="dimension_length" value={formData.dimension_length} onChange={handleChange} className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3" />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Width (cm)</label>
-                        <input type="number" name="dimension_width" value={formData.dimension_width} onChange={handleChange} className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3" />
+                        <label htmlFor="dimension_width" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Width (cm)</label>
+                        <input id="dimension_width" type="number" name="dimension_width" value={formData.dimension_width} onChange={handleChange} className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3" />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Height (cm)</label>
-                        <input type="number" name="dimension_height" value={formData.dimension_height} onChange={handleChange} className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3" />
+                        <label htmlFor="dimension_height" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Height (cm)</label>
+                        <input id="dimension_height" type="number" name="dimension_height" value={formData.dimension_height} onChange={handleChange} className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3" />
                       </div>
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Total CBM <span className="text-error">*</span></label>
+                      <label htmlFor="total_cbm" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Total CBM <span className="text-error">*</span></label>
                       <input
+                        id="total_cbm"
                         type="number"
                         name="total_cbm"
                         value={formData.total_cbm}
@@ -1017,8 +1039,9 @@ export function PurchaseOrderFormPage() {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Gross Weight / Carton (kg)</label>
+                      <label htmlFor="gross_weight_per_carton" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Gross Weight / Carton (kg)</label>
                       <input
+                        id="gross_weight_per_carton"
                         type="number"
                         name="gross_weight_per_carton"
                         value={formData.gross_weight_per_carton}
@@ -1503,6 +1526,7 @@ export function PurchaseOrderFormPage() {
               ) : (
                 <button
                   type="button"
+                  data-test-id="purchase-order-save"
                   onClick={() => handleSubmit()}
                   disabled={isSaving}
                   className="w-full py-4 rounded-2xl bg-gradient-to-br from-primary to-primary-fixed-dim text-on-primary font-bold text-center editorial-shadow hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"

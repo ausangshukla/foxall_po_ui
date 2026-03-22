@@ -91,6 +91,7 @@ export function CustomFieldDefinitionListPage() {
         <div className="flex gap-4">
           <button
             onClick={() => navigate('/custom-field-definitions/new')}
+            data-test-id="custom-field-definition-create"
             className="flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-lg font-bold ambient-shadow hover:scale-[1.02] transition-transform"
           >
             <span className="material-symbols-outlined">add</span>
@@ -177,12 +178,14 @@ export function CustomFieldDefinitionListPage() {
                           <td className="px-8 py-6 text-right">
                             <div className="flex justify-end gap-1">
                               <button
+                                data-test-id={`custom-field-definition-edit-${def.id}`}
                                 onClick={() => navigate(`/custom-field-definitions/${def.id}/edit`)}
                                 className="p-2 opacity-40 group-hover:opacity-100 hover:text-secondary transition-all"
                               >
                                 <span className="material-symbols-outlined text-xl">edit</span>
                               </button>
                               <button
+                                data-test-id={`custom-field-definition-delete-${def.id}`}
                                 onClick={() => handleDelete(def.id)}
                                 className="p-2 opacity-40 group-hover:opacity-100 hover:text-error transition-all"
                               >

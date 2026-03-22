@@ -183,6 +183,7 @@ export function CustomFieldDefinitionFormPage() {
             type="submit"
             form="definition-form"
             disabled={isSaving}
+            data-test-id="custom-field-definition-save"
             className="px-8 py-2.5 rounded-xl text-sm font-bold text-on-primary bg-gradient-to-br from-primary to-primary-fixed-dim editorial-shadow hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2"
           >
             {isSaving ? (
@@ -213,8 +214,9 @@ export function CustomFieldDefinitionFormPage() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                 <div className="space-y-1.5 md:col-span-2">
-                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Field Label <span className="text-error">*</span></label>
+                  <label htmlFor="field_label" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Field Label <span className="text-error">*</span></label>
                   <input
+                    id="field_label"
                     type="text"
                     name="field_label"
                     value={formData.field_label}
@@ -226,8 +228,9 @@ export function CustomFieldDefinitionFormPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Field Key (API Reference) <span className="text-error">*</span></label>
+                  <label htmlFor="field_key" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Field Key (API Reference) <span className="text-error">*</span></label>
                   <input
+                    id="field_key"
                     type="text"
                     name="field_key"
                     value={formData.field_key}
@@ -239,8 +242,9 @@ export function CustomFieldDefinitionFormPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Field Type <span className="text-error">*</span></label>
+                  <label htmlFor="field_type" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Field Type <span className="text-error">*</span></label>
                   <select
+                    id="field_type"
                     name="field_type"
                     value={formData.field_type}
                     onChange={handleChange}
@@ -253,8 +257,9 @@ export function CustomFieldDefinitionFormPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Target Resource <span className="text-error">*</span></label>
+                  <label htmlFor="resource_name" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Target Resource <span className="text-error">*</span></label>
                   <select
+                    id="resource_name"
                     name="resource_name"
                     value={formData.resource_name}
                     onChange={handleChange}
@@ -267,8 +272,9 @@ export function CustomFieldDefinitionFormPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Tag (Contextual filter)</label>
+                  <label htmlFor="tag" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Tag (Contextual filter)</label>
                   <input
+                    id="tag"
                     type="text"
                     name="tag"
                     value={formData.tag}
@@ -279,8 +285,9 @@ export function CustomFieldDefinitionFormPage() {
                 </div>
 
                 <div className="space-y-1.5 md:col-span-2">
-                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Hint / Tooltip</label>
+                  <label htmlFor="hint" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Hint / Tooltip</label>
                   <input
+                    id="hint"
                     type="text"
                     name="hint"
                     value={formData.hint}
@@ -292,8 +299,9 @@ export function CustomFieldDefinitionFormPage() {
 
                 {formData.field_type === 'select' && (
                   <div className="space-y-1.5 md:col-span-2">
-                    <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Possible Values (Comma separated)</label>
+                    <label htmlFor="possible_values" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Possible Values (Comma separated)</label>
                     <textarea
+                      id="possible_values"
                       name="possible_values"
                       rows={2}
                       value={formData.possible_values}

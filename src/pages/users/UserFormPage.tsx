@@ -271,8 +271,9 @@ export function UserFormPage() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">First Name <span className="text-error">*</span></label>
+                  <label htmlFor="first_name" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">First Name <span className="text-error">*</span></label>
                   <input
+                    id="first_name"
                     type="text"
                     name="first_name"
                     value={formData.first_name}
@@ -284,8 +285,9 @@ export function UserFormPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Last Name <span className="text-error">*</span></label>
+                  <label htmlFor="last_name" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Last Name <span className="text-error">*</span></label>
                   <input
+                    id="last_name"
                     type="text"
                     name="last_name"
                     value={formData.last_name}
@@ -297,8 +299,9 @@ export function UserFormPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Email Account <span className="text-error">*</span></label>
+                  <label htmlFor="email" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Email Account <span className="text-error">*</span></label>
                   <input
+                    id="email"
                     type="email"
                     name="email"
                     value={formData.email}
@@ -310,8 +313,9 @@ export function UserFormPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Phone Number <span className="text-error">*</span></label>
+                  <label htmlFor="phone" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Phone Number <span className="text-error">*</span></label>
                   <input
+                    id="phone"
                     type="tel"
                     name="phone"
                     value={formData.phone}
@@ -324,8 +328,9 @@ export function UserFormPage() {
 
                 {!isEditing && (
                   <div className="space-y-1.5 md:col-span-2">
-                    <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Secure Password <span className="text-error">*</span></label>
+                    <label htmlFor="password" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Secure Password <span className="text-error">*</span></label>
                     <input
+                      id="password"
                       type="password"
                       name="password"
                       value={formData.password}
@@ -437,8 +442,9 @@ export function UserFormPage() {
             
             <div className="space-y-4 mb-8">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Entity Association <span className="text-error">*</span></label>
+                <label htmlFor="entity_id" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Entity Association <span className="text-error">*</span></label>
                 <select
+                  id="entity_id"
                   name="entity_id"
                   value={formData.entity_id}
                   onChange={handleChange}
@@ -463,6 +469,7 @@ export function UserFormPage() {
 
             <div className="space-y-3">
               <button
+                data-test-id="user-save"
                 type="submit"
                 form="user-form"
                 disabled={isSaving}
