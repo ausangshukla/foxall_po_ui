@@ -66,11 +66,17 @@ export async function apiRequest<T, M = Record<string, never>>(
   returnFull: boolean = false
 ): Promise<T | ApiResponse<T, M>> {
   const url = `${API_BASE_URL}${endpoint}`
+  console.debug('[API Client] Request:', options.method || 'GET', url)
+  console.debug('[API Client] Body type:', options.body instanceof FormData ? 'FormData' : typeof options.body)
 
   // Prepare headers
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
     ...((options.headers as Record<string, string>) || {}),
+  }
+
+  // Only set application/json if body is not FormData
+  if (!(options.body instanceof FormData) && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json'
   }
 
   // Add auth token if available
@@ -86,10 +92,13 @@ export async function apiRequest<T, M = Record<string, never>>(
   }
 
   // Make the request
+  console.debug('[API Client] Headers:', headers)
   const response = await fetch(url, {
     ...options,
     headers,
   })
+
+  console.debug('[API Client] Response status:', response.status, response.statusText)
 
   // Capture Authorization header (for devise-jwt login)
   const authHeader = response.headers.get('Authorization')
@@ -229,13 +238,13 @@ export const api = {
   post: <T>(endpoint: string, data: unknown) =>
     apiRequest<T>(endpoint, {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: data instanceof FormData ? data : JSON.stringify(data),
     }),
 
   put: <T>(endpoint: string, data: unknown) =>
     apiRequest<T>(endpoint, {
       method: 'PUT',
-      body: JSON.stringify(data),
+      body: data instanceof FormData ? data : JSON.stringify(data),
     }),
 
   delete: <T>(endpoint: string) =>

@@ -180,6 +180,7 @@ export interface PurchaseOrderResponse {
   entity_id: number
   po_number: string
   vendor_id: number
+  vendor_name?: string
   status: PurchaseOrderStatus
   po_type: PurchaseOrderType
   order_date: string
@@ -197,6 +198,41 @@ export interface PurchaseOrderResponse {
   tracking_number: string | null
   carrier: string | null
   custom_fields: Record<string, CustomFieldValue> | null
+  
+  // New Fields
+  supplier_contact_name: string | null
+  supplier_email: string | null
+  supplier_phone: string | null
+  supplier_address: string | null
+  supplier_country: string | null
+  origin_city_port: string | null
+  payment_terms: string | null
+  cargo_description: string | null
+  hs_code: string | null
+  product_category: string | null
+  quantity: number | null
+  unit_of_measure: string | null
+  number_of_cartons_pallets: number | null
+  dimension_length: number | null
+  dimension_width: number | null
+  dimension_height: number | null
+  total_cbm: number | null
+  gross_weight_per_carton: number | null
+  total_gross_weight: number | null
+  total_net_weight: number | null
+  is_dangerous_goods: boolean
+  dg_class_un_number: string | null
+  is_temperature_controlled: boolean
+  temperature_range: string | null
+  estimated_ready_date: string | null
+  target_ship_date: string | null
+  
+  // Document URLs
+  po_document_url: string | null
+  product_spec_sheet_url: string | null
+  msds_url: string | null
+  pre_production_sample_url: string | null
+
   // Audit Fields
   created_by: number
   approved_by: number | null
@@ -225,6 +261,40 @@ export interface CreatePurchaseOrderRequest {
   tracking_number?: string | null
   carrier?: string | null
   custom_fields?: Record<string, CustomFieldValue> | null
+
+  // New Fields
+  supplier_contact_name?: string | null
+  supplier_email?: string | null
+  supplier_phone?: string | null
+  supplier_address?: string | null
+  supplier_country?: string | null
+  origin_city_port?: string | null
+  payment_terms?: string | null
+  cargo_description?: string | null
+  hs_code?: string | null
+  product_category?: string | null
+  quantity?: number | null
+  unit_of_measure?: string | null
+  number_of_cartons_pallets?: number | null
+  dimension_length?: number | null
+  dimension_width?: number | null
+  dimension_height?: number | null
+  total_cbm?: number | null
+  gross_weight_per_carton?: number | null
+  total_gross_weight?: number | null
+  total_net_weight?: number | null
+  is_dangerous_goods?: boolean
+  dg_class_un_number?: string | null
+  is_temperature_controlled?: boolean
+  temperature_range?: string | null
+  estimated_ready_date?: string | null
+  target_ship_date?: string | null
+
+  // Documents (these might be sent as File or handled separately if using FormData)
+  po_document?: File | null
+  product_spec_sheet?: File | null
+  msds?: File | null
+  pre_production_sample?: File | null
 }
 
 export interface UpdatePurchaseOrderRequest {
@@ -248,6 +318,40 @@ export interface UpdatePurchaseOrderRequest {
   carrier?: string | null
   custom_fields?: Record<string, CustomFieldValue> | null
   approved_by?: number | null
+
+  // New Fields
+  supplier_contact_name?: string | null
+  supplier_email?: string | null
+  supplier_phone?: string | null
+  supplier_address?: string | null
+  supplier_country?: string | null
+  origin_city_port?: string | null
+  payment_terms?: string | null
+  cargo_description?: string | null
+  hs_code?: string | null
+  product_category?: string | null
+  quantity?: number | null
+  unit_of_measure?: string | null
+  number_of_cartons_pallets?: number | null
+  dimension_length?: number | null
+  dimension_width?: number | null
+  dimension_height?: number | null
+  total_cbm?: number | null
+  gross_weight_per_carton?: number | null
+  total_gross_weight?: number | null
+  total_net_weight?: number | null
+  is_dangerous_goods?: boolean
+  dg_class_un_number?: string | null
+  is_temperature_controlled?: boolean
+  temperature_range?: string | null
+  estimated_ready_date?: string | null
+  target_ship_date?: string | null
+
+  // Documents
+  po_document?: File | null
+  product_spec_sheet?: File | null
+  msds?: File | null
+  pre_production_sample?: File | null
 }
 
 // ============================================

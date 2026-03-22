@@ -5,13 +5,13 @@ export function Layout() {
   return (
     <div className="min-h-screen bg-background text-on-background selection:bg-primary-container selection:text-on-primary-container">
       <AppNavbar />
-      <main className="pt-24 pb-12">
+      <main className="pt-20 pb-8">
         <Outlet />
       </main>
       
       {/* Footer */}
-      <footer className="bg-slate-100 w-full mt-20 border-t border-slate-200/20">
-        <div className="flex flex-col md:flex-row justify-between items-center w-full px-12 py-10 max-w-screen-2xl mx-auto">
+      <footer className="bg-slate-100 w-full mt-12 border-t border-slate-200/20">
+        <div className="flex flex-col md:flex-row justify-between items-center w-full px-12 py-8 max-w-screen-2xl mx-auto">
           <div className="mb-6 md:mb-0">
             <span className="font-headline font-bold text-slate-900 text-lg">Foxall PO</span>
             <p className="text-xs text-slate-500 mt-2 font-body">© 2024 Foxall PO Logistics. All rights reserved.</p>

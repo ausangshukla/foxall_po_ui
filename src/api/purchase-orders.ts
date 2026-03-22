@@ -19,14 +19,24 @@ export async function getPurchaseOrder(id: number): Promise<PurchaseOrderRespons
 export async function createPurchaseOrder(
   data: CreatePurchaseOrderRequest
 ): Promise<PurchaseOrderResponse> {
-  return api.post<PurchaseOrderResponse>(API_ROUTES.PURCHASE_ORDERS, { purchase_order: data })
+  const body = data instanceof FormData ? data : { purchase_order: data }
+  return api.post<PurchaseOrderResponse>(API_ROUTES.PURCHASE_ORDERS, body)
 }
 
 export async function updatePurchaseOrder(
   id: number,
   data: UpdatePurchaseOrderRequest
 ): Promise<PurchaseOrderResponse> {
-  return api.put<PurchaseOrderResponse>(API_ROUTES.PURCHASE_ORDER(id), { purchase_order: data })
+  // Use POST with _method=PATCH for multipart updates to avoid common server-side issues with PUT + Files
+  if (data instanceof FormData) {
+    if (!data.has('_method')) {
+      data.append('_method', 'PATCH');
+    }
+    return api.post<PurchaseOrderResponse>(API_ROUTES.PURCHASE_ORDER(id), data)
+  }
+  
+  const body = { purchase_order: data }
+  return api.put<PurchaseOrderResponse>(API_ROUTES.PURCHASE_ORDER(id), body)
 }
 
 export async function deletePurchaseOrder(id: number): Promise<string> {

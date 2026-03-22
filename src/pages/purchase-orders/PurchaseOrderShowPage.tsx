@@ -5,6 +5,30 @@ import { LoadingSpinner, AlertMessage } from '../../components/common'
 import { getPurchaseOrder } from '../../api/purchase-orders'
 import { getCustomFieldDefinitions } from '../../api/custom-fields'
 import type { PurchaseOrderResponse, PurchaseOrderType, CustomFieldDefinition } from '../../types/api'
+import { API_BASE_URL } from '../../config'
+
+function fixDocUrl(url: string | null | undefined): string | null {
+  if (!url) return null
+  
+  // If it's a relative URL, prepend the API base
+  if (url.startsWith('/')) {
+    return `${API_BASE_URL}${url}`
+  }
+  
+  // If it's an absolute URL, replace the protocol and host (including port) with the ones from API_BASE_URL
+  try {
+    const docUrl = new URL(url)
+    const apiBaseUrl = new URL(API_BASE_URL)
+    
+    docUrl.protocol = apiBaseUrl.protocol
+    docUrl.host = apiBaseUrl.host
+    
+    return docUrl.toString()
+  } catch (e) {
+    // Fallback to simple replacement if URL parsing fails
+    return url.replace(/https?:\/\/[^/]+/, API_BASE_URL)
+  }
+}
 
 export function PurchaseOrderShowPage() {
   const { id } = useParams<{ id: string }>()
@@ -125,8 +149,8 @@ export function PurchaseOrderShowPage() {
                 <p className="font-bold text-on-surface">Entity #{purchaseOrder.entity_id}</p>
               </div>
               <div>
-                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Vendor Reference</p>
-                <p className="font-bold text-on-surface">Partner #{purchaseOrder.vendor_id}</p>
+                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Vendor/Supplier</p>
+                <p className="font-bold text-on-surface">{purchaseOrder.vendor_name || `Partner #${purchaseOrder.vendor_id}`}</p>
               </div>
               <div>
                 <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Financial Total</p>
@@ -139,6 +163,91 @@ export function PurchaseOrderShowPage() {
             </div>
           </section>
 
+          {/* Supplier & Contact Info */}
+          <section className="glass-panel ambient-shadow rounded-xl p-8 border border-outline-variant/20">
+            <div className="flex items-center gap-3 mb-6">
+              <span className="material-symbols-outlined text-primary">store</span>
+              <h2 className="text-on-primary-container font-extrabold tracking-tight text-lg">Supplier Information</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div>
+                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Contact Name</p>
+                <p className="font-bold text-on-surface">{purchaseOrder.supplier_contact_name || '—'}</p>
+              </div>
+              <div>
+                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Email</p>
+                <p className="font-bold text-on-surface">{purchaseOrder.supplier_email || '—'}</p>
+              </div>
+              <div>
+                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Phone</p>
+                <p className="font-bold text-on-surface">{purchaseOrder.supplier_phone || '—'}</p>
+              </div>
+              <div className="md:col-span-2">
+                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Address & Country</p>
+                <p className="font-bold text-on-surface">{purchaseOrder.supplier_address || '—'}{purchaseOrder.supplier_country ? `, ${purchaseOrder.supplier_country}` : ''}</p>
+              </div>
+              <div>
+                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Origin Port</p>
+                <p className="font-bold text-on-surface uppercase">{purchaseOrder.origin_city_port || '—'}</p>
+              </div>
+            </div>
+          </section>
+
+          {/* Cargo Details */}
+          <section className="glass-panel ambient-shadow rounded-xl p-8 border border-outline-variant/20">
+            <div className="flex items-center gap-3 mb-6">
+              <span className="material-symbols-outlined text-primary">inventory_2</span>
+              <h2 className="text-on-primary-container font-extrabold tracking-tight text-lg">Cargo Details</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+              <div className="md:col-span-2">
+                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Description</p>
+                <p className="font-bold text-on-surface">{purchaseOrder.cargo_description || '—'}</p>
+              </div>
+              <div>
+                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">HS Code</p>
+                <p className="font-bold text-on-surface">{purchaseOrder.hs_code || '—'}</p>
+              </div>
+              <div>
+                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Category</p>
+                <p className="font-bold text-on-surface">{purchaseOrder.product_category || '—'}</p>
+              </div>
+              <div>
+                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Quantity</p>
+                <p className="font-bold text-on-surface">{purchaseOrder.quantity} {purchaseOrder.unit_of_measure}</p>
+              </div>
+              <div>
+                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Total CBM</p>
+                <p className="font-bold text-on-surface">{purchaseOrder.total_cbm} m³</p>
+              </div>
+              <div>
+                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Gross Weight</p>
+                <p className="font-bold text-on-surface">{purchaseOrder.total_gross_weight} kg</p>
+              </div>
+              <div>
+                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Net Weight</p>
+                <p className="font-bold text-on-surface">{purchaseOrder.total_net_weight} kg</p>
+              </div>
+            </div>
+            
+            {(purchaseOrder.is_dangerous_goods || purchaseOrder.is_temperature_controlled) && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-error-container/10 rounded-xl border border-error-container/20">
+                {purchaseOrder.is_dangerous_goods && (
+                  <div>
+                    <p className="text-error text-[10px] uppercase tracking-widest mb-1 font-bold">Dangerous Goods</p>
+                    <p className="font-bold text-on-surface">{purchaseOrder.dg_class_un_number || 'Classified'}</p>
+                  </div>
+                )}
+                {purchaseOrder.is_temperature_controlled && (
+                  <div>
+                    <p className="text-primary text-[10px] uppercase tracking-widest mb-1 font-bold">Temperature Controlled</p>
+                    <p className="font-bold text-on-surface">{purchaseOrder.temperature_range || 'Active'}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+
           {/* Logistics & Freight */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <section className="glass-panel ambient-shadow rounded-xl p-8 border border-outline-variant/20">
@@ -147,6 +256,16 @@ export function PurchaseOrderShowPage() {
                 <h2 className="text-on-primary-container font-extrabold tracking-tight text-lg">Logistics</h2>
               </div>
               <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Incoterm</p>
+                    <p className="font-bold text-on-surface uppercase">{purchaseOrder.incoterm || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Freight Mode</p>
+                    <p className="font-bold text-on-surface capitalize">{purchaseOrder.shipping_method || '—'}</p>
+                  </div>
+                </div>
                 <div>
                   <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Tracking #</p>
                   <p className="font-bold text-on-surface">{purchaseOrder.tracking_number || 'Pending'}</p>
@@ -161,9 +280,13 @@ export function PurchaseOrderShowPage() {
             <section className="glass-panel ambient-shadow rounded-xl p-8 border border-outline-variant/20">
               <div className="flex items-center gap-3 mb-6">
                 <span className="material-symbols-outlined text-primary">receipt_long</span>
-                <h2 className="text-on-primary-container font-extrabold tracking-tight text-lg">Billing</h2>
+                <h2 className="text-on-primary-container font-extrabold tracking-tight text-lg">Billing & Payments</h2>
               </div>
               <div className="space-y-6">
+                <div>
+                  <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Payment Terms</p>
+                  <p className="font-bold text-on-surface">{purchaseOrder.payment_terms || '—'}</p>
+                </div>
                 <div>
                   <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Billing Address</p>
                   <p className="font-light text-on-surface leading-relaxed">{purchaseOrder.bill_to_address || 'No billing address provided.'}</p>
@@ -171,6 +294,44 @@ export function PurchaseOrderShowPage() {
               </div>
             </section>
           </div>
+
+          {/* Documents Section */}
+          <section className="glass-panel ambient-shadow rounded-xl p-8 border border-outline-variant/20">
+            <div className="flex items-center gap-3 mb-8">
+              <span className="material-symbols-outlined text-primary">cloud_download</span>
+              <h2 className="text-on-primary-container font-extrabold tracking-tight text-lg">Associated Documents</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                { label: 'PO Document', url: fixDocUrl(purchaseOrder.po_document_url) },
+                { label: 'Spec Sheet', url: fixDocUrl(purchaseOrder.product_spec_sheet_url) },
+                { label: 'MSDS', url: fixDocUrl(purchaseOrder.msds_url) },
+                { label: 'Sample Approval', url: fixDocUrl(purchaseOrder.pre_production_sample_url) },
+              ].map((doc, idx) => (
+                <div key={idx} className={`p-4 rounded-xl flex flex-col gap-3 ${doc.url ? 'bg-primary-container/20 border border-primary-container/30' : 'bg-surface-container-low opacity-50'}`}>
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-primary text-sm">{doc.url ? 'check_circle' : 'cancel'}</span>
+                    <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">{doc.label}</p>
+                  </div>
+                  {doc.url ? (
+                    <a 
+                      href={doc.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
+                    >
+                      View Document
+                      <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+                    </a>
+                  ) : (
+                    <p className="text-xs font-bold text-on-surface-variant/50">Not attached</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Extended Attributes & Documentation */}
 
           {/* Extended Attributes & Documentation */}
           <section className="glass-panel ambient-shadow rounded-xl p-8 border border-outline-variant/20">
@@ -210,7 +371,7 @@ export function PurchaseOrderShowPage() {
         <div className="md:col-span-4 flex flex-col gap-6">
           {/* Delivery Timeline */}
           <section className="glass-panel ambient-shadow rounded-xl p-8 border border-outline-variant/20">
-            <h2 className="text-on-primary-container font-extrabold tracking-tight text-lg mb-8">Delivery Timeline</h2>
+            <h2 className="text-on-primary-container font-extrabold tracking-tight text-lg mb-8">Procurement Timeline</h2>
             <div className="relative space-y-10 pl-6 border-l-2 border-primary-container">
               <div className="relative">
                 <div className="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-primary border-4 border-surface"></div>
@@ -219,7 +380,17 @@ export function PurchaseOrderShowPage() {
               </div>
               <div className="relative">
                 <div className="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-primary-container border-4 border-surface"></div>
-                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Expected By</p>
+                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Est. Ready Date</p>
+                <p className="font-bold text-on-surface">{formatDate(purchaseOrder.estimated_ready_date)}</p>
+              </div>
+              <div className="relative">
+                <div className="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-primary-container border-4 border-surface"></div>
+                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Target Ship Date</p>
+                <p className="font-bold text-on-surface">{formatDate(purchaseOrder.target_ship_date)}</p>
+              </div>
+              <div className="relative">
+                <div className="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-primary-container border-4 border-surface"></div>
+                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Required Delivery</p>
                 <p className="font-bold text-on-surface">{formatDate(purchaseOrder.expected_delivery_date)}</p>
               </div>
               <div className={`relative ${!purchaseOrder.actual_delivery_date ? 'opacity-40' : ''}`}>
