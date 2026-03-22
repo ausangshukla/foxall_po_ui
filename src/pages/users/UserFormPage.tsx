@@ -353,53 +353,58 @@ export function UserFormPage() {
               <div className="space-y-6">
                 <div className="space-y-3">
                   <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Assigned Roles <span className="text-error">*</span></label>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    {AVAILABLE_ROLES.map(role => {
-                      const isSelected = formData.roles.includes(role.value);
-                      const isDisabled = isSelf && !currentUser?.roles.includes('super');
-                      return (
-                        <label 
-                          key={role.value} 
-                          className={`relative flex flex-col items-center p-6 rounded-2xl border transition-all cursor-pointer group ${
-                            isSelected 
-                            ? 'bg-surface-container-lowest border-primary ring-4 ring-primary-container/20 shadow-sm' 
-                            : 'bg-surface-container-lowest border-outline-variant/30 hover:border-outline-variant/60'
-                          } ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                          <input
-                            type="checkbox"
-                            className="sr-only"
-                            checked={isSelected}
-                            onChange={e => !isDisabled && handleRoleChange(role.value, e.target.checked)}
-                            disabled={isDisabled}
-                          />
-                          <span className={`material-symbols-outlined text-3xl mb-3 ${isSelected ? 'text-primary' : 'text-on-surface-variant opacity-40 group-hover:opacity-100'}`}>
-                            {role.icon}
-                          </span>
-                          <span className={`text-[11px] font-bold uppercase tracking-widest text-center ${isSelected ? 'text-primary' : 'text-on-surface-variant'}`}>
-                            {role.label}
-                          </span>
-                          {isSelected && (
-                            <div className="absolute top-2 right-2 w-5 h-5 bg-primary rounded-full flex items-center justify-center text-on-primary">
-                              <span className="material-symbols-outlined text-[14px] font-black">check</span>
-                            </div>
-                          )}
-                        </label>
-                      );
-                    })}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {AVAILABLE_ROLES
+                      .filter(role => role.value !== 'super')
+                      .map(role => {
+                        const isSelected = formData.roles.includes(role.value);
+                        const isDisabled = isSelf && !currentUser?.roles.includes('super') && !currentUser?.roles.includes('admin');
+                        return (
+                          <label 
+                            key={role.value} 
+                            className={`relative flex flex-col items-center p-6 rounded-2xl border transition-all cursor-pointer group ${
+                              isSelected 
+                              ? 'bg-surface-container-lowest border-primary ring-4 ring-primary-container/20 shadow-sm' 
+                              : 'bg-surface-container-lowest border-outline-variant/30 hover:border-outline-variant/60'
+                            } ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          >
+                            <input
+                              type="checkbox"
+                              className="sr-only"
+                              checked={isSelected}
+                              onChange={e => !isDisabled && handleRoleChange(role.value, e.target.checked)}
+                              disabled={isDisabled}
+                            />
+                            <span className={`material-symbols-outlined text-3xl mb-3 ${isSelected ? 'text-primary' : 'text-on-surface-variant opacity-40 group-hover:opacity-100'}`}>
+                              {role.icon}
+                            </span>
+                            <span className={`text-[11px] font-bold uppercase tracking-widest text-center ${isSelected ? 'text-primary' : 'text-on-surface-variant'}`}>
+                              {role.label}
+                            </span>
+                            {isSelected && (
+                              <div className="absolute top-2 right-2 w-5 h-5 bg-primary rounded-full flex items-center justify-center text-on-primary">
+                                <span className="material-symbols-outlined text-[14px] font-black">check</span>
+                              </div>
+                            )}
+                          </label>
+                        );
+                      })}
                   </div>
                   {validationErrors.roles && <p className="text-[10px] font-bold text-error ml-1 mt-1">{validationErrors.roles}</p>}
                 </div>
 
                 <div className="pt-6 grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-outline-variant/10">
-                  <label className="flex items-center justify-between p-4 bg-surface-container-lowest rounded-2xl cursor-pointer group hover:bg-surface-container-high transition-colors border border-outline-variant/10">
-                    <div className="flex items-center gap-3">
-                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${formData.wa_enabled ? 'bg-primary-container/20 text-primary' : 'bg-surface-container text-on-surface-variant/40'}`}>
-                         <span className="material-symbols-outlined text-[20px]">chat</span>
+                  <label className="flex items-center justify-between p-5 bg-surface-container-lowest rounded-2xl cursor-pointer group hover:bg-surface-container-high transition-all border border-outline-variant/10 hover:border-primary/20">
+                    <div className="flex items-center gap-4">
+                       <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${formData.wa_enabled ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface-variant/40'}`}>
+                         <span className="material-symbols-outlined text-[24px]">chat</span>
                        </div>
-                       <div className="text-sm font-bold text-on-surface">WhatsApp Notifications</div>
+                       <div>
+                         <div className="text-sm font-bold text-on-surface">WhatsApp</div>
+                         <div className="text-[10px] text-on-surface-variant font-medium">Push notifications</div>
+                       </div>
                     </div>
-                    <div className="relative">
+                    <div className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
                         name="wa_enabled"
@@ -407,18 +412,21 @@ export function UserFormPage() {
                         checked={formData.wa_enabled}
                         onChange={handleChange}
                       />
-                      <div className="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-outline-variant/30 after:border after:rounded-full after:h-5 after:after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                      <div className="w-14 h-7 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-7 peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-outline-variant/30 after:border after:rounded-full after:h-[20px] after:w-[20px] after:transition-all peer-checked:bg-primary shadow-inner"></div>
                     </div>
                   </label>
 
-                  <label className="flex items-center justify-between p-4 bg-surface-container-lowest rounded-2xl cursor-pointer group hover:bg-surface-container-high transition-colors border border-outline-variant/10">
-                    <div className="flex items-center gap-3">
-                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${formData.email_enabled ? 'bg-primary-container/20 text-primary' : 'bg-surface-container text-on-surface-variant/40'}`}>
-                         <span className="material-symbols-outlined text-[20px]">mail</span>
+                  <label className="flex items-center justify-between p-5 bg-surface-container-lowest rounded-2xl cursor-pointer group hover:bg-surface-container-high transition-all border border-outline-variant/10 hover:border-primary/20">
+                    <div className="flex items-center gap-4">
+                       <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${formData.email_enabled ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface-variant/40'}`}>
+                         <span className="material-symbols-outlined text-[24px]">mail</span>
                        </div>
-                       <div className="text-sm font-bold text-on-surface">Email Notifications</div>
+                       <div>
+                         <div className="text-sm font-bold text-on-surface">Email</div>
+                         <div className="text-[10px] text-on-surface-variant font-medium">Digital correspondence</div>
+                       </div>
                     </div>
-                    <div className="relative">
+                    <div className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
                         name="email_enabled"
@@ -426,7 +434,7 @@ export function UserFormPage() {
                         checked={formData.email_enabled}
                         onChange={handleChange}
                       />
-                      <div className="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-outline-variant/30 after:border after:rounded-full after:h-5 after:after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                      <div className="w-14 h-7 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-7 peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-outline-variant/30 after:border after:rounded-full after:h-[20px] after:w-[20px] after:transition-all peer-checked:bg-primary shadow-inner"></div>
                     </div>
                   </label>
                 </div>
@@ -448,8 +456,8 @@ export function UserFormPage() {
                   name="entity_id"
                   value={formData.entity_id}
                   onChange={handleChange}
-                  disabled={isSelf && !currentUser?.roles.includes('super')}
-                  className={`w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface appearance-none ${validationErrors.entity_id ? 'ring-2 ring-error/20' : 'focus:ring-primary-container/40'} ${isSelf && !currentUser?.roles.includes('super') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  disabled={isSelf && !currentUser?.roles.includes('super') && !currentUser?.roles.includes('admin')}
+                  className={`w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface appearance-none ${validationErrors.entity_id ? 'ring-2 ring-error/20' : 'focus:ring-primary-container/40'} ${isSelf && !currentUser?.roles.includes('super') && !currentUser?.roles.includes('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <option value="">Select Subsidiary Entity...</option>
                   {entities.map(entity => (

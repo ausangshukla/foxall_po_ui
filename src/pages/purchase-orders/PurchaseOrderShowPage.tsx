@@ -7,6 +7,8 @@ import { getCustomFieldDefinitions } from '../../api/custom-fields'
 import type { PurchaseOrderResponse, PurchaseOrderType, CustomFieldDefinition } from '../../types/api'
 import { API_BASE_URL } from '../../config'
 
+import { PurchaseOrderLineItems } from '../../components/purchase-orders/PurchaseOrderLineItems'
+
 function fixDocUrl(url: string | null | undefined): string | null {
   if (!url) return null
   
@@ -448,6 +450,11 @@ export function PurchaseOrderShowPage() {
           </a>
         </div>
       </div>
+
+      {/* Line Items Section - Full Width */}
+      <section className="mt-12 mb-20 animate-in fade-in slide-in-from-bottom-6 duration-1000">
+        <PurchaseOrderLineItems poId={purchaseOrder.id} canManage={canManageUsers()} />
+      </section>
     </div>
   )
 }

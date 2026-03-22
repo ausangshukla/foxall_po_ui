@@ -21,6 +21,8 @@ export const API_ROUTES = {
   // Purchase Orders
   PURCHASE_ORDERS: '/api/v1/purchase_orders',
   PURCHASE_ORDER: (id: number) => `/api/v1/purchase_orders/${id}`,
+  PURCHASE_ORDER_LINE_ITEMS: (poId: number) => `/api/v1/purchase_orders/${poId}/line_items`,
+  PURCHASE_ORDER_LINE_ITEM: (poId: number, id: number) => `/api/v1/purchase_orders/${poId}/line_items/${id}`,
 
   // Custom Fields
   CUSTOM_FIELD_DEFINITIONS: '/api/v1/custom_field_definitions',

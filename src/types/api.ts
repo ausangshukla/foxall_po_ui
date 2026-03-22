@@ -355,6 +355,107 @@ export interface UpdatePurchaseOrderRequest {
 }
 
 // ============================================
+// Purchase Order Line Item Types
+// ============================================
+export interface PurchaseOrderLineItemResponse {
+  id: number
+  purchase_order_id: number
+  sku_or_part_number: string | null
+  description: string | null
+  quantity_ordered: number | null
+  quantity_shipped: number | null
+  quantity_received: number | null
+  unit_of_measure: string | null
+  net_weight: number | null
+  gross_weight: number | null
+  weight_unit: string | null
+  total_volume: number | null
+  volume_unit: string | null
+  dimension_length: number | null
+  dimension_width: number | null
+  dimension_height: number | null
+  dimension_unit: string | null
+  hs_code: string | null
+  country_of_origin: string | null
+  unit_value: number | null
+  total_value: number | null
+  currency: string | null
+  is_dangerous_goods: boolean
+  un_number: string | null
+  dg_class: string | null
+  is_temperature_controlled: boolean
+  temperature_range: string | null
+  batch_or_lot_number: string | null
+  expiry_date: string | null
+  status: string | null
+  created_at: string
+  updated_at: string
+  calculated_status: string | null
+}
+
+export interface CreatePurchaseOrderLineItemRequest {
+  sku_or_part_number?: string | null
+  description?: string | null
+  quantity_ordered?: number | null
+  quantity_shipped?: number | null
+  quantity_received?: number | null
+  unit_of_measure?: string | null
+  net_weight?: number | null
+  gross_weight?: number | null
+  weight_unit?: string | null
+  total_volume?: number | null
+  volume_unit?: string | null
+  dimension_length?: number | null
+  dimension_width?: number | null
+  dimension_height?: number | null
+  dimension_unit?: string | null
+  hs_code?: string | null
+  country_of_origin?: string | null
+  unit_value?: number | null
+  total_value?: number | null
+  currency?: string | null
+  is_dangerous_goods?: boolean
+  un_number?: string | null
+  dg_class?: string | null
+  is_temperature_controlled?: boolean
+  temperature_range?: string | null
+  batch_or_lot_number?: string | null
+  expiry_date?: string | null
+  status?: string | null
+}
+
+export interface UpdatePurchaseOrderLineItemRequest {
+  sku_or_part_number?: string | null
+  description?: string | null
+  quantity_ordered?: number | null
+  quantity_shipped?: number | null
+  quantity_received?: number | null
+  unit_of_measure?: string | null
+  net_weight?: number | null
+  gross_weight?: number | null
+  weight_unit?: string | null
+  total_volume?: number | null
+  volume_unit?: string | null
+  dimension_length?: number | null
+  dimension_width?: number | null
+  dimension_height?: number | null
+  dimension_unit?: string | null
+  hs_code?: string | null
+  country_of_origin?: string | null
+  unit_value?: number | null
+  total_value?: number | null
+  currency?: string | null
+  is_dangerous_goods?: boolean
+  un_number?: string | null
+  dg_class?: string | null
+  is_temperature_controlled?: boolean
+  temperature_range?: string | null
+  batch_or_lot_number?: string | null
+  expiry_date?: string | null
+  status?: string | null
+}
+
+// ============================================
 // Purchase Order Search Types
 // ============================================
 export interface PurchaseOrderSearchCondition {
