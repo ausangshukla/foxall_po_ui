@@ -32,6 +32,10 @@ export function EntityShowPage() {
         setEntity(entityData)
         setUsers(usersData.filter((u) => u.entity_id === entityId))
       } catch (err) {
+        // Re-throw AuthError so the auth system handles redirect to login
+        if (err instanceof Error && err.name === 'AuthError') {
+          throw err
+        }
         const message = err instanceof Error ? err.message : 'Failed to load entity'
         setError(message)
       } finally {

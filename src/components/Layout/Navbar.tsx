@@ -61,6 +61,21 @@ export function AppNavbar() {
                 Custom Fields
               </Link>
             )}
+            {canManageUsers() && (
+              <Link to="/external-parties" className={linkClass('/external-parties')}>
+                Parties
+              </Link>
+            )}
+            {canManageUsers() && (
+              <Link to="/notification-rules" className={linkClass('/notification-rules')}>
+                Rules
+              </Link>
+            )}
+            {canManageUsers() && (
+              <Link to="/po-states" className={linkClass('/po-states')}>
+                States
+              </Link>
+            )}
           </div>
         </div>
         
@@ -135,6 +150,9 @@ export function AppNavbar() {
               <Link to="/entities" className={mobileLinkClass('/entities')}>Entities</Link>
               <Link to="/users" className={mobileLinkClass('/users')}>Users</Link>
               <Link to="/custom-field-definitions" className={mobileLinkClass('/custom-field-definitions')}>Custom Fields</Link>
+              <Link to="/external-parties" className={mobileLinkClass('/external-parties')}>External Parties</Link>
+              <Link to="/notification-rules" className={mobileLinkClass('/notification-rules')}>Notification Rules</Link>
+              <Link to="/po-states" className={mobileLinkClass('/po-states')}>PO States</Link>
             </>
           )}
           <hr className="border-slate-100 my-2" />

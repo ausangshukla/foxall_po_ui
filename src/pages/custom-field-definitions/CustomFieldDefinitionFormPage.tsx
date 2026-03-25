@@ -78,6 +78,10 @@ export function CustomFieldDefinitionFormPage() {
             tag: data.tag || '',
           })
         } catch (err) {
+          // Re-throw AuthError so the auth system handles redirect to login
+          if (err instanceof Error && err.name === 'AuthError') {
+            throw err
+          }
           setError(err instanceof Error ? err.message : 'Failed to load definition')
         } finally {
           setIsLoading(false)
@@ -130,6 +134,10 @@ export function CustomFieldDefinitionFormPage() {
 
       navigate('/custom-field-definitions')
     } catch (err) {
+      // Re-throw AuthError so the auth system handles redirect to login
+      if (err instanceof Error && err.name === 'AuthError') {
+        throw err
+      }
       setError(err instanceof Error ? err.message : 'Failed to save definition')
     } finally {
       setIsSaving(false)

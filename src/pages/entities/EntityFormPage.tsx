@@ -52,7 +52,11 @@ export function EntityFormPage() {
             entity_type: entityData.entity_type || 'company',
             address: entityData.address || '',
           })
-        } catch {
+        } catch (err) {
+          // Re-throw AuthError so the auth system handles redirect to login
+          if (err instanceof Error && err.name === 'AuthError') {
+            throw err
+          }
           setError('Failed to load entity data')
         } finally {
           setIsLoading(false)
@@ -107,6 +111,10 @@ export function EntityFormPage() {
 
       navigate('/entities')
     } catch (err) {
+      // Re-throw AuthError so the auth system handles redirect to login
+      if (err instanceof Error && err.name === 'AuthError') {
+        throw err
+      }
       setError(err instanceof Error ? err.message : 'Failed to save entity')
     } finally {
       setIsSaving(false)

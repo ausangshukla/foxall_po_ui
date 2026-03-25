@@ -487,6 +487,226 @@ export interface PurchaseOrderSearchMeta {
 }
 
 // ============================================
+// State Machine Types
+// ============================================
+
+export interface PurchaseOrderAvailableAction {
+  action_name: string
+  action_key: string
+  requires_comment: boolean
+  to_state_id: number
+}
+
+export interface PurchaseOrderAvailableActionsResponse {
+  purchase_order: {
+    id: number
+    po_number: string
+    current_state: string
+  }
+  available_actions: PurchaseOrderAvailableAction[]
+}
+
+export interface PurchaseOrderTransitionRequest {
+  transition: {
+    po_state_id: number
+    comment?: string
+  }
+}
+
+export interface PurchaseOrderTransitionResponse {
+  purchase_order: PurchaseOrderResponse & {
+    po_state: {
+      id: number
+      name: string
+      system_code: string
+    }
+    transitioned_at: string
+  }
+  attempt: {
+    id: number
+    status: string
+    action: string
+  }
+}
+
+export interface PurchaseOrderTransitionAttempt {
+  id: number
+  action: string
+  from_state: string
+  to_state: string
+  status: string
+  error_message: string | null
+  actor_type: string
+  created_at: string
+}
+
+export interface PurchaseOrderTransitionAttemptsResponse {
+  purchase_order: {
+    id: number
+    po_number: string
+  }
+  attempts: PurchaseOrderTransitionAttempt[]
+}
+
+// ============================================
+// External Party Types
+// ============================================
+export type ExternalPartyType = 'seller' | 'logistics' | 'carrier'
+
+export interface ExternalPartyResponse {
+  id: number
+  entity_id: number
+  purchase_order_id: number
+  party_type: ExternalPartyType
+  name: string
+  email: string | null
+  phone: string | null
+  whatsapp_country_code: string | null
+  whatsapp_number: string | null
+  company_name: string | null
+  address: string | null
+  prefers_whatsapp: boolean
+  preferences: Record<string, unknown> | null
+  last_contacted_at: string | null
+  opt_out: boolean
+  created_at: string
+  updated_at: string
+  // Computed/joined fields (if returned by API)
+  entity_name?: string
+  purchase_order_number?: string
+}
+
+export interface ExternalPartyCreateRequest {
+  entity_id: number
+  purchase_order_id: number
+  party_type: ExternalPartyType
+  name: string
+  email?: string | null
+  phone?: string | null
+  whatsapp_country_code?: string | null
+  whatsapp_number?: string | null
+  company_name?: string | null
+  address?: string | null
+  prefers_whatsapp?: boolean
+  preferences?: Record<string, unknown> | null
+  opt_out?: boolean
+}
+
+export interface ExternalPartyUpdateRequest {
+  entity_id?: number
+  purchase_order_id?: number
+  party_type?: ExternalPartyType
+  name?: string
+  email?: string | null
+  phone?: string | null
+  whatsapp_country_code?: string | null
+  whatsapp_number?: string | null
+  company_name?: string | null
+  address?: string | null
+  prefers_whatsapp?: boolean
+  preferences?: Record<string, unknown> | null
+  opt_out?: boolean
+}
+
+export interface ExternalPartySearchMeta {
+  current_page: number
+  per_page: number
+  total_pages: number
+  total_count: number
+}
+
+// ============================================
+// State Machine Config Types
+// ============================================
+
+export interface PoStateResponse {
+  id: number
+  entity_id: number
+  name: string
+  system_code: string
+  category: 'open' | 'in_transit' | 'closed' | 'exception'
+  magic_link_expiry_minutes: number | null
+  description: string | null
+  position: number
+  is_terminal: boolean
+  is_default: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface PoStateCreateRequest {
+  entity_id: number
+  name: string
+  system_code: string
+  category: 'open' | 'in_transit' | 'closed' | 'exception'
+  magic_link_expiry_minutes?: number | null
+  description?: string | null
+  position?: number
+  is_terminal?: boolean
+  is_default?: boolean
+}
+
+export interface PoStateUpdateRequest {
+  name?: string
+  system_code?: string
+  category?: 'open' | 'in_transit' | 'closed' | 'exception'
+  magic_link_expiry_minutes?: number | null
+  description?: string | null
+  position?: number
+  is_terminal?: boolean
+  is_default?: boolean
+}
+
+// ============================================
+// Notification Rule Types
+// ============================================
+
+export type NotificationPartyRole = 'seller' | 'logistics' | 'buyer' | 'internal_manager'
+export type NotificationChannel = 'email' | 'whatsapp' | 'sms'
+
+export interface NotificationRuleResponse {
+  id: number
+  entity_id: number
+  po_state_id: number
+  party_role: NotificationPartyRole
+  channel: NotificationChannel
+  template_id: string | null
+  subject_template: string | null
+  is_active: boolean
+  delay_minutes: number
+  additional_params: Record<string, unknown>
+  created_at: string
+  updated_at: string
+  // Joined fields
+  po_state_name?: string
+  entity_name?: string
+}
+
+export interface NotificationRuleCreateRequest {
+  entity_id: number
+  po_state_id: number
+  party_role: NotificationPartyRole
+  channel: NotificationChannel
+  template_id?: string | null
+  subject_template?: string | null
+  is_active?: boolean
+  delay_minutes?: number
+  additional_params?: Record<string, unknown>
+}
+
+export interface NotificationRuleUpdateRequest {
+  entity_id?: number
+  po_state_id?: number
+  party_role?: NotificationPartyRole
+  channel?: NotificationChannel
+  template_id?: string | null
+  subject_template?: string | null
+  is_active?: boolean
+  delay_minutes?: number
+  additional_params?: Record<string, unknown>
+}
+
+// ============================================
 // API Error Types
 // ============================================
 export class ApiError extends Error {

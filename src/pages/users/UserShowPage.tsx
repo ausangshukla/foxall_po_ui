@@ -36,6 +36,10 @@ export function UserShowPage() {
         const entityData = await getEntity(userData.entity_id)
         setEntity(entityData)
       } catch (err) {
+        // Re-throw AuthError so the auth system handles redirect to login
+        if (err instanceof Error && err.name === 'AuthError') {
+          throw err
+        }
         const message = err instanceof Error ? err.message : 'Failed to load user'
         setError(message)
       } finally {

@@ -6,6 +6,10 @@ import type {
   UpdatePurchaseOrderRequest,
   PurchaseOrderSearchRequest,
   PurchaseOrderSearchMeta,
+  PurchaseOrderAvailableActionsResponse,
+  PurchaseOrderTransitionRequest,
+  PurchaseOrderTransitionResponse,
+  PurchaseOrderTransitionAttemptsResponse,
 } from '../types/api'
 
 export async function listPurchaseOrders(): Promise<PurchaseOrderResponse[]> {
@@ -55,4 +59,19 @@ export async function searchPurchaseOrders(
     true
   )
   return result as { data: PurchaseOrderResponse[]; meta: PurchaseOrderSearchMeta }
+}
+
+export async function getPurchaseOrderAvailableActions(id: number): Promise<PurchaseOrderAvailableActionsResponse> {
+  return api.get<PurchaseOrderAvailableActionsResponse>(API_ROUTES.PURCHASE_ORDER_AVAILABLE_ACTIONS(id))
+}
+
+export async function transitionPurchaseOrder(
+  id: number,
+  data: PurchaseOrderTransitionRequest
+): Promise<PurchaseOrderTransitionResponse> {
+  return api.post<PurchaseOrderTransitionResponse>(API_ROUTES.PURCHASE_ORDER_TRANSITION(id), data)
+}
+
+export async function getPurchaseOrderTransitionAttempts(id: number): Promise<PurchaseOrderTransitionAttemptsResponse> {
+  return api.get<PurchaseOrderTransitionAttemptsResponse>(API_ROUTES.PURCHASE_ORDER_TRANSITION_ATTEMPTS(id))
 }

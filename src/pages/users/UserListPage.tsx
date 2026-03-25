@@ -48,6 +48,10 @@ export function UserListPage() {
         })
         setEntities(entityMap)
       } catch (err) {
+        // Re-throw AuthError so the auth system handles redirect to login
+        if (err instanceof Error && err.name === 'AuthError') {
+          throw err
+        }
         const message = err instanceof Error ? err.message : 'Failed to load users'
         setError(message)
       } finally {

@@ -15,16 +15,21 @@ import {
   PurchaseOrderShowPage,
   CustomFieldDefinitionListPage,
   CustomFieldDefinitionFormPage,
+  ExternalPartyListPage,
+  ExternalPartyShowPage,
+  ExternalPartyFormPage,
+  NotificationRuleListPage,
+  NotificationRuleFormPage,
+  NotificationRuleShowPage,
+  PoStateListPage,
+  PoStateFormPage,
 } from '../pages'
 import { NotFound } from '../components/common'
 
 export function AppRouter() {
   return (
     <Routes>
-      {/* Route without layout */}
       <Route path="/login" element={<LoginPage />} />
-
-      {/* Routes with layout */}
       <Route element={<Layout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
@@ -42,11 +47,23 @@ export function AppRouter() {
         <Route path="/purchase-orders/new" element={<PurchaseOrderFormPage />} />
         <Route path="/purchase-orders/:id" element={<PurchaseOrderShowPage />} />
         <Route path="/purchase-orders/:id/edit" element={<PurchaseOrderFormPage />} />
-
-        {/* Custom Field Definitions */}
         <Route path="/custom-field-definitions" element={<CustomFieldDefinitionListPage />} />
         <Route path="/custom-field-definitions/new" element={<CustomFieldDefinitionFormPage />} />
         <Route path="/custom-field-definitions/:id/edit" element={<CustomFieldDefinitionFormPage />} />
+        <Route path="/external-parties" element={<ExternalPartyListPage />} />
+        <Route path="/external-parties/new" element={<ExternalPartyFormPage />} />
+        <Route path="/external-parties/new/:poId" element={<ExternalPartyFormPage />} />
+        <Route path="/external-parties/:id" element={<ExternalPartyShowPage />} />
+        <Route path="/external-parties/:id/edit" element={<ExternalPartyFormPage />} />
+
+        <Route path="/notification-rules" element={<NotificationRuleListPage />} />
+        <Route path="/notification-rules/new" element={<NotificationRuleFormPage />} />
+        <Route path="/notification-rules/:id" element={<NotificationRuleShowPage />} />
+        <Route path="/notification-rules/:id/edit" element={<NotificationRuleFormPage />} />
+
+        <Route path="/po-states" element={<PoStateListPage />} />
+        <Route path="/po-states/new" element={<PoStateFormPage />} />
+        <Route path="/po-states/:id/edit" element={<PoStateFormPage />} />
 
         <Route path="*" element={<NotFound />} />
       </Route>

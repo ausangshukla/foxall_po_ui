@@ -55,6 +55,10 @@ export function EntityListPage() {
         })
         setUserCounts(counts)
       } catch (err) {
+        // Re-throw AuthError so the auth system handles redirect to login
+        if (err instanceof Error && err.name === 'AuthError') {
+          throw err
+        }
         const message = err instanceof Error ? err.message : 'Failed to load entities'
         setError(message)
       } finally {

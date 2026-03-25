@@ -142,6 +142,10 @@ export function PurchaseOrderListPage() {
       setTotalPages(response.meta?.total_pages || 1)
       setTotalCount(response.meta?.total_count || 0)
     } catch (err) {
+      // Re-throw AuthError so the auth system handles redirect to login
+      if (err instanceof Error && err.name === 'AuthError') {
+        throw err
+      }
       const message = err instanceof Error ? err.message : 'Failed to load purchase orders'
       console.error('Failed to load purchase orders:', err)
       setError(message)

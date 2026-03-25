@@ -289,6 +289,10 @@ export function PurchaseOrderFormPage() {
         }
       } catch (err) {
         console.error('>>> [useEffect] Error loading PO:', err)
+        // Re-throw AuthError so the auth system handles redirect to login
+        if (err instanceof Error && err.name === 'AuthError') {
+          throw err
+        }
         setError(err instanceof Error ? err.message : 'Failed to load purchase order or field definitions')
       } finally {
         setIsLoading(false)
@@ -486,6 +490,10 @@ export function PurchaseOrderFormPage() {
       }
     } catch (err) {
       console.error('Error saving PO:', err)
+      // Re-throw AuthError so the auth system handles redirect to login
+      if (err instanceof Error && err.name === 'AuthError') {
+        throw err
+      }
       const message = err instanceof Error ? err.message : 'Failed to save purchase order';
       setError(message)
       // If it's a validation error about the document, alert the user specifically

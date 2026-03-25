@@ -2,9 +2,20 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth, useRequireAuth } from '../../contexts/AuthContext'
 import { LoadingSpinner, AlertMessage } from '../../components/common'
-import { getPurchaseOrder } from '../../api/purchase-orders'
+import { 
+  getPurchaseOrder, 
+  getPurchaseOrderAvailableActions, 
+  transitionPurchaseOrder, 
+  getPurchaseOrderTransitionAttempts 
+} from '../../api/purchase-orders'
 import { getCustomFieldDefinitions } from '../../api/custom-fields'
-import type { PurchaseOrderResponse, PurchaseOrderType, CustomFieldDefinition } from '../../types/api'
+import type { 
+  PurchaseOrderResponse, 
+  PurchaseOrderType, 
+  CustomFieldDefinition,
+  PurchaseOrderAvailableAction,
+  PurchaseOrderTransitionAttempt
+} from '../../types/api'
 import { API_BASE_URL } from '../../config'
 
 import { PurchaseOrderLineItems } from '../../components/purchase-orders/PurchaseOrderLineItems'
@@ -26,7 +37,7 @@ function fixDocUrl(url: string | null | undefined): string | null {
     docUrl.host = apiBaseUrl.host
     
     return docUrl.toString()
-  } catch (e) {
+  } catch {
     // Fallback to simple replacement if URL parsing fails
     return url.replace(/https?:\/\/[^/]+/, API_BASE_URL)
   }
@@ -42,8 +53,34 @@ export function PurchaseOrderShowPage() {
 
   const [purchaseOrder, setPurchaseOrder] = useState<PurchaseOrderResponse | null>(null)
   const [fieldDefinitions, setFieldDefinitions] = useState<CustomFieldDefinition[]>([])
+  const [availableActions, setAvailableActions] = useState<PurchaseOrderAvailableAction[]>([])
+  const [transitionAttempts, setTransitionAttempts] = useState<PurchaseOrderTransitionAttempt[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // State machine transition state
+  const [isTransitioning, setIsTransitioning] = useState(false)
+  const [transitionError, setTransitionError] = useState<string | null>(null)
+  const [transitionSuccess, setTransitionSuccess] = useState<string | null>(null)
+  const [commentModalOpen, setCommentModalOpen] = useState(false)
+  const [pendingAction, setPendingAction] = useState<PurchaseOrderAvailableAction | null>(null)
+  const [transitionComment, setTransitionComment] = useState('')
+
+  const fetchStateData = async (id: number) => {
+    try {
+      console.log(`[PO State Debug] Fetching state data for PO #${id}`)
+      const [actionsRes, attemptsRes] = await Promise.all([
+        getPurchaseOrderAvailableActions(id),
+        getPurchaseOrderTransitionAttempts(id)
+      ])
+      console.log(`[PO State Debug] Actions:`, actionsRes?.available_actions)
+      console.log(`[PO State Debug] Attempts:`, attemptsRes?.attempts)
+      setAvailableActions(actionsRes?.available_actions || [])
+      setTransitionAttempts(attemptsRes?.attempts || [])
+    } catch (err) {
+      console.error('[PO State Debug] Failed to load transition state data', err)
+    }
+  }
 
   useEffect(() => {
     if (!isAuth || !poId) return
@@ -55,7 +92,12 @@ export function PurchaseOrderShowPage() {
         setPurchaseOrder(data)
         const definitions = await getCustomFieldDefinitions('PurchaseOrder', data.po_type as PurchaseOrderType)
         setFieldDefinitions(definitions)
+        await fetchStateData(poId)
       } catch (err) {
+        // Re-throw AuthError so the auth system handles redirect to login
+        if (err instanceof Error && err.name === 'AuthError') {
+          throw err
+        }
         const message = err instanceof Error ? err.message : 'Failed to load purchase order'
         setError(message)
       } finally {
@@ -65,6 +107,48 @@ export function PurchaseOrderShowPage() {
 
     fetchData()
   }, [isAuth, poId])
+
+  const handleActionClick = (action: PurchaseOrderAvailableAction) => {
+    if (action.requires_comment) {
+      setPendingAction(action)
+      setTransitionComment('')
+      setCommentModalOpen(true)
+    } else {
+      executeTransition(action)
+    }
+  }
+
+  const executeTransition = async (action: PurchaseOrderAvailableAction, comment?: string) => {
+    if (!poId || !purchaseOrder) return
+    
+    setIsTransitioning(true)
+    setTransitionError(null)
+    setTransitionSuccess(null)
+    
+    try {
+      const res = await transitionPurchaseOrder(poId, {
+        transition: {
+          po_state_id: action.to_state_id,
+          comment: comment || undefined
+        }
+      })
+      
+      const updatedPo = await getPurchaseOrder(poId)
+      setPurchaseOrder(updatedPo)
+      setTransitionSuccess(`Successfully transitioned to ${res.purchase_order.po_state?.name || action.action_name}`)
+      await fetchStateData(poId)
+      
+      if (commentModalOpen) {
+        setCommentModalOpen(false)
+        setPendingAction(null)
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to execute action'
+      setTransitionError(message)
+    } finally {
+      setIsTransitioning(false)
+    }
+  }
 
   const formatCurrency = (amount: number, currency: string): string => {
     return new Intl.NumberFormat('en-US', {
@@ -123,20 +207,44 @@ export function PurchaseOrderShowPage() {
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tighter text-on-primary-fixed mb-2">Purchase Order Details</h1>
           <p className="text-on-surface-variant font-light tracking-wide max-w-md">Reviewing logistics and vendor procurement requirements for fiscal Q3 infrastructure.</p>
         </div>
-        <div className="relative z-10 mt-6 md:mt-0">
+        <div className="relative z-10 mt-6 md:mt-0 flex gap-4 flex-wrap justify-end">
+          {availableActions.map((action) => (
+            <button
+              key={action.action_key}
+              onClick={() => handleActionClick(action)}
+              disabled={isTransitioning}
+              className={`px-6 py-2.5 font-bold rounded-lg shadow-sm hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2 ${
+                action.action_key.includes('reject') || action.action_key.includes('cancel')
+                  ? 'bg-error text-on-error'
+                  : 'bg-primary text-on-primary'
+              } disabled:opacity-50`}
+            >
+              {action.action_name}
+            </button>
+          ))}
           {canManageUsers() && (
             <button 
               onClick={() => navigate(`/purchase-orders/${purchaseOrder.id}/edit`)}
-              className="px-8 py-3 bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold rounded-lg shadow-lg hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2"
+              className="px-6 py-2.5 bg-surface-variant text-on-surface-variant font-bold rounded-lg shadow-sm hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2"
             >
               <span className="material-symbols-outlined text-sm">edit</span>
-              Modify Order
+              Edit
             </button>
           )}
         </div>
         {/* Decorative Abstract Pattern */}
         <div className="absolute -right-20 -top-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl"></div>
       </header>
+
+      {(transitionSuccess || transitionError) && (
+        <div className="mb-6">
+          <AlertMessage 
+            variant={transitionSuccess ? 'success' : 'danger'} 
+            message={(transitionSuccess || transitionError) as string} 
+            onClose={() => transitionSuccess ? setTransitionSuccess(null) : setTransitionError(null)}
+          />
+        </div>
+      )}
 
       {/* Bento Grid Content */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
@@ -409,8 +517,47 @@ export function PurchaseOrderShowPage() {
               <span className="material-symbols-outlined text-primary">history</span>
               <h2 className="text-on-primary-container font-extrabold tracking-tight text-lg">Audit Log</h2>
             </div>
-            <div className="space-y-6">
-              <div className="p-4 bg-surface-container-low/50 rounded-lg">
+            <div className="space-y-4">
+              {transitionAttempts.map((attempt) => (
+                <div 
+                  key={attempt.id} 
+                  className={`p-4 rounded-lg border-l-4 ${
+                    attempt.status === 'success' 
+                      ? 'bg-surface-container-low border-primary' 
+                      : 'bg-error-container/20 border-error'
+                  }`}
+                >
+                  <div className="flex justify-between items-start mb-1">
+                    <p className="text-sm font-bold text-on-surface">{attempt.action}</p>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest ${
+                      attempt.status === 'success' ? 'bg-primary/10 text-primary' : 'bg-error/10 text-error'
+                    }`}>
+                      {attempt.status.replace(/_/g, ' ')}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-2 mb-2">
+                    <span className="text-xs text-on-surface-variant bg-surface px-2 py-1 rounded">
+                      {attempt.from_state.replace(/_/g, ' ')}
+                    </span>
+                    <span className="material-symbols-outlined text-xs text-on-surface-variant">arrow_forward</span>
+                    <span className="text-xs text-on-surface bg-surface px-2 py-1 rounded font-medium">
+                      {attempt.to_state.replace(/_/g, ' ')}
+                    </span>
+                  </div>
+                  {attempt.error_message && (
+                    <p className="text-xs text-error mt-2 font-medium bg-error/5 p-2 rounded">
+                      {attempt.error_message}
+                    </p>
+                  )}
+                  <div className="mt-3 flex justify-between items-center text-[10px] text-on-surface-variant">
+                    <span>{attempt.actor_type}</span>
+                    <span>{formatDateTime(attempt.created_at)}</span>
+                  </div>
+                </div>
+              ))}
+              
+              {/* Creation Record */}
+              <div className="p-4 bg-surface-container-low/50 rounded-lg border-l-4 border-surface-variant">
                 <p className="text-[10px] uppercase tracking-widest text-on-surface-variant mb-2">Created By</p>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-xs">{purchaseOrder.created_by}</div>
@@ -419,23 +566,6 @@ export function PurchaseOrderShowPage() {
                     <p className="text-[10px] text-on-surface-variant">{formatDateTime(purchaseOrder.created_at)}</p>
                   </div>
                 </div>
-              </div>
-              {purchaseOrder.approved_by && (
-                <div className="p-4 bg-surface-container-low/50 rounded-lg">
-                  <p className="text-[10px] uppercase tracking-widest text-on-surface-variant mb-2">Approved By</p>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-xs">{purchaseOrder.approved_by}</div>
-                    <div>
-                      <p className="text-sm font-bold text-on-surface">Approver ID: {purchaseOrder.approved_by}</p>
-                      <p className="text-[10px] text-on-surface-variant">System Verified</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-              <div className="p-4 bg-surface-container-low/50 rounded-lg">
-                <p className="text-[10px] uppercase tracking-widest text-on-surface-variant mb-2">Last Modified</p>
-                <p className="text-sm font-bold text-on-surface">System Auto-Save</p>
-                <p className="text-[10px] text-on-surface-variant">{formatDateTime(purchaseOrder.updated_at)}</p>
               </div>
             </div>
           </section>
@@ -455,6 +585,56 @@ export function PurchaseOrderShowPage() {
       <section className="mt-12 mb-20 animate-in fade-in slide-in-from-bottom-6 duration-1000">
         <PurchaseOrderLineItems poId={purchaseOrder.id} canManage={canManageUsers()} />
       </section>
+
+      {/* Transition Comment Modal */}
+      {commentModalOpen && pendingAction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-surface/80 backdrop-blur-sm">
+          <div className="bg-surface-container rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-outline-variant/20">
+              <h3 className="text-xl font-bold text-on-surface">
+                {pendingAction.action_name}
+              </h3>
+              <p className="text-sm text-on-surface-variant mt-1">
+                A comment is required to perform this action.
+              </p>
+            </div>
+            <div className="p-6">
+              <textarea
+                value={transitionComment}
+                onChange={(e) => setTransitionComment(e.target.value)}
+                placeholder="Enter your comment here..."
+                className="w-full h-32 p-3 bg-surface rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary resize-none"
+                required
+              />
+            </div>
+            <div className="p-6 bg-surface-container-low flex justify-end gap-3 border-t border-outline-variant/20">
+              <button
+                onClick={() => {
+                  setCommentModalOpen(false)
+                  setPendingAction(null)
+                  setTransitionComment('')
+                }}
+                className="px-4 py-2 text-on-surface-variant font-medium hover:bg-surface-variant/50 rounded-lg transition-colors"
+                disabled={isTransitioning}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (transitionComment.trim()) {
+                    executeTransition(pendingAction, transitionComment)
+                  }
+                }}
+                disabled={!transitionComment.trim() || isTransitioning}
+                className="px-6 py-2 bg-primary text-on-primary font-bold rounded-lg shadow-sm hover:opacity-90 disabled:opacity-50 transition-all flex items-center gap-2"
+              >
+                {isTransitioning && <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>}
+                Submit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

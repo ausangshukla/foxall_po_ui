@@ -26,6 +26,10 @@ export function CustomFieldDefinitionListPage() {
         const data = await listCustomFieldDefinitions()
         setDefinitions(data)
       } catch (err) {
+        // Re-throw AuthError so the auth system handles redirect to login
+        if (err instanceof Error && err.name === 'AuthError') {
+          throw err
+        }
         const message = err instanceof Error ? err.message : 'Failed to load field definitions'
         setError(message)
       } finally {

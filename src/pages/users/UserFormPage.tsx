@@ -86,7 +86,11 @@ export function UserFormPage() {
             entity_id: currentUser.entity_id.toString(),
           }))
         }
-      } catch {
+      } catch (err) {
+        // Re-throw AuthError so the auth system handles redirect to login
+        if (err instanceof Error && err.name === 'AuthError') {
+          throw err
+        }
         setError('Failed to load user data or entities list')
       } finally {
         setIsLoading(false)
@@ -164,6 +168,10 @@ export function UserFormPage() {
         navigate(`/users/${newUser.id}`)
       }
     } catch (err) {
+      // Re-throw AuthError so the auth system handles redirect to login
+      if (err instanceof Error && err.name === 'AuthError') {
+        throw err
+      }
       setError(err instanceof Error ? err.message : 'Failed to save user')
     } finally {
       setIsSaving(false)

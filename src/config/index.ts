@@ -21,12 +21,28 @@ export const API_ROUTES = {
   // Purchase Orders
   PURCHASE_ORDERS: '/api/v1/purchase_orders',
   PURCHASE_ORDER: (id: number) => `/api/v1/purchase_orders/${id}`,
+  PURCHASE_ORDER_AVAILABLE_ACTIONS: (id: number) => `/api/v1/purchase_orders/${id}/available_actions`,
+  PURCHASE_ORDER_TRANSITION: (id: number) => `/api/v1/purchase_orders/${id}/transition`,
+  PURCHASE_ORDER_TRANSITION_ATTEMPTS: (id: number) => `/api/v1/purchase_orders/${id}/transition_attempts`,
   PURCHASE_ORDER_LINE_ITEMS: (poId: number) => `/api/v1/purchase_orders/${poId}/line_items`,
   PURCHASE_ORDER_LINE_ITEM: (poId: number, id: number) => `/api/v1/purchase_orders/${poId}/line_items/${id}`,
 
   // Custom Fields
   CUSTOM_FIELD_DEFINITIONS: '/api/v1/custom_field_definitions',
   CUSTOM_FIELD_DEFINITION: (id: number) => `/api/v1/custom_field_definitions/${id}`,
+
+  // External Parties
+  EXTERNAL_PARTIES: '/api/v1/external_parties',
+  EXTERNAL_PARTY: (id: number) => `/api/v1/external_parties/${id}`,
+  EXTERNAL_PARTIES_FOR_PO: (poId: number) => `/api/v1/purchase_orders/${poId}/external_parties`,
+
+  // PO States
+  PO_STATES: '/api/v1/po_states',
+  PO_STATE: (id: number) => `/api/v1/po_states/${id}`,
+
+  // Notification Rules
+  NOTIFICATION_RULES: '/api/v1/notification_rules',
+  NOTIFICATION_RULE: (id: number) => `/api/v1/notification_rules/${id}`,
 } as const
 
 // Storage Keys
