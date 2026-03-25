@@ -23,6 +23,9 @@ import {
   NotificationRuleShowPage,
   PoStateListPage,
   PoStateFormPage,
+  PoTransitionRuleListPage,
+  PoTransitionRuleFormPage,
+  PoTransitionRuleShowPage,
 } from '../pages'
 import { NotFound } from '../components/common'
 
@@ -64,6 +67,11 @@ export function AppRouter() {
         <Route path="/po-states" element={<PoStateListPage />} />
         <Route path="/po-states/new" element={<PoStateFormPage />} />
         <Route path="/po-states/:id/edit" element={<PoStateFormPage />} />
+
+        <Route path="/po-transition-rules" element={<PoTransitionRuleListPage />} />
+        <Route path="/po-transition-rules/new" element={<PoTransitionRuleFormPage />} />
+        <Route path="/po-transition-rules/:id" element={<PoTransitionRuleShowPage />} />
+        <Route path="/po-transition-rules/:id/edit" element={<PoTransitionRuleFormPage />} />
 
         <Route path="*" element={<NotFound />} />
       </Route>

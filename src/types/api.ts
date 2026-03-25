@@ -233,6 +233,9 @@ export interface PurchaseOrderResponse {
   msds_url: string | null
   pre_production_sample_url: string | null
 
+  // State Machine Actions
+  available_actions?: PurchaseOrderAvailableAction[]
+
   // Audit Fields
   created_by: number
   approved_by: number | null
@@ -537,6 +540,7 @@ export interface PurchaseOrderTransitionAttempt {
   status: string
   error_message: string | null
   actor_type: string
+  actor_id: number | null
   created_at: string
 }
 
@@ -546,6 +550,33 @@ export interface PurchaseOrderTransitionAttemptsResponse {
     po_number: string
   }
   attempts: PurchaseOrderTransitionAttempt[]
+}
+
+export interface PoTransitionAttemptResponse {
+  id: number
+  entity_id: number
+  purchase_order_id: number
+  po_transition_rule_id: number | null
+  actor_type: string | null
+  actor_id: number | null
+  attempted_action: string
+  from_state_system_code: string | null
+  to_state_system_code: string | null
+  status: string
+  error_message: string | null
+  metadata: Record<string, unknown>
+  ip_address: string | null
+  user_agent: string | null
+  created_at: string
+  updated_at: string
+  actor_display_name?: string
+}
+
+export interface PoTransitionAttemptSearchMeta {
+  current_page: number
+  per_page: number
+  total_pages: number
+  total_count: number
 }
 
 // ============================================
@@ -655,6 +686,50 @@ export interface PoStateUpdateRequest {
   position?: number
   is_terminal?: boolean
   is_default?: boolean
+}
+
+// ============================================
+// PO Transition Rule Types
+// ============================================
+
+export interface PoTransitionRuleResponse {
+  id: number
+  entity_id: number
+  from_state_id: number | null
+  to_state_id: number
+  allowed_role: string
+  requires_comment: boolean
+  requires_attachment: boolean
+  auto_transition: boolean
+  is_magic_link_enabled: boolean
+  created_at: string
+  updated_at: string
+  // Joined fields
+  from_state_name?: string
+  to_state_name?: string
+  to_state_magic_link_expiry_minutes?: number | null
+}
+
+export interface PoTransitionRuleCreateRequest {
+  entity_id: number
+  from_state_id: number | null
+  to_state_id: number
+  allowed_role: string
+  requires_comment?: boolean
+  requires_attachment?: boolean
+  auto_transition?: boolean
+  is_magic_link_enabled?: boolean
+}
+
+export interface PoTransitionRuleUpdateRequest {
+  entity_id?: number
+  from_state_id?: number | null
+  to_state_id?: number
+  allowed_role?: string
+  requires_comment?: boolean
+  requires_attachment?: boolean
+  auto_transition?: boolean
+  is_magic_link_enabled?: boolean
 }
 
 // ============================================

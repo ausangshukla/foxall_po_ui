@@ -5,20 +5,21 @@ import { LoadingSpinner, AlertMessage } from '../../components/common'
 import { 
   getPurchaseOrder, 
   getPurchaseOrderAvailableActions, 
-  transitionPurchaseOrder, 
-  getPurchaseOrderTransitionAttempts 
+  transitionPurchaseOrder
 } from '../../api/purchase-orders'
+import poTransitionAttemptApi from '../../api/po-transition-attempts'
 import { getCustomFieldDefinitions } from '../../api/custom-fields'
 import type { 
   PurchaseOrderResponse, 
   PurchaseOrderType, 
   CustomFieldDefinition,
   PurchaseOrderAvailableAction,
-  PurchaseOrderTransitionAttempt
+  PoTransitionAttemptResponse
 } from '../../types/api'
 import { API_BASE_URL } from '../../config'
 
 import { PurchaseOrderLineItems } from '../../components/purchase-orders/PurchaseOrderLineItems'
+import { PoTransitionAttempts } from '../../components/purchase-orders/PoTransitionAttempts'
 
 function fixDocUrl(url: string | null | undefined): string | null {
   if (!url) return null
@@ -54,7 +55,7 @@ export function PurchaseOrderShowPage() {
   const [purchaseOrder, setPurchaseOrder] = useState<PurchaseOrderResponse | null>(null)
   const [fieldDefinitions, setFieldDefinitions] = useState<CustomFieldDefinition[]>([])
   const [availableActions, setAvailableActions] = useState<PurchaseOrderAvailableAction[]>([])
-  const [transitionAttempts, setTransitionAttempts] = useState<PurchaseOrderTransitionAttempt[]>([])
+  const [transitionAttempts, setTransitionAttempts] = useState<PoTransitionAttemptResponse[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -65,20 +66,34 @@ export function PurchaseOrderShowPage() {
   const [commentModalOpen, setCommentModalOpen] = useState(false)
   const [pendingAction, setPendingAction] = useState<PurchaseOrderAvailableAction | null>(null)
   const [transitionComment, setTransitionComment] = useState('')
+  const [activeTab, setActiveTab] = useState<'line-items' | 'transitions'>('line-items')
 
   const fetchStateData = async (id: number) => {
     try {
       console.log(`[PO State Debug] Fetching state data for PO #${id}`)
-      const [actionsRes, attemptsRes] = await Promise.all([
+      const [actionsRes, attemptsRes] = await Promise.allSettled([
         getPurchaseOrderAvailableActions(id),
-        getPurchaseOrderTransitionAttempts(id)
+        poTransitionAttemptApi.getByPurchaseOrder(id)
       ])
-      console.log(`[PO State Debug] Actions:`, actionsRes?.available_actions)
-      console.log(`[PO State Debug] Attempts:`, attemptsRes?.attempts)
-      setAvailableActions(actionsRes?.available_actions || [])
-      setTransitionAttempts(attemptsRes?.attempts || [])
+      
+      if (actionsRes.status === 'fulfilled') {
+        console.log(`[PO State Debug] Actions:`, actionsRes.value?.available_actions)
+        setAvailableActions(actionsRes.value?.available_actions || [])
+      } else {
+        // Fallback to what we already have if any
+        console.error('[PO State Debug] Failed to load available actions', actionsRes.reason)
+        // If we already have actions from the PO data, don't clear them
+      }
+
+      if (attemptsRes.status === 'fulfilled') {
+        console.log(`[PO State Debug] Attempts:`, attemptsRes.value?.data)
+        setTransitionAttempts(attemptsRes.value?.data || [])
+      } else {
+        console.error('[PO State Debug] Failed to load transition attempts', attemptsRes.reason)
+        setTransitionAttempts([])
+      }
     } catch (err) {
-      console.error('[PO State Debug] Failed to load transition state data', err)
+      console.error('[PO State Debug] Unexpected error loading state data', err)
     }
   }
 
@@ -90,6 +105,13 @@ export function PurchaseOrderShowPage() {
         setIsLoading(true)
         const data = await getPurchaseOrder(poId)
         setPurchaseOrder(data)
+        
+        // If data includes available actions, use them immediately
+        if (data.available_actions) {
+          console.log(`[PO State Debug] Found actions in PO data:`, data.available_actions)
+          setAvailableActions(data.available_actions)
+        }
+
         const definitions = await getCustomFieldDefinitions('PurchaseOrder', data.po_type as PurchaseOrderType)
         setFieldDefinitions(definitions)
         await fetchStateData(poId)
@@ -528,7 +550,7 @@ export function PurchaseOrderShowPage() {
                   }`}
                 >
                   <div className="flex justify-between items-start mb-1">
-                    <p className="text-sm font-bold text-on-surface">{attempt.action}</p>
+                    <p className="text-sm font-bold text-on-surface">{(attempt.attempted_action || 'Unknown').replace(/_/g, ' ')}</p>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest ${
                       attempt.status === 'success' ? 'bg-primary/10 text-primary' : 'bg-error/10 text-error'
                     }`}>
@@ -537,11 +559,11 @@ export function PurchaseOrderShowPage() {
                   </div>
                   <div className="flex items-center gap-2 mt-2 mb-2">
                     <span className="text-xs text-on-surface-variant bg-surface px-2 py-1 rounded">
-                      {attempt.from_state.replace(/_/g, ' ')}
+                      {(attempt.from_state_system_code || 'START').replace(/_/g, ' ')}
                     </span>
                     <span className="material-symbols-outlined text-xs text-on-surface-variant">arrow_forward</span>
                     <span className="text-xs text-on-surface bg-surface px-2 py-1 rounded font-medium">
-                      {attempt.to_state.replace(/_/g, ' ')}
+                      {(attempt.to_state_system_code || 'END').replace(/_/g, ' ')}
                     </span>
                   </div>
                   {attempt.error_message && (
@@ -550,7 +572,7 @@ export function PurchaseOrderShowPage() {
                     </p>
                   )}
                   <div className="mt-3 flex justify-between items-center text-[10px] text-on-surface-variant">
-                    <span>{attempt.actor_type}</span>
+                    <span>{attempt.actor_type || 'System'}</span>
                     <span>{formatDateTime(attempt.created_at)}</span>
                   </div>
                 </div>
@@ -581,9 +603,42 @@ export function PurchaseOrderShowPage() {
         </div>
       </div>
 
-      {/* Line Items Section - Full Width */}
+      {/* Tabs Section - Full Width */}
       <section className="mt-12 mb-20 animate-in fade-in slide-in-from-bottom-6 duration-1000">
-        <PurchaseOrderLineItems poId={purchaseOrder.id} canManage={canManageUsers()} />
+        <div className="flex border-b border-outline-variant/30 mb-8 overflow-x-auto scrollbar-hide">
+          <button
+            onClick={() => setActiveTab('line-items')}
+            className={`px-8 py-4 font-extrabold tracking-tight text-sm uppercase transition-all relative ${
+              activeTab === 'line-items' 
+                ? 'text-primary' 
+                : 'text-on-surface-variant/60 hover:text-on-surface'
+            }`}
+          >
+            Line Items
+            {activeTab === 'line-items' && (
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-t-full"></div>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('transitions')}
+            className={`px-8 py-4 font-extrabold tracking-tight text-sm uppercase transition-all relative ${
+              activeTab === 'transitions' 
+                ? 'text-primary' 
+                : 'text-on-surface-variant/60 hover:text-on-surface'
+            }`}
+          >
+            Transition History
+            {activeTab === 'transitions' && (
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-t-full"></div>
+            )}
+          </button>
+        </div>
+
+        {activeTab === 'line-items' ? (
+          <PurchaseOrderLineItems poId={purchaseOrder.id} canManage={canManageUsers()} />
+        ) : (
+          <PoTransitionAttempts poId={purchaseOrder.id} />
+        )}
       </section>
 
       {/* Transition Comment Modal */}

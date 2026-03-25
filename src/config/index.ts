@@ -40,6 +40,10 @@ export const API_ROUTES = {
   PO_STATES: '/api/v1/po_states',
   PO_STATE: (id: number) => `/api/v1/po_states/${id}`,
 
+  // PO Transition Rules
+  PO_TRANSITION_RULES: '/api/v1/po_transition_rules',
+  PO_TRANSITION_RULE: (id: number) => `/api/v1/po_transition_rules/${id}`,
+
   // Notification Rules
   NOTIFICATION_RULES: '/api/v1/notification_rules',
   NOTIFICATION_RULE: (id: number) => `/api/v1/notification_rules/${id}`,

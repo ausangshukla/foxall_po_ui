@@ -76,6 +76,11 @@ export function AppNavbar() {
                 States
               </Link>
             )}
+            {canManageUsers() && (
+              <Link to="/po-transition-rules" className={linkClass('/po-transition-rules')}>
+                Transitions
+              </Link>
+            )}
           </div>
         </div>
         
@@ -153,6 +158,7 @@ export function AppNavbar() {
               <Link to="/external-parties" className={mobileLinkClass('/external-parties')}>External Parties</Link>
               <Link to="/notification-rules" className={mobileLinkClass('/notification-rules')}>Notification Rules</Link>
               <Link to="/po-states" className={mobileLinkClass('/po-states')}>PO States</Link>
+              <Link to="/po-transition-rules" className={mobileLinkClass('/po-transition-rules')}>Transitions</Link>
             </>
           )}
           <hr className="border-slate-100 my-2" />
