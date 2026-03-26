@@ -226,7 +226,7 @@ export function PurchaseOrderShowPage() {
             </span>
             <span className="text-on-surface-variant font-light tracking-widest text-sm">{purchaseOrder.po_number}</span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tighter text-on-primary-fixed mb-2">Purchase Order Details</h1>
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tighter text-on-primary-fixed mb-2">PO #{purchaseOrder.po_number}</h1>
           <p className="text-on-surface-variant font-light tracking-wide max-w-md">Reviewing logistics and vendor procurement requirements for fiscal Q3 infrastructure.</p>
         </div>
         <div className="relative z-10 mt-6 md:mt-0 flex gap-4 flex-wrap justify-end">
@@ -295,32 +295,66 @@ export function PurchaseOrderShowPage() {
             </div>
           </section>
 
-          {/* Supplier & Contact Info */}
+          {/* Stakeholders & Partners */}
           <section className="glass-panel ambient-shadow rounded-xl p-8 border border-outline-variant/20">
             <div className="flex items-center gap-3 mb-6">
-              <span className="material-symbols-outlined text-primary">store</span>
-              <h2 className="text-on-primary-container font-extrabold tracking-tight text-lg">Supplier Information</h2>
+              <span className="material-symbols-outlined text-primary">groups</span>
+              <h2 className="text-on-primary-container font-extrabold tracking-tight text-lg">Stakeholders & Partners</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div>
-                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Contact Name</p>
-                <p className="font-bold text-on-surface">{purchaseOrder.supplier_contact_name || '—'}</p>
+              {/* Seller */}
+              <div className="p-4 bg-surface-container-low rounded-xl border border-outline-variant/10">
+                <p className="text-primary text-[10px] uppercase tracking-widest mb-2 font-bold flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[14px]">store</span>
+                  Seller / Supplier
+                </p>
+                <p className="font-extrabold text-on-surface text-lg mb-1">{purchaseOrder.seller_entity || '—'}</p>
+                <div className="flex items-center gap-2 text-on-surface-variant">
+                  <span className="material-symbols-outlined text-[16px]">person</span>
+                  <p className="text-xs font-bold">{purchaseOrder.seller_contact || 'No contact assigned'}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Email</p>
-                <p className="font-bold text-on-surface">{purchaseOrder.supplier_email || '—'}</p>
+
+              {/* Logistics */}
+              <div className="p-4 bg-surface-container-low rounded-xl border border-outline-variant/10">
+                <p className="text-primary text-[10px] uppercase tracking-widest mb-2 font-bold flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[14px]">local_shipping</span>
+                  Logistics Partner
+                </p>
+                <p className="font-extrabold text-on-surface text-lg mb-1">{purchaseOrder.logistics_entity || '—'}</p>
+                <div className="flex items-center gap-2 text-on-surface-variant">
+                  <span className="material-symbols-outlined text-[16px]">person</span>
+                  <p className="text-xs font-bold">{purchaseOrder.logistics_contact || 'No contact assigned'}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Phone</p>
-                <p className="font-bold text-on-surface">{purchaseOrder.supplier_phone || '—'}</p>
+
+              {/* Carrier */}
+              <div className="p-4 bg-surface-container-low rounded-xl border border-outline-variant/10">
+                <p className="text-primary text-[10px] uppercase tracking-widest mb-2 font-bold flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[14px]">flight_takeoff</span>
+                  Carrier / Forwarder
+                </p>
+                <p className="font-extrabold text-on-surface text-lg mb-1">{purchaseOrder.carrier_entity || '—'}</p>
+                <div className="flex items-center gap-2 text-on-surface-variant">
+                  <span className="material-symbols-outlined text-[16px]">person</span>
+                  <p className="text-xs font-bold">{purchaseOrder.carrier_contact || 'No contact assigned'}</p>
+                </div>
               </div>
+
               <div className="md:col-span-2">
-                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Address & Country</p>
-                <p className="font-bold text-on-surface">{purchaseOrder.supplier_address || '—'}{purchaseOrder.supplier_country ? `, ${purchaseOrder.supplier_country}` : ''}</p>
+                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Origin Port & Country</p>
+                <p className="font-bold text-on-surface uppercase">
+                  {purchaseOrder.origin_city_port || '—'}
+                  {purchaseOrder.supplier_country ? `, ${purchaseOrder.supplier_country}` : ''}
+                </p>
               </div>
+              
               <div>
-                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Origin Port</p>
-                <p className="font-bold text-on-surface uppercase">{purchaseOrder.origin_city_port || '—'}</p>
+                <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Legacy Supplier Info</p>
+                <p className="text-xs text-on-surface-variant italic">
+                  {purchaseOrder.supplier_email ? `${purchaseOrder.supplier_email}` : ''}
+                  {purchaseOrder.supplier_phone ? ` | ${purchaseOrder.supplier_phone}` : ''}
+                </p>
               </div>
             </div>
           </section>

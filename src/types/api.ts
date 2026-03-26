@@ -242,6 +242,20 @@ export interface PurchaseOrderResponse {
   created_at: string
   updated_at: string
   deleted_at: string | null
+
+  // Unified Partner/Contact Fields
+  seller_entity?: string | null
+  seller_entity_id?: number | null
+  logistics_entity?: string | null
+  logistics_entity_id?: number | null
+  carrier_entity?: string | null
+  carrier_entity_id?: number | null
+  seller_contact?: string | null
+  seller_contact_id?: number | null
+  logistics_contact?: string | null
+  logistics_contact_id?: number | null
+  carrier_contact?: string | null
+  carrier_contact_id?: number | null
 }
 
 export interface CreatePurchaseOrderRequest {
@@ -355,6 +369,14 @@ export interface UpdatePurchaseOrderRequest {
   product_spec_sheet?: File | null
   msds?: File | null
   pre_production_sample?: File | null
+
+  // Partner/Contact IDs
+  seller_entity_id?: number | null
+  logistics_entity_id?: number | null
+  carrier_entity_id?: number | null
+  seller_contact_id?: number | null
+  logistics_contact_id?: number | null
+  carrier_contact_id?: number | null
 }
 
 // ============================================
@@ -816,8 +838,11 @@ export class LoginError extends Error {
 }
 
 export class ValidationError extends Error {
-  constructor(message: string = 'Validation failed') {
+  errors?: Record<string, string[]>
+
+  constructor(message: string = 'Validation failed', errors?: Record<string, string[]>) {
     super(message)
     this.name = 'ValidationError'
+    this.errors = errors
   }
 }

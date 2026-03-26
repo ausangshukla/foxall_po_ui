@@ -148,6 +148,7 @@ export async function apiRequest<T, M = Record<string, never>>(
   if (hasError) {
     let code = 'UNKNOWN_ERROR'
     let message = 'An unexpected error occurred'
+    let errors: Record<string, string[]> | undefined
     const errorBody = body.error || (body as unknown as { errors?: unknown }).errors || body.status
 
     // Prioritize HTTP status code for determining error type
@@ -163,10 +164,19 @@ export async function apiRequest<T, M = Record<string, never>>(
       // If it's a Rails-style errors object (e.g., { email: ["is invalid"] })
       if (!errorBodyObj.code && !errorBodyObj.message) {
         code = 'VALIDATION_ERROR'
-        message = Object.entries(errorBody as Record<string, string[]>)
-          .map(([field, msgs]) => `${field} ${(msgs as string[]).join(', ')}`)
-          .join('; ')
+        errors = errorBody as Record<string, string[]>
+        
+        // If the body has full_messages (standard Rails), use those for a better combined message
+        const fullMessages = (body as unknown as { full_messages?: string[] }).full_messages
+        if (fullMessages && Array.isArray(fullMessages)) {
+          message = fullMessages.join('; ')
+        } else {
+          message = Object.entries(errors)
+            .map(([field, msgs]) => `${field} ${(msgs as string[]).join(', ')}`)
+            .join('; ')
+        }
       } else {
+        // ... (rest of the object handling)
         // Only use the body's code if it's actually an error code
         const bodyCode = (errorBodyObj.code as string | undefined)?.toString()
         if (bodyCode && bodyCode !== '200' && bodyCode !== '0') {
@@ -207,7 +217,7 @@ export async function apiRequest<T, M = Record<string, never>>(
         throw new LoginError(message)
 
       case 'VALIDATION_ERROR':
-        throw new ValidationError(message)
+        throw new ValidationError(message, errors)
 
       case 'NOT_FOUND':
         throw new ApiError(code, message)

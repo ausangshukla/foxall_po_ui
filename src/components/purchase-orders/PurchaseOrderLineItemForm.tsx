@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, AlertMessage } from '../common';
+import { ValidationError } from '../../types/api';
 import type {
   PurchaseOrderLineItemResponse,
   CreatePurchaseOrderLineItemRequest,
@@ -189,7 +190,16 @@ export const PurchaseOrderLineItemForm: React.FC<PurchaseOrderLineItemFormProps>
       await onSubmit(formData);
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      if (err instanceof ValidationError && err.errors) {
+        const mappedErrors: Record<string, string> = {};
+        Object.entries(err.errors).forEach(([field, msgs]) => {
+          mappedErrors[field] = msgs.join(', ');
+        });
+        setValidationErrors(mappedErrors);
+        setError('Please fix the validation errors below.');
+      } else {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      }
     } finally {
       setIsLoading(false);
     }

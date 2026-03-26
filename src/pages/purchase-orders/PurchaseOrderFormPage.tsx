@@ -1,10 +1,13 @@
 import { useState, useEffect, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth, useRequireAuth } from '../../contexts/AuthContext'
-import { LoadingSpinner, AlertMessage, RichTextEditor } from '../../components/common'
+import { LoadingSpinner, AlertMessage, RichTextEditor, SearchableSelect } from '../../components/common'
 import { createPurchaseOrder, updatePurchaseOrder, getPurchaseOrder } from '../../api/purchase-orders'
 import { getCustomFieldDefinitions } from '../../api/custom-fields'
-import type { CreatePurchaseOrderRequest, UpdatePurchaseOrderRequest, PurchaseOrderResponse, PurchaseOrderStatus, PurchaseOrderType, ShippingMethod, ShippingTerm, CustomFieldDefinition, CustomFieldValue } from '../../types/api'
+import { listEntities } from '../../api/entities'
+import { listUsers } from '../../api/users'
+import { ValidationError } from '../../types/api'
+import type { CreatePurchaseOrderRequest, UpdatePurchaseOrderRequest, PurchaseOrderResponse, PurchaseOrderStatus, PurchaseOrderType, ShippingMethod, ShippingTerm, CustomFieldDefinition, CustomFieldValue, EntityResponse, UserResponse } from '../../types/api'
 
 interface FormData {
   entity_id: string
@@ -27,6 +30,14 @@ interface FormData {
   tracking_number: string
   carrier: string
   custom_fields: Record<string, CustomFieldValue>
+
+  // Unified Partner/Contact Fields
+  seller_entity_id: string
+  logistics_entity_id: string
+  carrier_entity_id: string
+  seller_contact_id: string
+  logistics_contact_id: string
+  carrier_contact_id: string
 
   // New Fields
   supplier_contact_name: string
@@ -90,6 +101,14 @@ const initialFormData: FormData = {
   tracking_number: '',
   carrier: '',
   custom_fields: {},
+
+  // Unified Partner/Contact Fields
+  seller_entity_id: '',
+  logistics_entity_id: '',
+  carrier_entity_id: '',
+  seller_contact_id: '',
+  logistics_contact_id: '',
+  carrier_contact_id: '',
 
   // New Fields
   supplier_contact_name: '',
@@ -174,6 +193,8 @@ export function PurchaseOrderFormPage() {
   const [formData, setFormData] = useState<FormData>(initialFormData)
   const [currentStep, setCurrentStep] = useState(0)
   const [fieldDefinitions, setFieldDefinitions] = useState<CustomFieldDefinition[]>([])
+  const [entities, setEntities] = useState<EntityResponse[]>([])
+  const [allUsers, setAllUsers] = useState<UserResponse[]>([])
   const [isLoading, setIsLoading] = useState(isEditing)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -198,6 +219,13 @@ export function PurchaseOrderFormPage() {
     const loadData = async () => {
       console.log('>>> [useEffect] Loading data...')
       try {
+        const [entitiesData, usersData] = await Promise.all([
+          listEntities(),
+          listUsers()
+        ])
+        setEntities(entitiesData)
+        setAllUsers(usersData)
+
         let poData: PurchaseOrderResponse | null = null;
         if (isEditing && poId) {
           console.log('>>> [useEffect] Fetching PO id:', poId)
@@ -239,6 +267,14 @@ export function PurchaseOrderFormPage() {
             tracking_number: poData.tracking_number || '',
             carrier: poData.carrier || '',
             custom_fields: { ...customFields, ...poData.custom_fields },
+
+            // Unified Partner/Contact Fields
+            seller_entity_id: poData.seller_entity_id?.toString() || '',
+            logistics_entity_id: poData.logistics_entity_id?.toString() || '',
+            carrier_entity_id: poData.carrier_entity_id?.toString() || '',
+            seller_contact_id: poData.seller_contact_id?.toString() || '',
+            logistics_contact_id: poData.logistics_contact_id?.toString() || '',
+            carrier_contact_id: poData.carrier_contact_id?.toString() || '',
 
             // New Fields
             supplier_contact_name: poData.supplier_contact_name || '',
@@ -319,13 +355,10 @@ export function PurchaseOrderFormPage() {
       }
     }
 
-    // Step 1: Supplier & Cargo
+    // Step 1: Partners & Cargo
     if (step === 1 || validateAll) {
-      if (!(formData.supplier_email || '').trim()) {
-        errors.supplier_email = 'Supplier email is required'
-      } else if (!/\S+@\S+\.\S+/.test(formData.supplier_email)) {
-        errors.supplier_email = 'Invalid email format'
-      }
+      if (!formData.seller_entity_id) errors.seller_entity_id = 'Seller entity is required'
+      if (!formData.seller_contact_id) errors.seller_contact_id = 'Seller contact is required'
       if (!formData.supplier_country) errors.supplier_country = 'Country is required'
       if (!formData.origin_city_port) errors.origin_city_port = 'Origin city/port is required'
       if (!formData.cargo_description) errors.cargo_description = 'Cargo description is required'
@@ -440,6 +473,14 @@ export function PurchaseOrderFormPage() {
       data.append('purchase_order[tracking_number]', formData.tracking_number || '');
       data.append('purchase_order[carrier]', formData.carrier || '');
 
+      // Unified Partner/Contact IDs
+      data.append('purchase_order[seller_entity_id]', formData.seller_entity_id || '');
+      data.append('purchase_order[logistics_entity_id]', formData.logistics_entity_id || '');
+      data.append('purchase_order[carrier_entity_id]', formData.carrier_entity_id || '');
+      data.append('purchase_order[seller_contact_id]', formData.seller_contact_id || '');
+      data.append('purchase_order[logistics_contact_id]', formData.logistics_contact_id || '');
+      data.append('purchase_order[carrier_contact_id]', formData.carrier_contact_id || '');
+
       // Custom fields
       data.append('purchase_order[custom_fields]', JSON.stringify(formData.custom_fields));
 
@@ -477,23 +518,38 @@ export function PurchaseOrderFormPage() {
       if (formData.msds instanceof File) data.append('purchase_order[msds]', formData.msds);
       if (formData.pre_production_sample instanceof File) data.append('purchase_order[pre_production_sample]', formData.pre_production_sample);
 
+      let response: PurchaseOrderResponse;
       if (isEditing && poId) {
-        await updatePurchaseOrder(poId, data as unknown as UpdatePurchaseOrderRequest)
+        response = await updatePurchaseOrder(poId, data as unknown as UpdatePurchaseOrderRequest)
       } else {
-        await createPurchaseOrder(data as unknown as CreatePurchaseOrderRequest)
+        response = await createPurchaseOrder(data as unknown as CreatePurchaseOrderRequest)
       }
 
-      if (isEditing) {
-        navigate(`/purchase-orders/${id}`)
-      } else {
-        navigate('/purchase-orders')
-      }
+      navigate(`/purchase-orders/${response.id}`)
     } catch (err) {
       console.error('Error saving PO:', err)
       // Re-throw AuthError so the auth system handles redirect to login
       if (err instanceof Error && err.name === 'AuthError') {
         throw err
       }
+
+      if (err instanceof ValidationError && err.errors) {
+        // Map the errors back to the form fields
+        const mappedErrors: Record<string, string> = {}
+        Object.entries(err.errors).forEach(([field, msgs]) => {
+          // Flatten nested custom_fields errors if any
+          if (field === 'custom_fields') {
+             // Rails might return { custom_fields: ["is invalid"] } or similar
+             mappedErrors[field] = (msgs as string[]).join(', ')
+          } else {
+             mappedErrors[field] = (msgs as string[]).join(', ')
+          }
+        })
+        setValidationErrors(mappedErrors)
+        setError('Please fix the validation errors below.')
+        return
+      }
+
       const message = err instanceof Error ? err.message : 'Failed to save purchase order';
       setError(message)
       // If it's a validation error about the document, alert the user specifically
@@ -550,6 +606,12 @@ export function PurchaseOrderFormPage() {
 
     if (name === 'po_type') {
       handlePoTypeChange(value)
+    } else if (name === 'seller_entity_id') {
+      setFormData(prev => ({ ...prev, [name]: value, seller_contact_id: '' }))
+    } else if (name === 'logistics_entity_id') {
+      setFormData(prev => ({ ...prev, [name]: value, logistics_contact_id: '' }))
+    } else if (name === 'carrier_entity_id') {
+      setFormData(prev => ({ ...prev, [name]: value, carrier_contact_id: '' }))
     } else if (name.startsWith('custom_fields.')) {
       const fieldKey = name.split('.')[1]
       const fieldValue = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
@@ -794,49 +856,104 @@ export function PurchaseOrderFormPage() {
               </section>
             )}
 
-            {/* Step 2: Supplier & Cargo */}
+            {/* Step 2: Partners & Cargo */}
             {currentStep === 1 && (
               <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
                 <section className="bg-surface-container-lowest rounded-3xl p-8 editorial-shadow border border-white/20">
                   <h2 className="text-xl font-bold text-on-primary-container mb-6 flex items-center gap-2">
-                    <span className="material-symbols-outlined text-primary">store</span>
-                    Supplier Information
+                    <span className="material-symbols-outlined text-primary">groups</span>
+                    Stakeholders & Partners
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
-                    <div className="space-y-1.5">
-                      <label htmlFor="supplier_contact_name" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Contact Name</label>
-                      <input
-                        id="supplier_contact_name"
-                        type="text"
-                        name="supplier_contact_name"
-                        value={formData.supplier_contact_name}
-                        onChange={handleChange}
-                        className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface focus:ring-primary-container/40"
-                      />
+                    {/* Seller Selection */}
+                    <div className="space-y-6 md:col-span-2 border-b border-outline-variant/20 pb-6 mb-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <SearchableSelect
+                          id="seller_entity_id"
+                          name="seller_entity_id"
+                          label="Seller Entity"
+                          value={formData.seller_entity_id}
+                          options={entities.map(e => ({ value: e.id, label: e.name }))}
+                          onChange={handleChange}
+                          required
+                          error={validationErrors.seller_entity_id}
+                          placeholder="Select seller..."
+                        />
+                        <SearchableSelect
+                          id="seller_contact_id"
+                          name="seller_contact_id"
+                          label="Seller Point of Contact"
+                          value={formData.seller_contact_id}
+                          options={allUsers
+                            .filter(u => !formData.seller_entity_id || u.entity_id === parseInt(formData.seller_entity_id))
+                            .map(u => ({ value: u.id, label: `${u.first_name} ${u.last_name} (${u.email})` }))}
+                          onChange={handleChange}
+                          required
+                          error={validationErrors.seller_contact_id}
+                          placeholder="Select contact..."
+                          disabled={!formData.seller_entity_id}
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-1.5">
-                      <label htmlFor="supplier_email" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Email <span className="text-error">*</span></label>
-                      <input
-                        id="supplier_email"
-                        type="email"
-                        name="supplier_email"
-                        value={formData.supplier_email}
-                        onChange={handleChange}
-                        className={`w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface ${validationErrors.supplier_email ? 'ring-2 ring-error/20' : 'focus:ring-primary-container/40'}`}
-                      />
-                      {validationErrors.supplier_email && <p className="text-[10px] font-bold text-error ml-1 mt-1">{validationErrors.supplier_email}</p>}
+
+                    {/* Logistics Selection */}
+                    <div className="space-y-6 md:col-span-2 border-b border-outline-variant/20 pb-6 mb-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <SearchableSelect
+                          id="logistics_entity_id"
+                          name="logistics_entity_id"
+                          label="Logistics Entity"
+                          value={formData.logistics_entity_id}
+                          options={entities.map(e => ({ value: e.id, label: e.name }))}
+                          onChange={handleChange}
+                          error={validationErrors.logistics_entity_id}
+                          placeholder="Select logistics partner..."
+                        />
+                        <SearchableSelect
+                          id="logistics_contact_id"
+                          name="logistics_contact_id"
+                          label="Logistics Contact"
+                          value={formData.logistics_contact_id}
+                          options={allUsers
+                            .filter(u => !formData.logistics_entity_id || u.entity_id === parseInt(formData.logistics_entity_id))
+                            .map(u => ({ value: u.id, label: `${u.first_name} ${u.last_name} (${u.email})` }))}
+                          onChange={handleChange}
+                          error={validationErrors.logistics_contact_id}
+                          placeholder="Select contact..."
+                          disabled={!formData.logistics_entity_id}
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-1.5">
-                      <label htmlFor="supplier_phone" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Phone</label>
-                      <input
-                        id="supplier_phone"
-                        type="text"
-                        name="supplier_phone"
-                        value={formData.supplier_phone}
-                        onChange={handleChange}
-                        className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface focus:ring-primary-container/40"
-                      />
+
+                    {/* Carrier Selection */}
+                    <div className="space-y-6 md:col-span-2 border-b border-outline-variant/20 pb-6 mb-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <SearchableSelect
+                          id="carrier_entity_id"
+                          name="carrier_entity_id"
+                          label="Carrier/Forwarder Entity"
+                          value={formData.carrier_entity_id}
+                          options={entities.map(e => ({ value: e.id, label: e.name }))}
+                          onChange={handleChange}
+                          error={validationErrors.carrier_entity_id}
+                          placeholder="Select carrier..."
+                        />
+                        <SearchableSelect
+                          id="carrier_contact_id"
+                          name="carrier_contact_id"
+                          label="Carrier Contact"
+                          value={formData.carrier_contact_id}
+                          options={allUsers
+                            .filter(u => !formData.carrier_entity_id || u.entity_id === parseInt(formData.carrier_entity_id))
+                            .map(u => ({ value: u.id, label: `${u.first_name} ${u.last_name} (${u.email})` }))}
+                          onChange={handleChange}
+                          error={validationErrors.carrier_contact_id}
+                          placeholder="Select contact..."
+                          disabled={!formData.carrier_entity_id}
+                        />
+                      </div>
                     </div>
+
                     <div className="space-y-1.5">
                       <label htmlFor="supplier_country" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Country <span className="text-error">*</span></label>
                       <select
@@ -849,17 +966,6 @@ export function PurchaseOrderFormPage() {
                         <option value="">Select country...</option>
                         {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
-                    </div>
-                    <div className="space-y-1.5 md:col-span-2">
-                      <label htmlFor="supplier_address" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Address</label>
-                      <textarea
-                        id="supplier_address"
-                        name="supplier_address"
-                        rows={2}
-                        value={formData.supplier_address}
-                        onChange={handleChange}
-                        className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface resize-none focus:ring-primary-container/40"
-                      />
                     </div>
                     <div className="space-y-1.5">
                       <label htmlFor="origin_city_port" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Origin City / Port <span className="text-error">*</span></label>
@@ -1347,12 +1453,16 @@ export function PurchaseOrderFormPage() {
                         <span className="font-bold text-on-surface">{formData.po_number}</span>
                       </div>
                       <div className="flex justify-between border-b border-outline-variant/10 pb-2">
-                        <span className="text-on-surface-variant text-sm">Vendor</span>
-                        <span className="font-bold text-on-surface">{formData.vendor_name || formData.vendor_id}</span>
+                        <span className="text-on-surface-variant text-sm">Seller</span>
+                        <span className="font-bold text-on-surface">
+                          {entities.find(e => String(e.id) === String(formData.seller_entity_id))?.name || '-'}
+                        </span>
                       </div>
                       <div className="flex justify-between border-b border-outline-variant/10 pb-2">
-                        <span className="text-on-surface-variant text-sm">Supplier Email</span>
-                        <span className="font-bold text-on-surface">{formData.supplier_email}</span>
+                        <span className="text-on-surface-variant text-sm">Seller Contact</span>
+                        <span className="font-bold text-on-surface">
+                          {allUsers.find(u => String(u.id) === String(formData.seller_contact_id))?.first_name || ''} {allUsers.find(u => String(u.id) === String(formData.seller_contact_id))?.last_name || '-'}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-on-surface-variant text-sm">Origin Port</span>
@@ -1380,10 +1490,26 @@ export function PurchaseOrderFormPage() {
                         <span className="text-on-surface-variant text-sm">Gross Weight</span>
                         <span className="font-bold text-on-surface">{formData.total_gross_weight} kg</span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex justify-between border-b border-outline-variant/10 pb-2">
                         <span className="text-on-surface-variant text-sm">Est. Ready Date</span>
                         <span className="font-bold text-on-surface">{formData.estimated_ready_date}</span>
                       </div>
+                      {formData.logistics_entity_id && (
+                        <div className="flex justify-between border-b border-outline-variant/10 pb-2">
+                          <span className="text-on-surface-variant text-sm">Logistics Partner</span>
+                          <span className="font-bold text-on-surface">
+                            {entities.find(e => String(e.id) === String(formData.logistics_entity_id))?.name || '-'}
+                          </span>
+                        </div>
+                      )}
+                      {formData.carrier_entity_id && (
+                        <div className="flex justify-between">
+                          <span className="text-on-surface-variant text-sm">Carrier</span>
+                          <span className="font-bold text-on-surface">
+                            {entities.find(e => String(e.id) === String(formData.carrier_entity_id))?.name || '-'}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </section>
                 </div>

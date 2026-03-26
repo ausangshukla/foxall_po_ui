@@ -656,9 +656,9 @@ export function PurchaseOrderListPage() {
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center text-xs font-bold text-on-surface-variant">
-                          {po.vendor_id ? po.vendor_id.toString().substring(0, 2).toUpperCase() : '??'}
+                          {(po.seller_entity || po.vendor_name || '??').substring(0, 2).toUpperCase()}
                         </div>
-                        <span className="font-medium text-sm">Vendor #{po.vendor_id || 'N/A'}</span>
+                        <span className="font-medium text-sm">{po.seller_entity || po.vendor_name || `Vendor #${po.vendor_id}`}</span>
                       </div>
                     </td>
                     <td className="px-8 py-6">
@@ -698,10 +698,10 @@ export function PurchaseOrderListPage() {
                     </td>
                     <td className="px-8 py-6 text-center">
                       <span 
-                        onClick={(e) => po.carrier && handleFilterClick(e, 'carrier', po.carrier)}
+                        onClick={(e) => (po.carrier_entity || po.carrier) && handleFilterClick(e, 'carrier', po.carrier_entity || po.carrier || '')}
                         className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
                       >
-                        {po.carrier || '—'}
+                        {po.carrier_entity || po.carrier || '—'}
                       </span>
                     </td>
                     <td className="px-8 py-6 text-right" onClick={(e) => e.stopPropagation()}>
