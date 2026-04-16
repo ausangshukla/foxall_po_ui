@@ -1,0 +1,1 @@
+export { SellerConfirmationPage } from './SellerConfirmationPage'

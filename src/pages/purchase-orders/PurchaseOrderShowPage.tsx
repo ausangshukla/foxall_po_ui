@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth, useRequireAuth } from '../../contexts/AuthContext'
 import { LoadingSpinner, AlertMessage } from '../../components/common'
@@ -20,6 +20,9 @@ import { API_BASE_URL } from '../../config'
 
 import { PurchaseOrderLineItems } from '../../components/purchase-orders/PurchaseOrderLineItems'
 import { PoTransitionAttempts } from '../../components/purchase-orders/PoTransitionAttempts'
+import { TransitionActionsPanel } from '../../components/purchase-orders/TransitionActionsPanel'
+import { FreightBookingBanner } from '../../components/freight/FreightBookingBanner'
+import { FreightBookingCard } from '../../components/freight/FreightBookingCard'
 
 function fixDocUrl(url: string | null | undefined): string | null {
   if (!url) return null
@@ -61,12 +64,15 @@ export function PurchaseOrderShowPage() {
 
   // State machine transition state
   const [isTransitioning, setIsTransitioning] = useState(false)
+  const isTransitioningRef = useRef(false)
   const [transitionError, setTransitionError] = useState<string | null>(null)
   const [transitionSuccess, setTransitionSuccess] = useState<string | null>(null)
   const [commentModalOpen, setCommentModalOpen] = useState(false)
   const [pendingAction, setPendingAction] = useState<PurchaseOrderAvailableAction | null>(null)
   const [transitionComment, setTransitionComment] = useState('')
   const [activeTab, setActiveTab] = useState<'line-items' | 'transitions'>('line-items')
+  // Incrementing this causes TransitionActionsPanel to reload after a transition fires
+  const [actionsRefreshKey, setActionsRefreshKey] = useState(0)
 
   const fetchStateData = async (id: number) => {
     try {
@@ -106,6 +112,12 @@ export function PurchaseOrderShowPage() {
         const data = await getPurchaseOrder(poId)
         setPurchaseOrder(data)
         
+        // If data includes transition history, use it as initial state
+        if (data.history) {
+          console.log(`[PO State Debug] Found history in PO data:`, data.history)
+          setTransitionAttempts(data.history)
+        }
+
         // If data includes available actions, use them immediately
         if (data.available_actions) {
           console.log(`[PO State Debug] Found actions in PO data:`, data.available_actions)
@@ -142,11 +154,13 @@ export function PurchaseOrderShowPage() {
 
   const executeTransition = async (action: PurchaseOrderAvailableAction, comment?: string) => {
     if (!poId || !purchaseOrder) return
-    
+    if (isTransitioningRef.current) return
+
+    isTransitioningRef.current = true
     setIsTransitioning(true)
     setTransitionError(null)
     setTransitionSuccess(null)
-    
+
     try {
       const res = await transitionPurchaseOrder(poId, {
         transition: {
@@ -157,8 +171,10 @@ export function PurchaseOrderShowPage() {
       
       const updatedPo = await getPurchaseOrder(poId)
       setPurchaseOrder(updatedPo)
-      setTransitionSuccess(`Successfully transitioned to ${res.purchase_order.po_state?.name || action.action_name}`)
+      setTransitionSuccess(`Successfully transitioned to ${updatedPo.po_state_name || res.purchase_order.po_state?.name || action.action_name}`)
       await fetchStateData(poId)
+      // Reload the post-transition actions panel so it reflects the new transition
+      setActionsRefreshKey(k => k + 1)
       
       if (commentModalOpen) {
         setCommentModalOpen(false)
@@ -168,6 +184,7 @@ export function PurchaseOrderShowPage() {
       const message = err instanceof Error ? err.message : 'Failed to execute action'
       setTransitionError(message)
     } finally {
+      isTransitioningRef.current = false
       setIsTransitioning(false)
     }
   }
@@ -222,12 +239,14 @@ export function PurchaseOrderShowPage() {
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-2">
             <span className={`px-3 py-1 bg-surface-container-lowest text-primary text-[10px] font-extrabold tracking-widest rounded-full uppercase`}>
-              {purchaseOrder.status.replace(/_/g, ' ')}
+              {purchaseOrder.po_state_name || purchaseOrder.status.replace(/_/g, ' ')}
             </span>
             <span className="text-on-surface-variant font-light tracking-widest text-sm">{purchaseOrder.po_number}</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tighter text-on-primary-fixed mb-2">PO #{purchaseOrder.po_number}</h1>
-          <p className="text-on-surface-variant font-light tracking-wide max-w-md">Reviewing logistics and vendor procurement requirements for fiscal Q3 infrastructure.</p>
+          <p className="text-on-surface-variant font-light tracking-wide max-w-md">
+            {purchaseOrder.po_state_description || 'Reviewing logistics and vendor procurement requirements for fiscal Q3 infrastructure.'}
+          </p>
         </div>
         <div className="relative z-10 mt-6 md:mt-0 flex gap-4 flex-wrap justify-end">
           {availableActions.map((action) => (
@@ -272,6 +291,18 @@ export function PurchaseOrderShowPage() {
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         {/* Column 1: Essential Details & Logistics */}
         <div className="md:col-span-8 flex flex-col gap-6">
+          
+          {purchaseOrder.po_state_system_code === 'goods_ready_approved' && (
+            <FreightBookingBanner 
+              poId={purchaseOrder.id} 
+              onConfirm={() => fetchStateData(purchaseOrder.id)} 
+            />
+          )}
+
+          {['freight_booked', 'in_transit', 'picked_up', 'shipped', 'out_for_delivery', 'received', 'completed'].includes(purchaseOrder.po_state_system_code || '') && (
+            <FreightBookingCard poId={purchaseOrder.id} />
+          )}
+
           {/* Essential Details Glass Card */}
           <section className="glass-panel ambient-shadow rounded-xl p-8 border border-outline-variant/20">
             <h2 className="text-on-primary-container font-extrabold tracking-tight text-lg mb-8">Essential Details</h2>
@@ -358,6 +389,116 @@ export function PurchaseOrderShowPage() {
               </div>
             </div>
           </section>
+
+          {/*
+            Seller Confirmation Summary
+            ────────────────────────────
+            Shown when the seller has responded (state is seller_confirmed,
+            seller_confirmed_partial, or seller_rejected). Gives the buyer
+            a quick visual summary without having to scroll to line items.
+            Hidden in all other states.
+          */}
+          {purchaseOrder.po_state_system_code &&
+            ['seller_confirmed', 'seller_confirmed_partial', 'seller_rejected'].includes(
+              purchaseOrder.po_state_system_code
+            ) && (
+              <section className={`glass-panel ambient-shadow rounded-xl p-8 border ${
+                purchaseOrder.po_state_system_code === 'seller_confirmed'
+                  ? 'border-green-300 bg-green-50/40'
+                  : purchaseOrder.po_state_system_code === 'seller_confirmed_partial'
+                  ? 'border-amber-300 bg-amber-50/40'
+                  : 'border-red-300 bg-red-50/40'
+              }`}>
+                <div className="flex items-center gap-3 mb-6">
+                  <span className="material-symbols-outlined text-primary">
+                    {purchaseOrder.po_state_system_code === 'seller_confirmed' ? 'check_circle' :
+                     purchaseOrder.po_state_system_code === 'seller_confirmed_partial' ? 'warning' : 'cancel'}
+                  </span>
+                  <h2 className="text-on-primary-container font-extrabold tracking-tight text-lg">
+                    Seller Response — {purchaseOrder.po_state_name}
+                  </h2>
+                </div>
+
+                {/*
+                  Derive seller response details from the transition attempt whose
+                  to_state_system_code is one of the seller confirmation states.
+                  The comment lives in metadata.comment — same generic mechanism
+                  used across all transitions that require a comment.
+                */}
+                {(() => {
+                  const SELLER_RESPONSE_STATES = ['seller_confirmed', 'seller_confirmed_partial', 'seller_rejected']
+                  const sentAttempt = transitionAttempts.find(
+                    (a) => a.to_state_system_code === 'sent_to_seller' && a.status === 'success'
+                  )
+                  const responseAttempt = transitionAttempts.find(
+                    (a) => a.to_state_system_code && SELLER_RESPONSE_STATES.includes(a.to_state_system_code) && a.status === 'success'
+                  )
+                  const sellerComment = responseAttempt?.metadata?.comment as string | undefined
+
+                  return (
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+                        {/* Who responded */}
+                        <div>
+                          <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Responded By</p>
+                          <p className="font-bold text-on-surface">
+                            {responseAttempt?.actor_display_name || purchaseOrder.seller_contact || '—'}
+                          </p>
+                        </div>
+
+                        {/* When sent to seller */}
+                        {sentAttempt && (
+                          <div>
+                            <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Sent to Seller</p>
+                            <p className="font-bold text-on-surface">{formatDateTime(sentAttempt.created_at)}</p>
+                          </div>
+                        )}
+
+                        {/* Confirmed total */}
+                        <div>
+                          <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Confirmed Total</p>
+                          <p className="font-bold text-primary text-xl">
+                            {formatCurrency(purchaseOrder.total_amount, purchaseOrder.currency)}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Seller's comment (from transition metadata) */}
+                      {sellerComment && (
+                        <div className="mt-4 p-4 bg-surface-container-low rounded-xl">
+                          <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-2">Seller Comment</p>
+                          <p className="text-sm text-on-surface italic">
+                            &ldquo;{sellerComment}&rdquo;
+                          </p>
+                        </div>
+                      )}
+                    </>
+                  )
+                })()}
+
+                {/* Hint for partial: direct buyer to line items tab */}
+                {purchaseOrder.po_state_system_code === 'seller_confirmed_partial' && (
+                  <p className="mt-4 text-xs text-amber-700 font-medium">
+                    The seller has submitted changes to one or more line items.
+                    Review the <strong>Line Items</strong> tab below to see original vs confirmed values.
+                  </p>
+                )}
+              </section>
+            )}
+
+          {/* Post-Transition Actions Panel
+               ─────────────────────────────
+               Shows actions available after the last transition. Automatic
+               actions (e.g. "Notify seller by email") appear with their
+               execution status. Manual actions can be triggered here.
+               Reloads automatically whenever a new transition fires.
+          */}
+          {poId && (
+            <TransitionActionsPanel
+              purchaseOrderId={poId}
+              refreshKey={actionsRefreshKey}
+            />
+          )}
 
           {/* Cargo Details */}
           <section className="glass-panel ambient-shadow rounded-xl p-8 border border-outline-variant/20">
@@ -600,13 +741,18 @@ export function PurchaseOrderShowPage() {
                       {(attempt.to_state_system_code || 'END').replace(/_/g, ' ')}
                     </span>
                   </div>
+                  {attempt.comment && (
+                    <p className="text-xs text-on-surface-variant italic mt-2 bg-surface/50 p-2 rounded border border-outline-variant/10">
+                      &ldquo;{attempt.comment}&rdquo;
+                    </p>
+                  )}
                   {attempt.error_message && (
                     <p className="text-xs text-error mt-2 font-medium bg-error/5 p-2 rounded">
                       {attempt.error_message}
                     </p>
                   )}
                   <div className="mt-3 flex justify-between items-center text-[10px] text-on-surface-variant">
-                    <span>{attempt.actor_type || 'System'}</span>
+                    <span>{attempt.actor_display_name || attempt.actor_type || 'System'}</span>
                     <span>{formatDateTime(attempt.created_at)}</span>
                   </div>
                 </div>
@@ -616,9 +762,11 @@ export function PurchaseOrderShowPage() {
               <div className="p-4 bg-surface-container-low/50 rounded-lg border-l-4 border-surface-variant">
                 <p className="text-[10px] uppercase tracking-widest text-on-surface-variant mb-2">Created By</p>
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-xs">{purchaseOrder.created_by}</div>
+                  <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-xs">
+                    {(purchaseOrder.creator_name || String(purchaseOrder.created_by)).substring(0, 2).toUpperCase()}
+                  </div>
                   <div>
-                    <p className="text-sm font-bold text-on-surface">Operator ID: {purchaseOrder.created_by}</p>
+                    <p className="text-sm font-bold text-on-surface">{purchaseOrder.creator_name || `Operator ID: ${purchaseOrder.created_by}`}</p>
                     <p className="text-[10px] text-on-surface-variant">{formatDateTime(purchaseOrder.created_at)}</p>
                   </div>
                 </div>
@@ -669,7 +817,11 @@ export function PurchaseOrderShowPage() {
         </div>
 
         {activeTab === 'line-items' ? (
-          <PurchaseOrderLineItems poId={purchaseOrder.id} canManage={canManageUsers()} />
+          <PurchaseOrderLineItems
+            poId={purchaseOrder.id}
+            canManage={canManageUsers()}
+            poStateSystemCode={purchaseOrder.po_state_system_code}
+          />
         ) : (
           <PoTransitionAttempts poId={purchaseOrder.id} />
         )}

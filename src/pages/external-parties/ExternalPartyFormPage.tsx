@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth, useRequireAuth } from '../../contexts/AuthContext'
 import { LoadingSpinner, AlertMessage } from '../../components/common'
 import { createExternalParty, updateExternalParty, getExternalParty } from '../../api/external-parties'
-import type { ExternalPartyCreateRequest, ExternalPartyUpdateRequest, ExternalPartyType } from '../../types/api'
+import type { ExternalPartyCreateRequest, ExternalPartyType } from '../../types/api'
 
 interface FormData {
   entity_id: number
@@ -123,7 +123,7 @@ export function ExternalPartyFormPage() {
   return (
     <div className="max-w-4xl mx-auto py-12 px-6">
       <h1 className="text-3xl font-bold mb-8">{isEditing ? 'Edit' : 'Add'} External Party</h1>
-      {error && <AlertMessage variant="danger" message={error} className="mb-6" />}
+      {error && <AlertMessage variant="danger" message={error} />}
       <form onSubmit={handleSubmit} className="space-y-6 bg-white p-8 rounded-xl shadow-sm border border-slate-200">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-1">

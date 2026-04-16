@@ -47,6 +47,14 @@ export const API_ROUTES = {
   // Notification Rules
   NOTIFICATION_RULES: '/api/v1/notification_rules',
   NOTIFICATION_RULE: (id: number) => `/api/v1/notification_rules/${id}`,
+
+  // Seller Confirmation (public — no JWT)
+  SELLER_CONFIRMATION: (poId: number) => `/api/v1/public/seller_confirmations/${poId}`,
+  SELLER_CONFIRMATIONS: '/api/v1/public/seller_confirmations',
+
+  // Post-transition action panel
+  PURCHASE_ORDER_TRANSITION_ACTIONS: (id: number) => `/api/v1/purchase_orders/${id}/transition_actions`,
+  PURCHASE_ORDER_EXECUTE_TRANSITION_ACTION: (id: number) => `/api/v1/purchase_orders/${id}/execute_transition_action`,
 } as const
 
 // Storage Keys

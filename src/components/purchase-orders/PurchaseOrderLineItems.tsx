@@ -19,9 +19,21 @@ type SortDirection = 'asc' | 'desc';
 interface PurchaseOrderLineItemsProps {
   poId: number;
   canManage: boolean;
+  /** Current PO state system_code — drives whether confirmation columns are shown */
+  poStateSystemCode?: string | null;
 }
 
-export const PurchaseOrderLineItems: React.FC<PurchaseOrderLineItemsProps> = ({ poId, canManage }) => {
+// States where the seller has responded — show confirmation columns
+const SELLER_CONFIRMED_STATES = ['seller_confirmed', 'seller_confirmed_partial', 'seller_rejected'];
+
+export const PurchaseOrderLineItems: React.FC<PurchaseOrderLineItemsProps> = ({ poId, canManage, poStateSystemCode }) => {
+  // Show the confirmed qty/price columns when the seller has already responded
+  const showConfirmedColumns = poStateSystemCode
+    ? SELLER_CONFIRMED_STATES.includes(poStateSystemCode) ||
+      // Also show for any downstream state (picked_up, shipped, received, etc.)
+      ['picked_up', 'shipped', 'out_for_delivery', 'received', 'inspection',
+       'disputed', 'completed'].includes(poStateSystemCode)
+    : false;
   const [lineItems, setLineItems] = useState<PurchaseOrderLineItemResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -334,7 +346,7 @@ export const PurchaseOrderLineItems: React.FC<PurchaseOrderLineItemsProps> = ({ 
                       Total Value {getSortIcon('total_value')}
                     </div>
                   </th>
-                  <th 
+                  <th
                     className="p-4 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest text-center cursor-pointer hover:bg-primary/5 transition-colors select-none"
                     onClick={() => handleSort('status')}
                   >
@@ -342,13 +354,31 @@ export const PurchaseOrderLineItems: React.FC<PurchaseOrderLineItemsProps> = ({ 
                       Status {getSortIcon('status')}
                     </div>
                   </th>
+                  {/*
+                    Seller confirmation columns — only shown once the seller
+                    has submitted their response. Highlighted in amber to draw
+                    attention to any values that differ from the original.
+                  */}
+                  {showConfirmedColumns && (
+                    <>
+                      <th className="p-4 text-[10px] font-bold text-amber-700 uppercase tracking-widest text-right bg-amber-50/40">
+                        Confirmed Qty
+                      </th>
+                      <th className="p-4 text-[10px] font-bold text-amber-700 uppercase tracking-widest text-right bg-amber-50/40">
+                        Confirmed Price
+                      </th>
+                      <th className="p-4 text-[10px] font-bold text-amber-700 uppercase tracking-widest bg-amber-50/40">
+                        Seller Notes
+                      </th>
+                    </>
+                  )}
                   {canManage && <th className="p-4 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest text-right">Actions</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant/10">
                 {filteredLineItems.length === 0 ? (
                   <tr>
-                    <td colSpan={canManage ? 7 : 6} className="p-12 text-center">
+                    <td colSpan={(canManage ? 7 : 6) + (showConfirmedColumns ? 3 : 0)} className="p-12 text-center">
                       <span className="material-symbols-outlined text-4xl text-outline-variant mb-4 block">search_off</span>
                       <p className="text-on-surface-variant font-medium">No items match your search criteria.</p>
                       <button
@@ -360,8 +390,23 @@ export const PurchaseOrderLineItems: React.FC<PurchaseOrderLineItemsProps> = ({ 
                     </td>
                   </tr>
                 ) : (
-                  filteredLineItems.map((item) => (
-                    <tr key={item.id} className="hover:bg-primary/5 transition-colors">
+                  filteredLineItems.map((item) => {
+                    // A row is "changed" if the seller submitted different values
+                    // from what the buyer originally ordered. Highlighted in amber.
+                    const confirmedQtyChanged =
+                      item.seller_confirmed_quantity !== null &&
+                      Number(item.seller_confirmed_quantity) !== Number(item.quantity_ordered)
+                    const confirmedPriceChanged =
+                      item.seller_confirmed_unit_price !== null &&
+                      item.unit_value !== null &&
+                      Number(item.seller_confirmed_unit_price) !== Number(item.unit_value)
+                    const rowHasChanges = confirmedQtyChanged || confirmedPriceChanged
+
+                    return (
+                    <tr
+                      key={item.id}
+                      className={`hover:bg-primary/5 transition-colors ${rowHasChanges ? 'bg-amber-50/60' : ''}`}
+                    >
                       <td className="p-4 align-top">
                         <span className="font-bold text-on-surface">{item.sku_or_part_number || '—'}</span>
                         {item.is_dangerous_goods && (
@@ -411,6 +456,44 @@ export const PurchaseOrderLineItems: React.FC<PurchaseOrderLineItemsProps> = ({ 
                           {(item.calculated_status || item.status || 'pending').replace(/_/g, ' ').toUpperCase()}
                         </span>
                       </td>
+                      {/* Seller confirmation columns — amber background when changed */}
+                      {showConfirmedColumns && (
+                        <>
+                          <td className={`p-4 align-top text-right ${confirmedQtyChanged ? 'bg-amber-100/60' : 'bg-amber-50/30'}`}>
+                            {item.seller_confirmed_quantity !== null ? (
+                              <span className={`text-sm font-medium ${confirmedQtyChanged ? 'text-amber-800 font-bold' : 'text-on-surface'}`}>
+                                {Number(item.seller_confirmed_quantity).toFixed(3).replace(/\.?0+$/, '')}
+                                {confirmedQtyChanged && (
+                                  <span className="ml-1 text-[9px] text-amber-600 font-bold">
+                                    (was {item.quantity_ordered})
+                                  </span>
+                                )}
+                              </span>
+                            ) : (
+                              <span className="text-on-surface-variant text-xs italic">—</span>
+                            )}
+                          </td>
+                          <td className={`p-4 align-top text-right ${confirmedPriceChanged ? 'bg-amber-100/60' : 'bg-amber-50/30'}`}>
+                            {item.seller_confirmed_unit_price !== null ? (
+                              <span className={`text-sm font-medium ${confirmedPriceChanged ? 'text-amber-800 font-bold' : 'text-on-surface'}`}>
+                                {item.currency} {Number(item.seller_confirmed_unit_price).toFixed(2)}
+                                {confirmedPriceChanged && (
+                                  <span className="ml-1 text-[9px] text-amber-600 font-bold">
+                                    (was {item.currency} {Number(item.unit_value).toFixed(2)})
+                                  </span>
+                                )}
+                              </span>
+                            ) : (
+                              <span className="text-on-surface-variant text-xs italic">—</span>
+                            )}
+                          </td>
+                          <td className="p-4 align-top bg-amber-50/30">
+                            <span className="text-xs text-on-surface-variant italic">
+                              {item.seller_confirmation_notes || '—'}
+                            </span>
+                          </td>
+                        </>
+                      )}
                       {canManage && (
                         <td className="p-4 align-top text-right">
                           <div className="flex justify-end gap-2">
@@ -432,7 +515,7 @@ export const PurchaseOrderLineItems: React.FC<PurchaseOrderLineItemsProps> = ({ 
                         </td>
                       )}
                     </tr>
-                  ))
+                  )})
                 )}
               </tbody>
             </table>

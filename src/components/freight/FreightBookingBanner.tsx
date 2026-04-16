@@ -1,0 +1,132 @@
+import { useState, useEffect } from 'react'
+import { freightBookingsApi } from '../../api/freight-bookings'
+import type { BookingDraftResponse } from '../../api/freight-bookings'
+import FreightBookingWizard from './FreightBookingWizard'
+
+interface Props {
+  poId: number
+  onConfirm: () => void
+}
+
+export function FreightBookingBanner({ poId, onConfirm }: Props) {
+  const [draft, setDraft] = useState<BookingDraftResponse | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [confirming, setConfirming] = useState(false)
+  const [wizardOpen, setWizardOpen] = useState(false)
+
+  const fetchDraft = async () => {
+    try {
+      const response = await freightBookingsApi.getDraft(poId)
+      setDraft(response)
+    } catch (err) {
+      console.error('Failed to fetch booking draft', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchDraft()
+  }, [poId])
+
+  const handleConfirm = async () => {
+    if (!draft?.booking) return
+    setConfirming(true)
+    try {
+      await freightBookingsApi.update(poId, draft.booking.id, {
+        status: 'pending_carrier_confirmation' as any
+      })
+      onConfirm()
+    } catch (err) {
+      console.error('Failed to confirm booking', err)
+      alert('Failed to confirm booking')
+    } finally {
+      setConfirming(false)
+    }
+  }
+
+  if (loading) return null
+
+  // If a contract rate was auto-applied
+  if (draft?.booking?.booking_source === 'contract_rate') {
+    return (
+      <>
+        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 mb-8 flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+              <span className="material-symbols-outlined text-3xl">directions_boat</span>
+            </div>
+            <div>
+              <h3 className="text-emerald-900 font-bold text-lg">Contract Rate Found</h3>
+              <p className="text-emerald-700">
+                Ready to book with <strong>{draft.booking.carrier_name}</strong> at <strong>USD {Number(draft.booking.total_cost_usd).toFixed(2)}</strong>.
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setWizardOpen(true)}
+              className="px-6 py-2.5 rounded-xl text-sm font-bold text-emerald-700 hover:bg-emerald-100 transition-colors"
+            >
+              Change Details
+            </button>
+            <button
+              onClick={handleConfirm}
+              disabled={confirming}
+              className="bg-emerald-600 text-white px-8 py-2.5 rounded-xl text-sm font-bold hover:bg-emerald-700 transition-all shadow-md active:scale-[0.98] disabled:opacity-50 flex items-center gap-2"
+            >
+              {confirming ? <span className="material-symbols-outlined animate-spin">progress_activity</span> : null}
+              Confirm Booking
+            </button>
+          </div>
+        </div>
+        {wizardOpen && (
+          <FreightBookingWizard 
+            poId={poId} 
+            onClose={() => setWizardOpen(false)} 
+            onSuccess={() => {
+              setWizardOpen(false)
+              onConfirm()
+            }} 
+          />
+        )}
+      </>
+    )
+  }
+
+  // If no contract rate, show the "Book Freight" trigger
+  return (
+    <>
+      <div className="bg-primary-container/10 border border-primary-container/20 rounded-2xl p-6 mb-8 flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-primary-container/20 flex items-center justify-center text-primary">
+            <span className="material-symbols-outlined text-3xl">smart_toy</span>
+          </div>
+          <div>
+            <h3 className="text-on-primary-container font-bold text-lg">Ready to Book Freight</h3>
+            <p className="text-on-surface-variant text-sm">
+              AI recommends <strong>{draft?.recommendation.transport_mode.replace('_', ' ').toUpperCase()}</strong>. {draft?.recommendation.rationale}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => setWizardOpen(true)}
+          className="bg-primary text-on-primary px-8 py-2.5 rounded-xl text-sm font-bold hover:opacity-90 transition-all shadow-md active:scale-[0.98] flex items-center gap-2"
+        >
+          <span className="material-symbols-outlined">directions_boat</span>
+          Book Freight
+        </button>
+      </div>
+      {wizardOpen && (
+        <FreightBookingWizard 
+          poId={poId} 
+          onClose={() => setWizardOpen(false)} 
+          onSuccess={() => {
+            setWizardOpen(false)
+            onConfirm()
+          }} 
+        />
+      )}
+    </>
+  )
+}

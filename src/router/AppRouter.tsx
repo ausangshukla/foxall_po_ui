@@ -27,12 +27,24 @@ import {
   PoTransitionRuleFormPage,
   PoTransitionRuleShowPage,
 } from '../pages'
+import { SellerConfirmationPage } from '../pages/seller-confirmation'
 import { NotFound } from '../components/common'
+import FreightRatesList from '../pages/settings/freight-rates/FreightRatesList'
+import FreightRateForm from '../pages/settings/freight-rates/FreightRateForm'
 
 export function AppRouter() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+
+      {/*
+        Public seller confirmation page — NO authentication required.
+        Sellers arrive here via the magic link in their email/WhatsApp.
+        This route sits OUTSIDE the authenticated <Layout> wrapper so the
+        seller never sees the buyer's sidebar, nav, or a login redirect.
+      */}
+      <Route path="/seller-confirmation/:poId" element={<SellerConfirmationPage />} />
+
       <Route element={<Layout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
@@ -72,6 +84,10 @@ export function AppRouter() {
         <Route path="/po-transition-rules/new" element={<PoTransitionRuleFormPage />} />
         <Route path="/po-transition-rules/:id" element={<PoTransitionRuleShowPage />} />
         <Route path="/po-transition-rules/:id/edit" element={<PoTransitionRuleFormPage />} />
+
+        <Route path="/settings/freight-rates" element={<FreightRatesList />} />
+        <Route path="/settings/freight-rates/new" element={<FreightRateForm />} />
+        <Route path="/settings/freight-rates/:id/edit" element={<FreightRateForm />} />
 
         <Route path="*" element={<NotFound />} />
       </Route>

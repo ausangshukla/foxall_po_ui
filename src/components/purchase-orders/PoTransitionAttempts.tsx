@@ -97,18 +97,18 @@ export const PoTransitionAttempts: React.FC<PoTransitionAttemptsProps> = ({ poId
                   </td>
                   <td className="p-4 align-top">
                     <span className="text-sm font-bold text-primary uppercase tracking-tight">
-                      {(attempt.attempted_action || attempt.action || 'Unknown').replace(/_/g, ' ')}
+                      {(attempt.attempted_action || (attempt as any).action || 'Unknown').replace(/_/g, ' ')}
                     </span>
                   </td>
                   <td className="p-4 align-top">
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-1.5">
                         <span className="text-[10px] font-bold px-1.5 py-0.5 bg-surface-container-high rounded text-on-surface-variant">
-                          {(attempt.from_state_system_code || attempt.from_state || 'START').toUpperCase()}
+                          {(attempt.from_state_system_code || (attempt as any).from_state || 'START').toUpperCase()}
                         </span>
                         <span className="material-symbols-outlined text-[10px] text-outline-variant">arrow_forward</span>
                         <span className="text-[10px] font-bold px-1.5 py-0.5 bg-primary-container/20 rounded text-primary">
-                          {(attempt.to_state_system_code || attempt.to_state || 'END').toUpperCase()}
+                          {(attempt.to_state_system_code || (attempt as any).to_state || 'END').toUpperCase()}
                         </span>
                       </div>
                     </div>
