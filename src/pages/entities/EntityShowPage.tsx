@@ -64,7 +64,7 @@ export function EntityShowPage() {
   }
 
   const adminCount = users.filter(u => u.roles.includes('internal_manager') || u.roles.includes('super')).length
-  const employeeCount = users.length - adminCount
+  const internalUserCount = users.length - adminCount
 
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -104,7 +104,7 @@ export function EntityShowPage() {
         {[
           { label: 'Total Staff', value: users.length, icon: 'groups' },
           { label: 'Administrators', value: adminCount, icon: 'shield_person' },
-          { label: 'Internal Users', value: employeeCount, icon: 'person' },
+          { label: 'Internal Users', value: internalUserCount, icon: 'person' },
           { label: 'Digital Hubs', value: entity.url ? '1' : '0', icon: 'language' }
         ].map((stat, i) => (
           <div key={i} className="glass-panel ambient-shadow p-6 rounded-xl border border-outline-variant/20 flex flex-col items-center text-center group hover:bg-primary/5 transition-all">

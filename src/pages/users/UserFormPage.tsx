@@ -464,8 +464,8 @@ export function UserFormPage() {
                   name="entity_id"
                   value={formData.entity_id}
                   onChange={handleChange}
-                  disabled={isSelf && !currentUser?.roles.includes('super') && !currentUser?.roles.includes('admin')}
-                  className={`w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface appearance-none ${validationErrors.entity_id ? 'ring-2 ring-error/20' : 'focus:ring-primary-container/40'} ${isSelf && !currentUser?.roles.includes('super') && !currentUser?.roles.includes('admin') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  disabled={isSelf && !currentUser?.roles.includes('super') && !currentUser?.roles.includes('internal_manager')}
+                  className={`w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface appearance-none ${validationErrors.entity_id ? 'ring-2 ring-error/20' : 'focus:ring-primary-container/40'} ${isSelf && !currentUser?.roles.includes('super') && !currentUser?.roles.includes('internal_manager') ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <option value="">Select Subsidiary Entity...</option>
                   {entities.map(entity => (
@@ -515,7 +515,7 @@ export function UserFormPage() {
             <div className="mt-8 p-4 bg-primary-container/20 rounded-2xl border border-primary-container/30">
               <p className="text-[11px] text-on-primary-container leading-relaxed font-medium">
                 <span className="material-symbols-outlined text-[14px] align-middle mr-1" data-weight="fill">security</span>
-                Access level changes trigger an <span className="font-bold">audit log</span> entry and security notification to the primary entity admin.
+                Access level changes trigger an <span className="font-bold">audit log</span> entry and security notification to the primary entity manager.
               </p>
             </div>
           </div>

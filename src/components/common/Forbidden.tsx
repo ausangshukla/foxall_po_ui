@@ -7,7 +7,7 @@ export function Forbidden() {
         <h3 className="text-red-800 font-bold text-xl mb-3">Access Denied</h3>
         <p className="text-red-700 max-w-lg mx-auto">
           You don&apos;t have permission to access this page. Please contact your
-          administrator if you believe this is an error.
+          manager if you believe this is an error.
         </p>
       </div>
       <Link 
