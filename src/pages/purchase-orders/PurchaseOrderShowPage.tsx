@@ -70,7 +70,7 @@ export function PurchaseOrderShowPage() {
   const [commentModalOpen, setCommentModalOpen] = useState(false)
   const [pendingAction, setPendingAction] = useState<PurchaseOrderAvailableAction | null>(null)
   const [transitionComment, setTransitionComment] = useState('')
-  const [activeTab, setActiveTab] = useState<'line-items' | 'transitions'>('line-items')
+  const [activeTab, setActiveTab] = useState<'line-items' | 'documents' | 'transitions'>('line-items')
   // Incrementing this causes TransitionActionsPanel to reload after a transition fires
   const [actionsRefreshKey, setActionsRefreshKey] = useState(0)
 
@@ -284,6 +284,26 @@ export function PurchaseOrderShowPage() {
             message={(transitionSuccess || transitionError) as string} 
             onClose={() => transitionSuccess ? setTransitionSuccess(null) : setTransitionError(null)}
           />
+        </div>
+      )}
+
+      {purchaseOrder.po_state_system_code === 'ready_to_ship' && (
+        <div className="mb-6 p-4 rounded-xl bg-primary-container text-on-primary-container border border-primary/20 flex items-center gap-3">
+          <span className="material-symbols-outlined">info</span>
+          <div>
+            <p className="text-sm font-bold">Ready to Ship — Review Required</p>
+            <p className="text-xs opacity-90">The supplier has uploaded shipment documents. Please review them in the <strong>Documents</strong> tab before approving.</p>
+          </div>
+        </div>
+      )}
+
+      {purchaseOrder.po_state_system_code === 'ready_correction_requested' && (
+        <div className="mb-6 p-4 rounded-xl bg-tertiary-container text-on-tertiary-container border border-tertiary/20 flex items-center gap-3">
+          <span className="material-symbols-outlined">feedback</span>
+          <div>
+            <p className="text-sm font-bold">Correction Requested</p>
+            <p className="text-xs opacity-90">Waiting for the supplier to upload corrected documents.</p>
+          </div>
         </div>
       )}
 
@@ -802,6 +822,19 @@ export function PurchaseOrderShowPage() {
             )}
           </button>
           <button
+            onClick={() => setActiveTab('documents')}
+            className={`px-8 py-4 font-extrabold tracking-tight text-sm uppercase transition-all relative ${
+              activeTab === 'documents' 
+                ? 'text-primary' 
+                : 'text-on-surface-variant/60 hover:text-on-surface'
+            }`}
+          >
+            Documents
+            {activeTab === 'documents' && (
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-t-full"></div>
+            )}
+          </button>
+          <button
             onClick={() => setActiveTab('transitions')}
             className={`px-8 py-4 font-extrabold tracking-tight text-sm uppercase transition-all relative ${
               activeTab === 'transitions' 
@@ -816,13 +849,93 @@ export function PurchaseOrderShowPage() {
           </button>
         </div>
 
-        {activeTab === 'line-items' ? (
+        {activeTab === 'line-items' && (
           <PurchaseOrderLineItems
             poId={purchaseOrder.id}
             canManage={canManageUsers()}
             poStateSystemCode={purchaseOrder.po_state_system_code}
           />
-        ) : (
+        )}
+
+        {activeTab === 'documents' && (
+          <div className="flex flex-col gap-8">
+            {/* Standard PO Documents */}
+            <section className="glass-panel ambient-shadow rounded-xl p-8 border border-outline-variant/20">
+              <h2 className="text-on-primary-container font-extrabold tracking-tight text-lg mb-8">Standard PO Documents</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { label: 'PO Document', url: fixDocUrl(purchaseOrder.po_document_url) },
+                  { label: 'Spec Sheet', url: fixDocUrl(purchaseOrder.product_spec_sheet_url) },
+                  { label: 'MSDS', url: fixDocUrl(purchaseOrder.msds_url) },
+                  { label: 'Sample Approval', url: fixDocUrl(purchaseOrder.pre_production_sample_url) },
+                ].map((doc, idx) => (
+                  <div key={idx} className={`p-4 rounded-xl flex flex-col gap-3 ${doc.url ? 'bg-primary-container/20 border border-primary-container/30' : 'bg-surface-container-low opacity-50'}`}>
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-primary text-sm">{doc.url ? 'check_circle' : 'cancel'}</span>
+                      <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">{doc.label}</p>
+                    </div>
+                    {doc.url ? (
+                      <a href={doc.url} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-primary hover:underline flex items-center gap-1">
+                        View Document <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+                      </a>
+                    ) : (
+                      <p className="text-xs font-bold text-on-surface-variant/50">Not attached</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Shipment Documents (Uploaded by Supplier) */}
+            <section className="glass-panel ambient-shadow rounded-xl p-8 border border-outline-variant/20">
+              <h2 className="text-on-primary-container font-extrabold tracking-tight text-lg mb-8">Shipment Documents (Supplier Upload)</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { label: 'Commercial Invoice', url: fixDocUrl(purchaseOrder.commercial_invoice_url) },
+                  { label: 'Packing List', url: fixDocUrl(purchaseOrder.packing_list_url) },
+                  { label: 'Dangerous Goods', url: fixDocUrl(purchaseOrder.dangerous_goods_declaration_url) },
+                  { label: 'Cert. of Origin', url: fixDocUrl(purchaseOrder.certificate_of_origin_url) },
+                ].map((doc, idx) => (
+                  <div key={idx} className={`p-4 rounded-xl flex flex-col gap-3 ${doc.url ? 'bg-tertiary-container/20 border border-tertiary-container/30' : 'bg-surface-container-low opacity-50'}`}>
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-tertiary text-sm">{doc.url ? 'check_circle' : 'cancel'}</span>
+                      <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">{doc.label}</p>
+                    </div>
+                    {doc.url ? (
+                      <a href={doc.url} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-tertiary hover:underline flex items-center gap-1">
+                        View Document <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+                      </a>
+                    ) : (
+                      <p className="text-xs font-bold text-on-surface-variant/50">Not attached</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Misc Shipment Documents */}
+              {purchaseOrder.misc_shipment_documents && purchaseOrder.misc_shipment_documents.length > 0 && (
+                <div className="mt-8">
+                  <h3 className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-4 font-bold">Miscellaneous Shipment Documents</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {purchaseOrder.misc_shipment_documents.map((doc) => (
+                      <div key={doc.id} className="p-3 bg-surface-container-low rounded-lg border border-outline-variant/10 flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <span className="material-symbols-outlined text-on-surface-variant text-sm">description</span>
+                          <span className="text-xs font-medium text-on-surface truncate max-w-[200px]">{doc.filename}</span>
+                        </div>
+                        <a href={fixDocUrl(doc.url) || '#'} target="_blank" rel="noopener noreferrer" className="text-[10px] font-bold text-primary hover:underline">
+                          DOWNLOAD
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </section>
+          </div>
+        )}
+
+        {activeTab === 'transitions' && (
           <PoTransitionAttempts poId={purchaseOrder.id} />
         )}
       </section>

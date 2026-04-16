@@ -227,11 +227,23 @@ export interface PurchaseOrderResponse {
   estimated_ready_date: string | null
   target_ship_date: string | null
   
+  // State Machine Fields
+  po_state_system_code?: string | null
+  po_state_name?: string | null
+  po_state_description?: string | null
+  history?: PoTransitionAttemptResponse[]
+  creator_name?: string | null
+  
   // Document URLs
   po_document_url: string | null
   product_spec_sheet_url: string | null
   msds_url: string | null
   pre_production_sample_url: string | null
+  commercial_invoice_url: string | null
+  packing_list_url: string | null
+  dangerous_goods_declaration_url: string | null
+  certificate_of_origin_url: string | null
+  misc_shipment_documents: Array<{ id: number, url: string, filename: string }> | null
 
   // State Machine Actions
   available_actions?: PurchaseOrderAvailableAction[]
@@ -416,6 +428,11 @@ export interface PurchaseOrderLineItemResponse {
   created_at: string
   updated_at: string
   calculated_status: string | null
+  
+  // Seller confirmation fields
+  seller_confirmed_quantity?: number | null
+  seller_confirmed_unit_price?: number | null
+  seller_confirmation_notes?: string | null
 }
 
 export interface CreatePurchaseOrderLineItemRequest {
@@ -586,6 +603,7 @@ export interface PoTransitionAttemptResponse {
   to_state_system_code: string | null
   status: string
   error_message: string | null
+  comment?: string | null
   metadata: Record<string, unknown>
   ip_address: string | null
   user_agent: string | null
@@ -801,6 +819,151 @@ export interface NotificationRuleUpdateRequest {
   is_active?: boolean
   delay_minutes?: number
   additional_params?: Record<string, unknown>
+}
+
+// ============================================
+// Freight Booking Types
+// ============================================
+export interface FreightBooking {
+  id: number
+  purchase_order_id: number
+  entity_id: number
+  status: string
+  transport_mode: string
+  container_type: string | null
+  origin_port: string
+  destination_port: string
+  etd: string | null
+  eta: string | null
+  booking_reference: string | null
+  awb_number: string | null
+  bl_number: string | null
+  carrier_name: string | null
+  total_cost_usd: number | null
+  notes: string | null
+  confirmed_at: string | null
+  carrier_confirmed_at: string | null
+  booking_source?: string | null
+  proposed_etd?: string | null
+  etd_change_reason?: string | null
+  agreed_rate_usd?: number | null
+}
+
+export interface FreightBookingRate {
+  id: number
+  carrier_name: string
+  transport_mode: string
+  container_type: string | null
+  rate_usd: number
+  total_cost_usd: number
+  transit_days: number
+  departure_date: string
+  is_ai_recommended: boolean
+  is_selected: boolean
+}
+
+export interface FreightContractRate {
+  id: number
+  carrier_name: string
+  origin_port: string
+  destination_port: string
+  transport_mode: string
+  container_type: string | null
+  rate_usd: number
+  currency: string
+  valid_from: string
+  valid_to: string
+  carrier_entity_id?: number | null
+  notes?: string | null
+}
+
+// ============================================
+// Seller Confirmation Types
+// ============================================
+export interface SellerConfirmationLineItem {
+  id: number
+  sku_or_part_number: string | null
+  description: string | null
+  quantity_ordered: number
+  unit_value: number | null
+  currency: string | null
+  unit_of_measure: string | null
+  seller_confirmed_quantity: number | null
+  seller_confirmed_unit_price: number | null
+  seller_confirmation_notes: string | null
+}
+
+export interface SellerConfirmationDataResponse {
+  purchase_order: {
+    id: number
+    po_number: string
+    buyer_entity_name: string
+    seller_entity_name: string
+    total_amount: number
+    currency: string
+    order_date: string
+    estimated_ready_date: string | null
+    incoterm: string | null
+    payment_terms: string | null
+    cargo_description: string | null
+    current_state: string | null
+  }
+  line_items: SellerConfirmationLineItem[]
+  action_key: string
+  expires_at: string
+}
+
+export interface SellerConfirmationSubmitRequest {
+  token: string
+  action_key: string
+  comment?: string
+  line_items: Array<{
+    id: number
+    seller_confirmed_quantity: number
+    seller_confirmed_unit_price: number
+    seller_confirmation_notes?: string
+  }>
+}
+
+export interface SellerConfirmationSubmitResponse {
+  success: boolean
+  new_state: string
+  po_number: string
+  message: string
+}
+
+// ============================================
+// Transition Action Types
+// ============================================
+export interface TransitionAction {
+  id: number
+  label: string
+  description: string | null
+  action_type: string
+  trigger_mode: 'manual' | 'automatic'
+  allow_repeat: boolean
+  position: number
+  can_execute?: boolean
+  executions?: TransitionActionExecution[]
+}
+
+export interface TransitionActionExecution {
+  id: number
+  trigger_type: 'manual' | 'automatic'
+  status: 'pending' | 'success' | 'failed'
+  triggered_by: string | null
+  executed_at: string
+  result_data: Record<string, unknown>
+}
+
+export interface TransitionActionsResponse {
+  transition_attempt_id: number
+  transition_rule: {
+    action_name: string
+    from_state: string
+    to_state: string
+  }
+  actions: TransitionAction[]
 }
 
 // ============================================

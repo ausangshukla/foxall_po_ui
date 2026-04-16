@@ -21,7 +21,7 @@ export default function FreightRateForm() {
     destination_port: '',
     transport_mode: 'ocean_fcl',
     container_type: '',
-    rate_usd: '',
+    rate_usd: 0,
     currency: 'USD',
     valid_from: '',
     valid_to: '',
@@ -56,7 +56,10 @@ export default function FreightRateForm() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    setFormData(prev => ({ 
+      ...prev, 
+      [name]: name === 'rate_usd' ? parseFloat(value) || 0 : value 
+    }))
   }
 
   const handleCarrierChange = (e: React.ChangeEvent<HTMLSelectElement>) => {

@@ -26,6 +26,7 @@ import {
   PoTransitionRuleListPage,
   PoTransitionRuleFormPage,
   PoTransitionRuleShowPage,
+  SupplierShipmentDocsPage,
 } from '../pages'
 import { SellerConfirmationPage } from '../pages/seller-confirmation'
 import { NotFound } from '../components/common'
@@ -44,6 +45,7 @@ export function AppRouter() {
         seller never sees the buyer's sidebar, nav, or a login redirect.
       */}
       <Route path="/seller-confirmation/:poId" element={<SellerConfirmationPage />} />
+      <Route path="/supplier-documents/:poId" element={<SupplierShipmentDocsPage />} />
 
       <Route element={<Layout />}>
         <Route path="/" element={<HomePage />} />
