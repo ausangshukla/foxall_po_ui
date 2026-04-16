@@ -50,7 +50,7 @@ export function DashboardPage() {
           </div>
         </div>
         
-        {(hasRole('super') || hasRole('admin')) && (
+        {(hasRole('super') || hasRole('internal_manager')) && (
           <div 
             onClick={() => navigate('/users')}
             className="glass-panel p-8 rounded-xl ambient-shadow flex flex-col justify-between h-44 cursor-pointer hover:scale-[1.02] transition-transform group"

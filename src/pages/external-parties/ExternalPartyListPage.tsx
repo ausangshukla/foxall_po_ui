@@ -26,7 +26,7 @@ export function ExternalPartyListPage() {
   const [sortKey, setSortKey] = useState<keyof ExternalPartyResponse>('name')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
 
-  const isAdmin = user?.roles.includes('admin') || user?.roles.includes('super')
+  const isAdmin = user?.roles.includes('internal_manager') || user?.roles.includes('super')
 
   const toggleSort = (key: keyof ExternalPartyResponse) => {
     if (sortKey === key) setSortDir(sortDir === 'asc' ? 'desc' : 'asc')
@@ -81,7 +81,7 @@ export function ExternalPartyListPage() {
   }
 
   if (!isAuth || isLoading) return <LoadingSpinner />
-  if (!isAdmin) return <AlertMessage variant="danger" message="Access denied. Admin privileges required." />
+  if (!isAdmin) return <AlertMessage variant="danger" message="Access denied. Manager privileges required." />
 
   return (
     <div className="space-y-0 max-w-[1600px] mx-auto px-8 py-8 animate-in fade-in slide-in-from-bottom-4 duration-700">

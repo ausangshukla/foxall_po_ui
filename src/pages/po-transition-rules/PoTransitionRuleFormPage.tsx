@@ -34,7 +34,7 @@ const initialFormData: FormData = {
   is_magic_link_enabled: false,
 }
 
-const ROLES = ['super', 'admin', 'internal_manager', 'internal_user', 'seller', 'logistics', 'carrier']
+const ROLES = ['super', 'internal_manager', 'internal_user', 'seller', 'logistics', 'carrier']
 
 export function PoTransitionRuleFormPage() {
   const { id } = useParams<{ id: string }>()

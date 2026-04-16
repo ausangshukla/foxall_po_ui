@@ -159,7 +159,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Permission helpers based on roles
   const canManageUsers = useCallback((): boolean => {
-    return hasAnyRole(['super', 'admin'])
+    return hasAnyRole(['super', 'internal_manager'])
   }, [hasAnyRole])
 
   const canManageAllUsers = useCallback((): boolean => {

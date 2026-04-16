@@ -151,7 +151,7 @@ export interface EntityUpdateRequest {
 // ============================================
 // Role Types
 // ============================================
-export type UserRole = 'super' | 'admin' | 'employee'
+export type UserRole = 'super' | 'internal_manager' | 'internal_user'
 
 // Custom field value types
 export type CustomFieldValue = string | number | boolean | null

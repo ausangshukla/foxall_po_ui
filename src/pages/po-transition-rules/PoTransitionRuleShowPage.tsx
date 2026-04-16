@@ -121,7 +121,7 @@ export function PoTransitionRuleShowPage() {
                     <span className="px-3 py-1 bg-secondary-container text-on-secondary-container text-xs font-bold rounded-full uppercase tracking-wider">
                       {rule.allowed_role.replace('_', ' ')}
                     </span>
-                    {['admin', 'internal_manager', 'internal_user'].includes(rule.allowed_role.toLowerCase()) && (
+                    {['internal_manager', 'internal_user'].includes(rule.allowed_role.toLowerCase()) && (
                       <span className="text-[10px] text-secondary font-bold flex items-center gap-1">
                         <span className="material-symbols-outlined text-xs">north</span>
                         Hierarchy Applies

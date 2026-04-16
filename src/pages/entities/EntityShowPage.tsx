@@ -63,7 +63,7 @@ export function EntityShowPage() {
     )
   }
 
-  const adminCount = users.filter(u => u.roles.includes('admin') || u.roles.includes('super')).length
+  const adminCount = users.filter(u => u.roles.includes('internal_manager') || u.roles.includes('super')).length
   const employeeCount = users.length - adminCount
 
   return (
@@ -104,7 +104,7 @@ export function EntityShowPage() {
         {[
           { label: 'Total Staff', value: users.length, icon: 'groups' },
           { label: 'Administrators', value: adminCount, icon: 'shield_person' },
-          { label: 'Employees', value: employeeCount, icon: 'person' },
+          { label: 'Internal Users', value: employeeCount, icon: 'person' },
           { label: 'Digital Hubs', value: entity.url ? '1' : '0', icon: 'language' }
         ].map((stat, i) => (
           <div key={i} className="glass-panel ambient-shadow p-6 rounded-xl border border-outline-variant/20 flex flex-col items-center text-center group hover:bg-primary/5 transition-all">
@@ -213,7 +213,7 @@ export function EntityShowPage() {
                             {u.roles.map(r => (
                               <span key={r} className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter border ${
                                 r === 'super' ? 'bg-error-container text-on-error-container border-error/20' : 
-                                r === 'admin' ? 'bg-tertiary-container text-on-tertiary-container border-tertiary/20' : 
+                                r === 'internal_manager' ? 'bg-tertiary-container text-on-tertiary-container border-tertiary/20' : 
                                 'bg-primary-container text-on-primary-container border-primary/20'
                               }`}>
                                 {r}

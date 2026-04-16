@@ -12,8 +12,8 @@ import type {
 } from '../../types/api'
 
 const AVAILABLE_ROLES: { value: UserRole; label: string; icon: string; color: string }[] = [
-  { value: 'employee', label: 'Employee', icon: 'badge', color: 'blue' },
-  { value: 'admin', label: 'Administrator', icon: 'manage_accounts', color: 'amber' },
+  { value: 'internal_user', label: 'Internal User', icon: 'badge', color: 'blue' },
+  { value: 'internal_manager', label: 'Internal Manager', icon: 'manage_accounts', color: 'amber' },
   { value: 'super', label: 'Super Admin', icon: 'verified_user', color: 'red' },
 ]
 
@@ -38,7 +38,7 @@ const initialFormData: FormData = {
   entity_id: '',
   wa_enabled: true,
   email_enabled: true,
-  roles: ['employee'],
+  roles: ['internal_user'],
 }
 
 export function UserFormPage() {
@@ -366,7 +366,7 @@ export function UserFormPage() {
                       .filter(role => role.value !== 'super')
                       .map(role => {
                         const isSelected = formData.roles.includes(role.value);
-                        const isDisabled = isSelf && !currentUser?.roles.includes('super') && !currentUser?.roles.includes('admin');
+                        const isDisabled = isSelf && !currentUser?.roles.includes('super') && !currentUser?.roles.includes('internal_manager');
                         return (
                           <label 
                             key={role.value} 

@@ -18,7 +18,7 @@ const HelpIcon = ({ text }: { text: string }) => (
 )
 
 const RoleBadge = ({ role }: { role: string }) => {
-  const isInternal = ['admin', 'internal_manager', 'internal_user'].includes(role.toLowerCase())
+  const isInternal = ['internal_manager', 'internal_user'].includes(role.toLowerCase())
   return (
     <div className="flex items-center gap-2">
       <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${isInternal ? 'bg-secondary-container text-on-secondary-container border border-secondary/20' : 'bg-surface-container-high text-on-surface-variant border border-outline-variant/20'}`}>

@@ -89,8 +89,8 @@ export function UserListPage() {
   const getRoleBadgeClasses = (role: string): string => {
     switch (role) {
       case 'super': return 'bg-error-container/20 text-error'
-      case 'admin': return 'bg-tertiary-container text-on-tertiary-container'
-      case 'employee': return 'bg-primary-container text-on-primary-container'
+      case 'internal_manager': return 'bg-tertiary-container text-on-tertiary-container'
+      case 'internal_user': return 'bg-primary-container text-on-primary-container'
       default: return 'bg-surface-container-highest text-on-surface-variant'
     }
   }
@@ -162,7 +162,7 @@ export function UserListPage() {
           <div>
             <p className="text-on-surface-variant text-sm font-light uppercase tracking-widest mb-1">Admins</p>
             <h3 className="text-3xl font-extrabold text-on-primary-container">
-              {users.filter(u => u.roles.includes('super') || u.roles.includes('admin')).length}
+              {users.filter(u => u.roles.includes('super') || u.roles.includes('internal_manager')).length}
             </h3>
           </div>
         </div>

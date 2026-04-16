@@ -22,7 +22,7 @@ export function ExternalPartyShowPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const isAdmin = user?.roles.includes('admin') || user?.roles.includes('super')
+  const isAdmin = user?.roles.includes('internal_manager') || user?.roles.includes('super')
 
   useEffect(() => {
     if (!isAuth || !partyId) return

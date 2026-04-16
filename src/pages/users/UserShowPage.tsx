@@ -8,8 +8,8 @@ import type { UserResponse, EntityResponse } from '../../types/api'
 
 const ROLE_CONFIG: Record<string, { icon: string, color: string, bg: string, border: string, text: string }> = {
   super: { icon: 'verified_user', color: 'red', bg: 'bg-red-50', border: 'border-red-100', text: 'text-red-700' },
-  admin: { icon: 'manage_accounts', color: 'amber', bg: 'bg-amber-50', border: 'border-amber-100', text: 'text-amber-700' },
-  employee: { icon: 'badge', color: 'blue', bg: 'bg-blue-50', border: 'border-blue-100', text: 'text-blue-700' },
+  internal_manager: { icon: 'manage_accounts', color: 'amber', bg: 'bg-amber-50', border: 'border-amber-100', text: 'text-amber-700' },
+  internal_user: { icon: 'badge', color: 'blue', bg: 'bg-blue-50', border: 'border-blue-100', text: 'text-blue-700' },
 }
 
 export function UserShowPage() {
@@ -53,7 +53,7 @@ export function UserShowPage() {
   const canManageThisUser = (): boolean => {
     if (!user || !currentUser) return false
     if (currentUser.roles.includes('super')) return true
-    if (currentUser.roles.includes('admin') && currentUser.entity_id === user.entity_id) return true
+    if (currentUser.roles.includes('internal_manager') && currentUser.entity_id === user.entity_id) return true
     return currentUser.id === user.id
   }
 
@@ -76,7 +76,7 @@ export function UserShowPage() {
     )
   }
 
-  const primaryRole = user.roles.includes('super') ? 'super' : user.roles.includes('admin') ? 'admin' : 'employee'
+  const primaryRole = user.roles.includes('super') ? 'super' : user.roles.includes('internal_manager') ? 'internal_manager' : 'internal_user'
 
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -147,7 +147,7 @@ export function UserShowPage() {
             <div className="space-y-6">
               <div className="flex flex-wrap gap-3">
                 {user.roles.map(role => {
-                  const cfg = ROLE_CONFIG[role] || ROLE_CONFIG.employee;
+                  const cfg = ROLE_CONFIG[role] || ROLE_CONFIG.internal_user;
                   return (
                     <div key={role} className={`flex items-center gap-2 px-4 py-2 rounded-xl border font-black text-[10px] uppercase tracking-widest shadow-sm ${cfg.bg} ${cfg.text} ${cfg.border}`}>
                       <span className="material-symbols-outlined text-lg">{cfg.icon}</span>
@@ -161,7 +161,7 @@ export function UserShowPage() {
                 <div className="text-sm font-light text-on-surface-variant leading-relaxed">
                   {primaryRole === 'super' ? 
                     'This user has unrestricted access to all platform modules, including global entity management, user privilege escalation, and full audit logs.' :
-                   primaryRole === 'admin' ? 
+                   primaryRole === 'internal_manager' ? 
                     'This user can manage all purchase orders, users, and configurations within their assigned entity subsidiary.' :
                     'This user has standard operational access to view and create purchase orders within their entity. Certain administrative actions are restricted.'}
                 </div>
