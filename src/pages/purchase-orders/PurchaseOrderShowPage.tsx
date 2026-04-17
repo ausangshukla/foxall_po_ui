@@ -33,18 +33,19 @@ function fixDocUrl(url: string | null | undefined): string | null {
     return `${API_BASE_URL}${url}`
   }
   
-  // If it's an absolute URL, replace the protocol and host (including port) with the ones from API_BASE_URL
+  // If it's an absolute URL, check if it points to localhost/3000 but we are on a different base
+  // and fix it. ActiveStorage often generates URLs based on the request host.
   try {
     const docUrl = new URL(url)
     const apiBaseUrl = new URL(API_BASE_URL)
     
+    // Always force the protocol and host to match our configured API_BASE_URL
     docUrl.protocol = apiBaseUrl.protocol
     docUrl.host = apiBaseUrl.host
     
     return docUrl.toString()
   } catch {
-    // Fallback to simple replacement if URL parsing fails
-    return url.replace(/https?:\/\/[^/]+/, API_BASE_URL)
+    return url
   }
 }
 
