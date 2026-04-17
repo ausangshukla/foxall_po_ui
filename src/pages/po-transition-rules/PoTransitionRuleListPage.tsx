@@ -102,9 +102,9 @@ export function PoTransitionRuleListPage() {
   }
 
   const getEntityName = (id: number) => entities.find(e => e.id === id)?.name || `ID: ${id}`
-  const getStateName = (id: number | null) => {
+  const getStateName = (id: number | null, name?: string) => {
     if (id === null) return <span className="text-primary font-bold italic opacity-60">Any State (Initial)</span>
-    return states.find(s => s.id === id)?.name || `ID: ${id}`
+    return name || states.find(s => s.id === id)?.name || `ID: ${id}`
   }
 
   const filteredRules = rules.filter((rule) => {
@@ -240,12 +240,12 @@ export function PoTransitionRuleListPage() {
                   >
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-3">
-                        <span className="text-sm font-medium">{getStateName(rule.from_state_id)}</span>
+                        <span className="text-sm font-medium">{getStateName(rule.from_state_id, rule.from_state_name)}</span>
                         <span className="material-symbols-outlined text-outline text-xs">arrow_forward</span>
                       </div>
                     </td>
                     <td className="px-8 py-6">
-                      <span className="text-sm font-bold text-primary">{getStateName(rule.to_state_id)}</span>
+                      <span className="text-sm font-bold text-primary">{getStateName(rule.to_state_id, rule.to_state_name)}</span>
                     </td>
                     <td className="px-8 py-6">
                       <RoleBadge role={rule.allowed_role} />
@@ -341,7 +341,7 @@ export function PoTransitionRuleListPage() {
           <div className="flex flex-col items-center py-8">
             <div className="flex flex-col items-center gap-2 p-4 bg-surface-container-high rounded-2xl w-full border border-outline-variant/10 shadow-sm animate-in zoom-in-95 duration-300">
                <span className="text-[10px] uppercase font-bold text-outline">Current Status</span>
-               <span className="text-lg font-bold text-on-surface-variant italic">{getStateName(previewRule.from_state_id)}</span>
+               <span className="text-lg font-bold text-on-surface-variant italic">{getStateName(previewRule.from_state_id, previewRule.from_state_name)}</span>
             </div>
             
             <div className="flex flex-col items-center my-4">
@@ -355,7 +355,7 @@ export function PoTransitionRuleListPage() {
 
             <div className="flex flex-col items-center gap-2 p-6 bg-primary/10 rounded-2xl w-full border border-primary/20 shadow-lg animate-in zoom-in-95 delay-150 duration-300">
                <span className="text-[10px] uppercase font-bold text-primary/80">Target Status</span>
-               <span className="text-2xl font-black text-primary tracking-tight uppercase">{getStateName(previewRule.to_state_id)}</span>
+               <span className="text-2xl font-black text-primary tracking-tight uppercase">{getStateName(previewRule.to_state_id, previewRule.to_state_name)}</span>
             </div>
 
             <div className="mt-8 w-full p-4 bg-surface-container-low rounded-xl border border-outline-variant/10 space-y-3">

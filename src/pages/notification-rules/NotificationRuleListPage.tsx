@@ -98,15 +98,15 @@ export function NotificationRuleListPage() {
   }
 
   const getEntityName = (id: number) => entities.find(e => e.id === id)?.name || `ID: ${id}`
-  const getPoStateName = (id: number) => poStates.find(s => s.id === id)?.name || `ID: ${id}`
+  const getPoStateName = (id: number, name?: string) => name || poStates.find(s => s.id === id)?.name || `ID: ${id}`
 
   const filteredRules = rules.filter((rule) => {
     const searchLower = searchTerm.toLowerCase()
     const entityName = getEntityName(rule.entity_id).toLowerCase()
-    const stateName = getPoStateName(rule.po_state_id).toLowerCase()
+    const stateName = getPoStateName(rule.po_state_id, rule.po_state_name).toLowerCase()
     return (
       rule.party_role.toLowerCase().includes(searchLower) ||
-      rule.channel.toLowerCase().includes(searchLower) ||
+      (rule.channels || []).join(' ').toLowerCase().includes(searchLower) ||
       entityName.includes(searchLower) ||
       stateName.includes(searchLower) ||
       (rule.template_id?.toLowerCase().includes(searchLower) ?? false)
@@ -170,7 +170,7 @@ export function NotificationRuleListPage() {
           <div>
             <p className="text-on-surface-variant text-sm font-light uppercase tracking-widest mb-1">WhatsApp Rules</p>
             <h3 className="text-3xl font-extrabold text-on-primary-container">
-              {rules.filter(r => r.channel === 'whatsapp').length}
+              {rules.filter(r => r.channels?.includes('whatsapp')).length}
             </h3>
           </div>
         </div>
@@ -182,7 +182,7 @@ export function NotificationRuleListPage() {
           <div>
             <p className="text-on-surface-variant text-sm font-light uppercase tracking-widest mb-1">Email Rules</p>
             <h3 className="text-3xl font-extrabold text-on-primary-container">
-              {rules.filter(r => r.channel === 'email').length}
+              {rules.filter(r => r.channels?.includes('email')).length}
             </h3>
           </div>
         </div>
@@ -241,11 +241,8 @@ export function NotificationRuleListPage() {
                 >
                   <div className="flex items-center gap-1">Recipient {getSortIndicator('party_role')}</div>
                 </th>
-                <th 
-                  className="px-8 py-5 text-xs font-extrabold uppercase tracking-widest text-on-surface-variant cursor-pointer group"
-                  onClick={() => toggleSort('channel')}
-                >
-                  <div className="flex items-center gap-1">Channel {getSortIndicator('channel')}</div>
+                <th className="px-8 py-5 text-xs font-extrabold uppercase tracking-widest text-on-surface-variant">
+                  Channel
                 </th>
                 <th className="px-8 py-5 text-xs font-extrabold uppercase tracking-widest text-on-surface-variant">Status</th>
                 <th className="px-8 py-5 text-xs font-extrabold uppercase tracking-widest text-on-surface-variant text-right">Actions</th>
@@ -266,7 +263,6 @@ export function NotificationRuleListPage() {
               ) : (
                 filteredRules.map((r) => {
                   const roleCfg = ROLE_CONFIG[r.party_role] || ROLE_CONFIG.seller;
-                  const channelCfg = CHANNEL_CONFIG[r.channel] || CHANNEL_CONFIG.email;
                   return (
                     <tr 
                       key={r.id} 
@@ -278,7 +274,7 @@ export function NotificationRuleListPage() {
                       </td>
                       <td className="px-8 py-6">
                         <span className="px-3 py-1 bg-surface-container-high rounded-full text-xs font-medium">
-                          {getPoStateName(r.po_state_id)}
+                          {getPoStateName(r.po_state_id, r.po_state_name)}
                         </span>
                       </td>
                       <td className="px-8 py-6">
@@ -290,9 +286,13 @@ export function NotificationRuleListPage() {
                         </div>
                       </td>
                       <td className="px-8 py-6">
-                        <div className="flex items-center gap-2">
-                          <span className="material-symbols-outlined text-lg text-on-surface-variant">{channelCfg.icon}</span>
-                          <span className="text-sm font-medium capitalize">{r.channel}</span>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {(r.channels || []).map(ch => (
+                            <div key={ch} className="flex items-center gap-1">
+                              <span className="material-symbols-outlined text-lg text-on-surface-variant">{CHANNEL_CONFIG[ch]?.icon || 'notifications'}</span>
+                              <span className="text-sm font-medium capitalize">{ch}</span>
+                            </div>
+                          ))}
                         </div>
                       </td>
                       <td className="px-8 py-6">

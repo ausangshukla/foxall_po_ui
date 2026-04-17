@@ -53,9 +53,9 @@ export function PoTransitionRuleShowPage() {
   }, [isAuth, ruleId])
 
   const getEntityName = (id: number) => entities.find(e => e.id === id)?.name || `ID: ${id}`
-  const getStateName = (id: number | null) => {
+  const getStateName = (id: number | null, name?: string) => {
     if (id === null) return 'Any State (Initial)'
-    return states.find(s => s.id === id)?.name || `ID: ${id}`
+    return name || states.find(s => s.id === id)?.name || `ID: ${id}`
   }
 
   if (!isAuth || isLoading) return <LoadingSpinner />
@@ -88,7 +88,7 @@ export function PoTransitionRuleShowPage() {
             Transition Details
           </h1>
           <p className="text-on-surface-variant font-light tracking-wide">
-            Authorization rule for transitioning from <span className="font-bold text-primary">{getStateName(rule.from_state_id)}</span> to <span className="font-bold text-primary">{getStateName(rule.to_state_id)}</span>.
+            Authorization rule for transitioning from <span className="font-bold text-primary">{getStateName(rule.from_state_id, rule.from_state_name)}</span> to <span className="font-bold text-primary">{getStateName(rule.to_state_id, rule.to_state_name)}</span>.
           </p>
         </div>
         <div className="flex gap-3">
@@ -188,7 +188,7 @@ export function PoTransitionRuleShowPage() {
               <div className="flex flex-col items-center py-4">
                 <div className="flex flex-col items-center gap-2 p-4 bg-surface-container-low rounded-2xl w-full border border-outline-variant/10 shadow-sm">
                    <span className="text-[10px] uppercase font-bold text-outline">Current Status</span>
-                   <span className="text-md font-bold text-on-surface-variant italic">{getStateName(rule.from_state_id)}</span>
+                   <span className="text-md font-bold text-on-surface-variant italic">{getStateName(rule.from_state_id, rule.from_state_name)}</span>
                 </div>
                 
                 <div className="flex flex-col items-center my-4">
@@ -202,15 +202,15 @@ export function PoTransitionRuleShowPage() {
 
                 <div className="flex flex-col items-center gap-2 p-6 bg-primary/10 rounded-2xl w-full border border-primary/20 shadow-lg">
                    <span className="text-[10px] uppercase font-bold text-primary/80">Target Status</span>
-                   <span className="text-xl font-black text-primary tracking-tight uppercase text-center">{getStateName(rule.to_state_id)}</span>
+                   <span className="text-xl font-black text-primary tracking-tight uppercase text-center">{getStateName(rule.to_state_id, rule.to_state_name)}</span>
                 </div>
               </div>
 
               <div className="mt-8 p-4 bg-primary/5 rounded-xl border border-primary/10">
                  <p className="text-[11px] text-on-surface-variant leading-relaxed">
-                   When a PO is in <span className="font-bold text-on-surface">{getStateName(rule.from_state_id)}</span>, 
+                   When a PO is in <span className="font-bold text-on-surface">{getStateName(rule.from_state_id, rule.from_state_name)}</span>, 
                    the <span className="font-bold text-on-surface">{rule.allowed_role.replace('_', ' ')}</span> role 
-                   can trigger a transition to <span className="font-bold text-on-surface">{getStateName(rule.to_state_id)}</span>
+                   can trigger a transition to <span className="font-bold text-on-surface">{getStateName(rule.to_state_id, rule.to_state_name)}</span>
                    {rule.auto_transition ? ' automatically via system logic.' : ' by manually clicking the action button.'}
                  </p>
               </div>

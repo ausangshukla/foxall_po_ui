@@ -18,7 +18,7 @@ interface FormData {
   entity_id: number | ''
   po_state_id: number | ''
   party_role: NotificationPartyRole
-  channel: NotificationChannel
+  channels: NotificationChannel[]
   template_id: string
   subject_template: string
   is_active: boolean
@@ -30,7 +30,7 @@ const initialFormData: FormData = {
   entity_id: '',
   po_state_id: '',
   party_role: 'seller',
-  channel: 'email',
+  channels: ['email'],
   template_id: '',
   subject_template: '',
   is_active: true,
@@ -83,7 +83,7 @@ export function NotificationRuleFormPage() {
             entity_id: ruleData.entity_id,
             po_state_id: ruleData.po_state_id,
             party_role: ruleData.party_role,
-            channel: ruleData.channel,
+            channels: ruleData.channels || ['email'],
             template_id: ruleData.template_id || '',
             subject_template: ruleData.subject_template || '',
             is_active: ruleData.is_active,
@@ -112,7 +112,7 @@ export function NotificationRuleFormPage() {
     if (!formData.entity_id) errors.entity_id = 'Entity is required'
     if (!formData.po_state_id) errors.po_state_id = 'Trigger state is required'
     if (!formData.party_role) errors.party_role = 'Recipient role is required'
-    if (!formData.channel) errors.channel = 'Channel is required'
+    if (!formData.channels.length) errors.channels = 'At least one channel is required'
     
     try {
       JSON.parse(formData.additional_params)
@@ -137,7 +137,7 @@ export function NotificationRuleFormPage() {
         entity_id: formData.entity_id as number,
         po_state_id: formData.po_state_id as number,
         party_role: formData.party_role,
-        channel: formData.channel,
+        channels: formData.channels,
         template_id: formData.template_id || null,
         subject_template: formData.subject_template || null,
         is_active: formData.is_active,
@@ -159,6 +159,17 @@ export function NotificationRuleFormPage() {
       setError(err instanceof Error ? err.message : 'Failed to save notification rule')
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  const handleChannelToggle = (channel: NotificationChannel) => {
+    setFormData(prev => {
+      const already = prev.channels.includes(channel)
+      const updated = already ? prev.channels.filter(c => c !== channel) : [...prev.channels, channel]
+      return { ...prev, channels: updated }
+    })
+    if (validationErrors.channels) {
+      setValidationErrors(prev => ({ ...prev, channels: '' }))
     }
   }
 
@@ -295,18 +306,21 @@ export function NotificationRuleFormPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="channel" className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Channel <span className="text-error">*</span></label>
-                  <select
-                    id="channel"
-                    name="channel"
-                    value={formData.channel}
-                    onChange={handleChange}
-                    className={`w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface appearance-none ${validationErrors.channel ? 'ring-2 ring-error/20' : 'focus:ring-primary-container/40'}`}
-                  >
-                    {CHANNELS.map(channel => (
-                      <option key={channel} value={channel}>{channel.charAt(0).toUpperCase() + channel.slice(1)}</option>
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider ml-1">Channels <span className="text-error">*</span></label>
+                  <div className={`flex gap-4 flex-wrap px-4 py-3 bg-surface-container-low rounded-xl ${validationErrors.channels ? 'ring-2 ring-error/20' : ''}`}>
+                    {CHANNELS.map(ch => (
+                      <label key={ch} className="flex items-center gap-2 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={formData.channels.includes(ch)}
+                          onChange={() => handleChannelToggle(ch)}
+                          className="w-4 h-4 rounded border-none bg-surface-container-high text-primary focus:ring-offset-0 focus:ring-primary transition-all cursor-pointer"
+                        />
+                        <span className="text-sm font-medium capitalize">{ch}</span>
+                      </label>
                     ))}
-                  </select>
+                  </div>
+                  {validationErrors.channels && <p className="text-[10px] font-bold text-error ml-1 mt-1">{validationErrors.channels}</p>}
                 </div>
               </div>
             </section>
@@ -403,7 +417,7 @@ export function NotificationRuleFormPage() {
               </div>
               <div className="flex justify-between items-center py-2 border-b border-outline-variant/10">
                  <span className="text-on-surface-variant text-sm font-light">Channel</span>
-                 <span className="text-on-surface font-bold text-xs uppercase tracking-widest">{formData.channel}</span>
+                 <span className="text-on-surface font-bold text-xs uppercase tracking-widest">{formData.channels.join(' + ') || '—'}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-outline-variant/10">
                  <span className="text-on-surface-variant text-sm font-light">Recipient</span>

@@ -784,7 +784,7 @@ export interface NotificationRuleResponse {
   entity_id: number
   po_state_id: number
   party_role: NotificationPartyRole
-  channel: NotificationChannel
+  channels: NotificationChannel[]
   template_id: string | null
   subject_template: string | null
   is_active: boolean
@@ -801,7 +801,7 @@ export interface NotificationRuleCreateRequest {
   entity_id: number
   po_state_id: number
   party_role: NotificationPartyRole
-  channel: NotificationChannel
+  channels: NotificationChannel[]
   template_id?: string | null
   subject_template?: string | null
   is_active?: boolean
@@ -813,7 +813,7 @@ export interface NotificationRuleUpdateRequest {
   entity_id?: number
   po_state_id?: number
   party_role?: NotificationPartyRole
-  channel?: NotificationChannel
+  channels?: NotificationChannel[]
   template_id?: string | null
   subject_template?: string | null
   is_active?: boolean

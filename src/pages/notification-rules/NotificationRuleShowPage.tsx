@@ -68,7 +68,7 @@ export function NotificationRuleShowPage() {
             <span>Configuration Details</span>
           </nav>
           <h1 className="text-4xl font-extrabold tracking-tight text-on-primary-container mb-2 font-headline">Notification Rule #{rule.id}</h1>
-          <p className="text-on-surface-variant font-light tracking-wide italic">Trigger: {poState?.name || rule.po_state_id} → {ROLE_LABELS[rule.party_role] || rule.party_role.replace('_', ' ')}</p>
+          <p className="text-on-surface-variant font-light tracking-wide italic">Trigger: {rule.po_state_name || poState?.name || rule.po_state_id} → {ROLE_LABELS[rule.party_role] || rule.party_role.replace('_', ' ')}</p>
         </div>
         <div className="flex gap-4">
           <button 
@@ -96,7 +96,7 @@ export function NotificationRuleShowPage() {
                </div>
                <div className="flex justify-between items-center py-4 border-b border-outline-variant/5">
                  <span className="text-on-surface-variant font-light text-sm tracking-wide">Trigger Event</span>
-                 <span className="text-on-surface font-bold text-sm">{poState?.name || rule.po_state_id}</span>
+                 <span className="text-on-surface font-bold text-sm">{rule.po_state_name || poState?.name || rule.po_state_id}</span>
                </div>
                <div className="flex justify-between items-center py-4 border-b border-outline-variant/5">
                  <span className="text-on-surface-variant font-light text-sm tracking-wide">Recipient Role</span>
@@ -106,7 +106,7 @@ export function NotificationRuleShowPage() {
                </div>
                <div className="flex justify-between items-center py-4 border-b border-outline-variant/5">
                  <span className="text-on-surface-variant font-light text-sm tracking-wide">Channel</span>
-                 <span className="text-on-surface font-bold text-sm capitalize">{rule.channel}</span>
+                 <span className="text-on-surface font-bold text-sm capitalize">{(rule.channels || []).join(' + ')}</span>
                </div>
                <div className="flex justify-between items-center py-4 border-b border-outline-variant/5">
                  <span className="text-on-surface-variant font-light text-sm tracking-wide">Execution Status</span>
