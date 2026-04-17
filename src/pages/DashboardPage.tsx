@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuth, useRequireAuth } from '../contexts/AuthContext'
 import { LoadingSpinner } from '../components/common'
+import { DelayAlertsWidget } from '../components/freight/DelayAlertsWidget'
 
 export function DashboardPage() {
   const isAuth = useRequireAuth()
@@ -34,6 +35,8 @@ export function DashboardPage() {
           </button>
         </div>
       </header>
+
+      <DelayAlertsWidget />
 
       {/* Summary Metrics: Glass Bento */}
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">

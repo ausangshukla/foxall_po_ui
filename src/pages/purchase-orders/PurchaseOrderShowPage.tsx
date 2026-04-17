@@ -23,6 +23,7 @@ import { PoTransitionAttempts } from '../../components/purchase-orders/PoTransit
 import { TransitionActionsPanel } from '../../components/purchase-orders/TransitionActionsPanel'
 import { FreightBookingBanner } from '../../components/freight/FreightBookingBanner'
 import { FreightBookingCard } from '../../components/freight/FreightBookingCard'
+import { ShipmentTrackingSection } from '../../components/freight/ShipmentTrackingSection'
 
 function fixDocUrl(url: string | null | undefined): string | null {
   if (!url) return null
@@ -320,7 +321,10 @@ export function PurchaseOrderShowPage() {
           )}
 
           {['freight_booked', 'in_transit', 'picked_up', 'shipped', 'out_for_delivery', 'received', 'completed'].includes(purchaseOrder.po_state_system_code || '') && (
-            <FreightBookingCard poId={purchaseOrder.id} />
+            <>
+              <FreightBookingCard poId={purchaseOrder.id} />
+              <ShipmentTrackingSection poId={purchaseOrder.id} />
+            </>
           )}
 
           {/* Essential Details Glass Card */}
@@ -956,34 +960,26 @@ export function PurchaseOrderShowPage() {
               <textarea
                 value={transitionComment}
                 onChange={(e) => setTransitionComment(e.target.value)}
-                placeholder="Enter your comment here..."
-                className="w-full h-32 p-3 bg-surface rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary resize-none"
-                required
+                placeholder="Enter a comment for this transition..."
+                className="w-full h-32 p-3 bg-surface border border-outline-variant/30 rounded-xl focus:ring-4 focus:ring-primary-container/40 transition-all font-medium text-on-surface"
               />
             </div>
-            <div className="p-6 bg-surface-container-low flex justify-end gap-3 border-t border-outline-variant/20">
+            <div className="p-6 bg-surface-container-high flex justify-end gap-3">
               <button
                 onClick={() => {
                   setCommentModalOpen(false)
                   setPendingAction(null)
-                  setTransitionComment('')
                 }}
-                className="px-4 py-2 text-on-surface-variant font-medium hover:bg-surface-variant/50 rounded-lg transition-colors"
-                disabled={isTransitioning}
+                className="px-6 py-2 rounded-xl text-sm font-bold text-on-surface-variant hover:bg-surface-container-highest transition-colors"
               >
                 Cancel
               </button>
               <button
-                onClick={() => {
-                  if (transitionComment.trim()) {
-                    executeTransition(pendingAction, transitionComment)
-                  }
-                }}
-                disabled={!transitionComment.trim() || isTransitioning}
-                className="px-6 py-2 bg-primary text-on-primary font-bold rounded-lg shadow-sm hover:opacity-90 disabled:opacity-50 transition-all flex items-center gap-2"
+                onClick={() => executeTransition(pendingAction, transitionComment)}
+                disabled={isTransitioning || !transitionComment.trim()}
+                className="px-8 py-2 rounded-xl text-sm font-bold text-on-primary bg-primary hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50"
               >
-                {isTransitioning && <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>}
-                Submit
+                {isTransitioning ? 'Processing...' : 'Confirm Action'}
               </button>
             </div>
           </div>

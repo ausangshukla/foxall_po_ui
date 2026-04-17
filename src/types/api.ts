@@ -967,6 +967,78 @@ export interface TransitionActionsResponse {
 }
 
 // ============================================
+// Shipment Tracking Types
+// ============================================
+export interface ShipmentTracking {
+  id: number
+  freight_booking_id: number
+  purchase_order_id: number
+  carrier_api_source: string
+  carrier_tracking_reference: string
+  webhook_subscription_id: string | null
+  current_status_code: string
+  current_location_unlocode: string | null
+  carrier_eta: string | null
+  predicted_eta: string | null
+  vessel_name: string | null
+  vessel_imo: string | null
+  vessel_latitude: number | null
+  vessel_longitude: number | null
+  vessel_position_updated_at: string | null
+  free_time_expiry: string | null
+  customs_status: string
+  last_polled_at: string | null
+  poll_failures: number
+  created_at: string
+  updated_at: string
+  events?: ShipmentEvent[]
+  alerts?: DelayAlert[]
+}
+
+export interface ShipmentEvent {
+  id: number
+  shipment_tracking_id: number
+  freight_booking_id: number
+  purchase_order_id: number
+  event_code: string
+  event_category: 'transport' | 'equipment' | 'customs' | 'document' | 'exception'
+  event_description: string
+  event_time: string
+  event_time_type: 'actual' | 'estimated' | 'predicted'
+  location_unlocode: string | null
+  location_name: string | null
+  vessel_name: string | null
+  vessel_imo: string | null
+  voyage_number: string | null
+  flight_number: string | null
+  container_number: string | null
+  new_eta: string | null
+  raw_source: string
+  created_at: string
+}
+
+export interface DelayAlert {
+  id: number
+  shipment_tracking_id: number
+  freight_booking_id: number
+  purchase_order_id: number
+  alert_type: 'eta_change' | 'demurrage_risk' | 'customs_hold' | 'security_hold'
+  severity: 'low' | 'medium' | 'high' | 'critical'
+  original_eta: string | null
+  revised_eta: string | null
+  delay_days: number | null
+  delay_reason_code: string | null
+  delay_reason_text: string | null
+  impact_on_delivery_date: boolean
+  demurrage_risk: boolean
+  notified_at: string | null
+  acknowledged_by_id: number | null
+  acknowledged_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+// ============================================
 // API Error Types
 // ============================================
 export class ApiError extends Error {
