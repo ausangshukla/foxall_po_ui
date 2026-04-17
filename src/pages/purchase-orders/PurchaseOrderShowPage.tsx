@@ -21,9 +21,7 @@ import { API_BASE_URL } from '../../config'
 import { PurchaseOrderLineItems } from '../../components/purchase-orders/PurchaseOrderLineItems'
 import { PoTransitionAttempts } from '../../components/purchase-orders/PoTransitionAttempts'
 import { TransitionActionsPanel } from '../../components/purchase-orders/TransitionActionsPanel'
-import { FreightBookingBanner } from '../../components/freight/FreightBookingBanner'
-import { FreightBookingCard } from '../../components/freight/FreightBookingCard'
-import { ShipmentTrackingSection } from '../../components/freight/ShipmentTrackingSection'
+import { FreightSection } from '../../components/freight/FreightSection'
 
 function fixDocUrl(url: string | null | undefined): string | null {
   if (!url) return null
@@ -63,6 +61,9 @@ export function PurchaseOrderShowPage() {
   const [transitionAttempts, setTransitionAttempts] = useState<PoTransitionAttemptResponse[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Audit Log State
+  const [auditExpanded, setAuditExpanded] = useState(false)
 
   // State machine transition state
   const [isTransitioning, setIsTransitioning] = useState(false)
@@ -235,7 +236,7 @@ export function PurchaseOrderShowPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="max-w-[1600px] mx-auto px-4 md:px-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Header Section: Editorial Mint Gradient */}
       <header className="relative overflow-hidden rounded-xl mb-10 p-8 md:p-12 flex flex-col md:flex-row justify-between items-end md:items-center bg-gradient-to-br from-primary-container via-surface to-surface-container-low">
         <div className="relative z-10">
@@ -310,23 +311,15 @@ export function PurchaseOrderShowPage() {
       )}
 
       {/* Bento Grid Content */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
         {/* Column 1: Essential Details & Logistics */}
         <div className="md:col-span-8 flex flex-col gap-6">
           
-          {purchaseOrder.po_state_system_code === 'goods_ready_approved' && (
-            <FreightBookingBanner 
-              poId={purchaseOrder.id} 
-              onConfirm={() => fetchStateData(purchaseOrder.id)} 
-            />
-          )}
-
-          {['freight_booked', 'in_transit', 'picked_up', 'shipped', 'out_for_delivery', 'received', 'completed'].includes(purchaseOrder.po_state_system_code || '') && (
-            <FreightBookingCard poId={purchaseOrder.id} />
-          )}
-          {['in_transit', 'picked_up', 'shipped', 'out_for_delivery', 'received', 'completed'].includes(purchaseOrder.po_state_system_code || '') && (
-            <ShipmentTrackingSection poId={purchaseOrder.id} />
-          )}
+          <FreightSection 
+            poId={purchaseOrder.id} 
+            poStateCode={purchaseOrder.po_state_system_code || ''} 
+            onStateChange={() => fetchStateData(purchaseOrder.id)} 
+          />
 
           {/* Essential Details Glass Card */}
           <section className="glass-panel ambient-shadow rounded-xl p-8 border border-outline-variant/20">
@@ -390,7 +383,14 @@ export function PurchaseOrderShowPage() {
                   <span className="material-symbols-outlined text-[14px]">flight_takeoff</span>
                   Carrier / Forwarder
                 </p>
-                <p className="font-extrabold text-on-surface text-lg mb-1">{purchaseOrder.carrier_entity || '—'}</p>
+                <div className="flex items-center justify-between mb-1">
+                  <p className="font-extrabold text-on-surface text-lg">{purchaseOrder.carrier_entity || '—'}</p>
+                  {purchaseOrder.carrier_booking_workflow && (
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide ${purchaseOrder.carrier_booking_workflow === 'api' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'}`}>
+                      {purchaseOrder.carrier_booking_workflow === 'api' ? 'API' : 'Manual'}
+                    </span>
+                  )}
+                </div>
                 <div className="flex items-center gap-2 text-on-surface-variant">
                   <span className="material-symbols-outlined text-[16px]">person</span>
                   <p className="text-xs font-bold">{purchaseOrder.carrier_contact || 'No contact assigned'}</p>
@@ -735,12 +735,23 @@ export function PurchaseOrderShowPage() {
 
           {/* System Audit Log */}
           <section className="glass-panel ambient-shadow rounded-xl p-8 border border-outline-variant/20">
-            <div className="flex items-center gap-3 mb-6">
-              <span className="material-symbols-outlined text-primary">history</span>
-              <h2 className="text-on-primary-container font-extrabold tracking-tight text-lg">Audit Log</h2>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-primary">history</span>
+                <h2 className="text-on-primary-container font-extrabold tracking-tight text-lg">Audit Log</h2>
+              </div>
+              <button 
+                onClick={() => setAuditExpanded(!auditExpanded)}
+                className="text-primary text-xs font-bold hover:underline flex items-center gap-1"
+              >
+                {auditExpanded ? 'Show Less' : `Show All (${transitionAttempts.length})`}
+                <span className="material-symbols-outlined text-sm">
+                  {auditExpanded ? 'expand_less' : 'expand_more'}
+                </span>
+              </button>
             </div>
             <div className="space-y-4">
-              {transitionAttempts.map((attempt) => (
+              {(auditExpanded ? transitionAttempts : transitionAttempts.slice(0, 3)).map((attempt) => (
                 <div 
                   key={attempt.id} 
                   className={`p-4 rounded-lg border-l-4 ${
@@ -783,6 +794,15 @@ export function PurchaseOrderShowPage() {
                 </div>
               ))}
               
+              {!auditExpanded && transitionAttempts.length > 3 && (
+                <button 
+                  onClick={() => setAuditExpanded(true)}
+                  className="w-full py-3 border-2 border-dashed border-outline-variant/20 rounded-xl text-on-surface-variant text-xs font-bold hover:bg-surface-container-low transition-colors uppercase tracking-widest"
+                >
+                  + {transitionAttempts.length - 3} more events
+                </button>
+              )}
+
               {/* Creation Record */}
               <div className="p-4 bg-surface-container-low/50 rounded-lg border-l-4 border-surface-variant">
                 <p className="text-[10px] uppercase tracking-widest text-on-surface-variant mb-2">Created By</p>

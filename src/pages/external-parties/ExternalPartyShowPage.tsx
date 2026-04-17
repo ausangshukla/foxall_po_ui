@@ -111,6 +111,17 @@ export function ExternalPartyShowPage() {
                 <div><p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Purchase Order ID</p><p className="font-bold text-on-surface">{party.purchase_order_id}</p></div>
                 <div><p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Created</p><p className="font-bold text-on-surface">{new Date(party.created_at).toLocaleDateString()}</p></div>
                 <div><p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Last Updated</p><p className="font-bold text-on-surface">{new Date(party.updated_at).toLocaleDateString()}</p></div>
+                {party.party_type === 'carrier' && (
+                  <div>
+                    <p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Booking Workflow</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold text-on-surface capitalize">{party.booking_workflow}</p>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide ${party.booking_workflow === 'api' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'}`}>
+                        {party.booking_workflow === 'api' ? 'API' : 'Manual'}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
               {party.preferences && Object.keys(party.preferences).length > 0 && (
                 <div className="mt-8"><p className="text-on-surface-variant text-[10px] uppercase tracking-widest mb-3">Custom Preferences</p>

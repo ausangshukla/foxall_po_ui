@@ -47,6 +47,9 @@ export function FreightBookingBanner({ poId, onConfirm }: Props) {
 
   if (loading) return null
 
+  // If no booking exists but we are in a freight state, show the trigger to create one
+  const isNoBookingInFreightState = !draft?.booking && poId
+
   // If a contract rate was auto-applied
   if (draft?.booking?.booking_source === 'contract_rate') {
     const isApiCarrier = draft.booking.carrier_booking_workflow === 'api'
@@ -93,7 +96,8 @@ export function FreightBookingBanner({ poId, onConfirm }: Props) {
             onClose={() => setWizardOpen(false)} 
             onSuccess={() => {
               setWizardOpen(false)
-              onConfirm()
+              fetchDraft() // Refresh the local draft state
+              onConfirm()  // Refresh the parent PO state
             }} 
           />
         )}
@@ -101,18 +105,23 @@ export function FreightBookingBanner({ poId, onConfirm }: Props) {
     )
   }
 
-  // If no contract rate, show the "Book Freight" trigger
+  // If no contract rate OR if we are in a freight state without a booking record
   return (
     <>
       <div className="bg-primary-container/10 border border-primary-container/20 rounded-2xl p-6 mb-8 flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-full bg-primary-container/20 flex items-center justify-center text-primary">
-            <span className="material-symbols-outlined text-3xl">smart_toy</span>
+            <span className="material-symbols-outlined text-3xl">{isNoBookingInFreightState ? 'warning' : 'smart_toy'}</span>
           </div>
           <div>
-            <h3 className="text-on-primary-container font-bold text-lg">Ready to Book Freight</h3>
+            <h3 className="text-on-primary-container font-bold text-lg">
+              {isNoBookingInFreightState ? 'Missing Freight Booking' : 'Ready to Book Freight'}
+            </h3>
             <p className="text-on-surface-variant text-sm">
-              AI recommends <strong>{draft?.recommendation.transport_mode.replace('_', ' ').toUpperCase()}</strong>. {draft?.recommendation.rationale}
+              {isNoBookingInFreightState 
+                ? 'This PO is in a freight state but no booking record was found. Please create one.'
+                : `AI recommends ${draft?.recommendation.transport_mode.replace('_', ' ').toUpperCase()}. ${draft?.recommendation.rationale}`
+              }
             </p>
           </div>
         </div>
@@ -121,7 +130,7 @@ export function FreightBookingBanner({ poId, onConfirm }: Props) {
           className="bg-primary text-on-primary px-8 py-2.5 rounded-xl text-sm font-bold hover:opacity-90 transition-all shadow-md active:scale-[0.98] flex items-center gap-2"
         >
           <span className="material-symbols-outlined">directions_boat</span>
-          Book Freight
+          {isNoBookingInFreightState ? 'Create Booking' : 'Book Freight'}
         </button>
       </div>
       {wizardOpen && (
@@ -130,7 +139,8 @@ export function FreightBookingBanner({ poId, onConfirm }: Props) {
           onClose={() => setWizardOpen(false)} 
           onSuccess={() => {
             setWizardOpen(false)
-            onConfirm()
+            fetchDraft() // Refresh local draft
+            onConfirm()  // Refresh parent PO
           }} 
         />
       )}

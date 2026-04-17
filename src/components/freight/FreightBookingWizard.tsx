@@ -80,7 +80,8 @@ export default function FreightBookingWizard({ poId, onClose, onSuccess }: Freig
         carrier_name: selectedRate?.carrier_name
       }
       const response = await freightBookingsApi.create(poId, bookingData)
-      onSuccess(response)
+      // The backend now returns the full PO object on success
+      onSuccess(response as any)
     } catch (err: any) {
       setError(err.message || 'Failed to create booking')
       setLoading(false)

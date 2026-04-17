@@ -17,6 +17,11 @@ export interface BookingDraftResponse {
 }
 
 export const freightBookingsApi = {
+  list: async (params?: { status?: string }) => {
+    const query = params?.status ? `?status=${params.status}` : ''
+    return api.get<FreightBooking[]>(`/api/v1/freight_bookings${query}`)
+  },
+
   getDraft: async (poId: number) => {
     return api.get<BookingDraftResponse>(`/api/v1/purchase_orders/${poId}/booking_draft`)
   },

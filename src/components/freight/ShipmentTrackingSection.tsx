@@ -8,9 +8,10 @@ import { DelayAlertsList } from './DelayAlertsList'
 
 interface Props {
   poId: number
+  embedded?: boolean
 }
 
-export function ShipmentTrackingSection({ poId }: Props) {
+export function ShipmentTrackingSection({ poId, embedded = false }: Props) {
   const [tracking, setTracking] = useState<ShipmentTracking | null>(null)
   const [loading, setLoading] = useState(true)
   const [isExpanded, setIsExpanded] = useState(false)

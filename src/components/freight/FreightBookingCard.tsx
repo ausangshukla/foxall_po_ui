@@ -5,84 +5,52 @@ import { LoadingSpinner } from '../common'
 
 interface Props {
   poId: number
+  embedded?: boolean
 }
 
-export function FreightBookingCard({ poId }: Props) {
-  const [booking, setBooking] = useState<FreightBooking | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchBooking = async () => {
-      try {
-        // In v1, we assume one booking per PO. The API returns the booking directly or null.
-        const response = await freightBookingsApi.getDraft(poId)
-        if (response?.booking) {
-          setBooking(response.booking)
-        }
-      } catch (err) {
-        console.error('Failed to fetch booking', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchBooking()
-  }, [poId])
-
-  if (loading) return <div className="p-8 text-center"><LoadingSpinner /></div>
-  if (!booking || booking.status === 'draft') return null
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'confirmed': return 'bg-emerald-100 text-emerald-800 border-emerald-200'
-      case 'pending_carrier_confirmation': return 'bg-amber-100 text-amber-800 border-amber-200'
-      case 'etd_changed': return 'bg-orange-100 text-orange-800 border-orange-200'
-      case 'cancelled': return 'bg-red-100 text-red-800 border-red-200'
-      default: return 'bg-slate-100 text-slate-800 border-slate-200'
-    }
+function statusColor(status: string) {
+  switch (status) {
+    case 'confirmed': return 'bg-emerald-100 text-emerald-800 border-emerald-200'
+    case 'pending_carrier_confirmation': return 'bg-amber-100 text-amber-800 border-amber-200'
+    case 'etd_changed': return 'bg-orange-100 text-orange-800 border-orange-200'
+    case 'cancelled': return 'bg-red-100 text-red-800 border-red-200'
+    default: return 'bg-slate-100 text-slate-800 border-slate-200'
   }
+}
 
-  const formatStatus = (status: string) => {
-    return status.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
-  }
+function formatStatus(status: string) {
+  return status.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+}
 
+function BookingBody({ booking }: { booking: FreightBooking }) {
   return (
-    <div className="glass-panel rounded-3xl ambient-shadow border border-outline-variant/20 overflow-hidden mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="px-8 py-5 border-b border-outline-variant/10 flex justify-between items-center bg-surface-container-low">
-        <div className="flex items-center gap-3">
-          <span className="material-symbols-outlined text-primary">directions_boat</span>
-          <h2 className="text-lg font-extrabold text-on-surface font-headline tracking-tight">Freight Booking Details</h2>
-        </div>
-        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${getStatusColor(booking.status)}`}>
-          {formatStatus(booking.status)}
-        </span>
-      </div>
-      
-      <div className="p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+    <>
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-8">
         <div className="space-y-1">
           <p className="text-on-surface-variant text-[10px] uppercase tracking-widest font-bold">Carrier</p>
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-primary-container flex items-center justify-center text-[10px] font-bold text-on-primary-container">
+          <div className="flex items-center flex-wrap gap-2">
+            <div className="w-6 h-6 rounded bg-primary-container flex items-center justify-center text-[10px] font-bold text-on-primary-container shrink-0">
               {booking.carrier_name?.substring(0, 2).toUpperCase()}
             </div>
-            <p className="font-bold text-on-surface">{booking.carrier_name}</p>
-            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide ${booking.carrier_booking_workflow === 'api' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'}`}>
+            <p className="font-bold text-on-surface truncate max-w-[120px]" title={booking.carrier_name || ''}>{booking.carrier_name}</p>
+            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide shrink-0 ${booking.carrier_booking_workflow === 'api' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'}`}>
               {booking.carrier_booking_workflow === 'api' ? 'API' : 'Manual'}
             </span>
           </div>
         </div>
-        
+
         <div className="space-y-1">
           <p className="text-on-surface-variant text-[10px] uppercase tracking-widest font-bold">Route & Mode</p>
-          <div className="flex items-center gap-2 font-bold text-on-surface">
+          <div className="flex items-center flex-wrap gap-2 font-bold text-on-surface">
             <span>{booking.origin_port}</span>
-            <span className="material-symbols-outlined text-sm text-outline-variant">arrow_forward</span>
+            <span className="material-symbols-outlined text-sm text-outline-variant shrink-0">arrow_forward</span>
             <span>{booking.destination_port}</span>
-            <span className="ml-2 px-2 py-0.5 bg-secondary-container text-on-secondary-container text-[10px] rounded uppercase">
+            <span className="px-2 py-0.5 bg-secondary-container text-on-secondary-container text-[10px] rounded uppercase shrink-0">
               {booking.transport_mode?.replace('_', ' ')}
             </span>
           </div>
         </div>
-        
+
         <div className="space-y-1">
           <p className="text-on-surface-variant text-[10px] uppercase tracking-widest font-bold">Schedule</p>
           <div className="space-y-0.5">
@@ -98,7 +66,7 @@ export function FreightBookingCard({ poId }: Props) {
             )}
           </div>
         </div>
-        
+
         <div className="space-y-1">
           <p className="text-on-surface-variant text-[10px] uppercase tracking-widest font-bold">Reference</p>
           <p className="font-bold text-primary text-lg tracking-tight">
@@ -108,7 +76,7 @@ export function FreightBookingCard({ poId }: Props) {
       </div>
 
       {booking.status === 'etd_changed' && (
-        <div className="mx-8 mb-8 p-4 bg-orange-50 border border-orange-200 rounded-2xl flex items-center justify-between">
+        <div className="mt-6 p-4 bg-orange-50 border border-orange-200 rounded-2xl flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="material-symbols-outlined text-orange-600">event_busy</span>
             <div>
@@ -122,6 +90,60 @@ export function FreightBookingCard({ poId }: Props) {
           </div>
         </div>
       )}
+    </>
+  )
+}
+
+export function FreightBookingCard({ poId, embedded = false }: Props) {
+  const [booking, setBooking] = useState<FreightBooking | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchBooking = async () => {
+      try {
+        const response = await freightBookingsApi.getDraft(poId)
+        if (response?.booking) setBooking(response.booking)
+      } catch (err) {
+        console.error('Failed to fetch booking', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchBooking()
+  }, [poId])
+
+  if (loading) return <div className="p-8 text-center"><LoadingSpinner /></div>
+  
+  if (!booking || booking.status === 'draft') return null
+
+  if (embedded) {
+    return (
+      <div>
+        <div className="flex items-center justify-between mb-6">
+          <p className="text-on-surface-variant text-[10px] uppercase tracking-widest font-bold">Booking Status</p>
+          <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${statusColor(booking.status)}`}>
+            {formatStatus(booking.status)}
+          </span>
+        </div>
+        <BookingBody booking={booking} />
+      </div>
+    )
+  }
+
+  return (
+    <div className="glass-panel rounded-3xl ambient-shadow border border-outline-variant/20 overflow-hidden mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="px-8 py-5 border-b border-outline-variant/10 flex justify-between items-center bg-surface-container-low">
+        <div className="flex items-center gap-3">
+          <span className="material-symbols-outlined text-primary">directions_boat</span>
+          <h2 className="text-lg font-extrabold text-on-surface font-headline tracking-tight">Freight Booking Details</h2>
+        </div>
+        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${statusColor(booking.status)}`}>
+          {formatStatus(booking.status)}
+        </span>
+      </div>
+      <div className="p-8">
+        <BookingBody booking={booking} />
+      </div>
     </div>
   )
 }

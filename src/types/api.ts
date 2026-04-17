@@ -233,6 +233,7 @@ export interface PurchaseOrderResponse {
   po_state_description?: string | null
   history?: PoTransitionAttemptResponse[]
   creator_name?: string | null
+  carrier_booking_workflow?: 'api' | 'manual' | null
   
   // Document URLs
   po_document_url: string | null
