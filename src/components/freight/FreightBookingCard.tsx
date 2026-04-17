@@ -65,6 +65,9 @@ export function FreightBookingCard({ poId }: Props) {
               {booking.carrier_name?.substring(0, 2).toUpperCase()}
             </div>
             <p className="font-bold text-on-surface">{booking.carrier_name}</p>
+            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide ${booking.carrier_booking_workflow === 'api' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'}`}>
+              {booking.carrier_booking_workflow === 'api' ? 'API' : 'Manual'}
+            </span>
           </div>
         </div>
         

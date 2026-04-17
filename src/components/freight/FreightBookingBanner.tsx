@@ -49,6 +49,7 @@ export function FreightBookingBanner({ poId, onConfirm }: Props) {
 
   // If a contract rate was auto-applied
   if (draft?.booking?.booking_source === 'contract_rate') {
+    const isApiCarrier = draft.booking.carrier_booking_workflow === 'api'
     return (
       <>
         <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 mb-8 flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
@@ -57,9 +58,15 @@ export function FreightBookingBanner({ poId, onConfirm }: Props) {
               <span className="material-symbols-outlined text-3xl">directions_boat</span>
             </div>
             <div>
-              <h3 className="text-emerald-900 font-bold text-lg">Contract Rate Found</h3>
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="text-emerald-900 font-bold text-lg">Contract Rate Found</h3>
+                {isApiCarrier && (
+                  <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold uppercase tracking-wide rounded">Tier 1 API</span>
+                )}
+              </div>
               <p className="text-emerald-700">
                 Ready to book with <strong>{draft.booking.carrier_name}</strong> at <strong>USD {Number(draft.booking.total_cost_usd).toFixed(2)}</strong>.
+                {isApiCarrier && <span className="ml-1 text-blue-700">Booking will be confirmed automatically via carrier API.</span>}
               </p>
             </div>
           </div>
@@ -76,7 +83,7 @@ export function FreightBookingBanner({ poId, onConfirm }: Props) {
               className="bg-emerald-600 text-white px-8 py-2.5 rounded-xl text-sm font-bold hover:bg-emerald-700 transition-all shadow-md active:scale-[0.98] disabled:opacity-50 flex items-center gap-2"
             >
               {confirming ? <span className="material-symbols-outlined animate-spin">progress_activity</span> : null}
-              Confirm Booking
+              {isApiCarrier ? 'Book via Carrier API' : 'Confirm Booking'}
             </button>
           </div>
         </div>

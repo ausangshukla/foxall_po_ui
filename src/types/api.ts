@@ -640,6 +640,7 @@ export interface ExternalPartyResponse {
   preferences: Record<string, unknown> | null
   last_contacted_at: string | null
   opt_out: boolean
+  booking_workflow: 'api' | 'manual'
   created_at: string
   updated_at: string
   // Computed/joined fields (if returned by API)
@@ -661,6 +662,7 @@ export interface ExternalPartyCreateRequest {
   prefers_whatsapp?: boolean
   preferences?: Record<string, unknown> | null
   opt_out?: boolean
+  booking_workflow?: 'api' | 'manual'
 }
 
 export interface ExternalPartyUpdateRequest {
@@ -677,6 +679,7 @@ export interface ExternalPartyUpdateRequest {
   prefers_whatsapp?: boolean
   preferences?: Record<string, unknown> | null
   opt_out?: boolean
+  booking_workflow?: 'api' | 'manual'
 }
 
 export interface ExternalPartySearchMeta {
@@ -847,6 +850,8 @@ export interface FreightBooking {
   proposed_etd?: string | null
   etd_change_reason?: string | null
   agreed_rate_usd?: number | null
+  carrier_api_source?: string | null
+  carrier_booking_workflow?: 'api' | 'manual'
 }
 
 export interface FreightBookingRate {

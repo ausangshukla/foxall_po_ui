@@ -168,7 +168,16 @@ export function ExternalPartyListPage() {
                         <span className="font-medium text-sm">{ep.name}</span>
                       </div>
                     </td>
-                    <td className="px-8 py-6"><span className={`px-3 py-1 rounded-full text-xs font-medium ${typeConfig.bg} ${typeConfig.text}`}>{typeConfig.label}</span></td>
+                    <td className="px-8 py-6">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${typeConfig.bg} ${typeConfig.text}`}>{typeConfig.label}</span>
+                        {ep.party_type === 'carrier' && (
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide ${ep.booking_workflow === 'api' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'}`}>
+                            {ep.booking_workflow === 'api' ? 'API' : 'Manual'}
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-8 py-6">{ep.email ? <a href={`mailto:${ep.email}`} onClick={(ev) => ev.stopPropagation()} className="text-primary hover:underline text-sm">{ep.email}</a> : <span className="text-outline text-xs">—</span>}</td>
                     <td className="px-8 py-6">{ep.company_name ? <span className="font-medium text-sm">{ep.company_name}</span> : <span className="text-outline text-xs">—</span>}</td>
                     <td className="px-8 py-6"><div className="flex justify-center"><span className={`px-3 py-1 rounded-full text-xs font-bold ${ep.opt_out ? 'bg-error-container/30 text-error' : 'bg-primary-container/30 text-primary'}`}>{ep.opt_out ? 'Opted Out' : 'Active'}</span></div></td>

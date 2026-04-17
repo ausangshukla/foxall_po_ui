@@ -18,6 +18,7 @@ interface FormData {
   address: string
   prefers_whatsapp: boolean
   opt_out: boolean
+  booking_workflow: 'api' | 'manual'
 }
 
 const initialFormData: FormData = {
@@ -33,6 +34,7 @@ const initialFormData: FormData = {
   address: '',
   prefers_whatsapp: false,
   opt_out: false,
+  booking_workflow: 'manual',
 }
 
 const PARTY_TYPES: { value: ExternalPartyType; label: string }[] = [
@@ -77,6 +79,7 @@ export function ExternalPartyFormPage() {
             address: data.address || '',
             prefers_whatsapp: data.prefers_whatsapp,
             opt_out: data.opt_out,
+            booking_workflow: data.booking_workflow || 'manual',
           })
         } catch (err) {
           setError('Failed to load data')
@@ -177,6 +180,21 @@ export function ExternalPartyFormPage() {
             <input name="purchase_order_id" type="number" value={formData.purchase_order_id} onChange={handleChange} className="w-full border rounded-lg px-4 py-2" />
           </div>
         </div>
+        {formData.party_type === 'carrier' && (
+          <div className="space-y-1">
+            <label className="text-sm font-semibold">Booking Workflow</label>
+            <div className="flex gap-6 mt-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="booking_workflow" value="manual" checked={formData.booking_workflow === 'manual'} onChange={handleChange} />
+                <span className="text-sm">Manual / Magic Link</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="booking_workflow" value="api" checked={formData.booking_workflow === 'api'} onChange={handleChange} />
+                <span className="text-sm">Tier 1 — Direct API</span>
+              </label>
+            </div>
+          </div>
+        )}
         <div className="flex gap-6">
           <label className="flex items-center gap-2"><input type="checkbox" name="prefers_whatsapp" checked={formData.prefers_whatsapp} onChange={handleChange} /> Prefers WhatsApp</label>
           <label className="flex items-center gap-2"><input type="checkbox" name="opt_out" checked={formData.opt_out} onChange={handleChange} /> Opt Out</label>

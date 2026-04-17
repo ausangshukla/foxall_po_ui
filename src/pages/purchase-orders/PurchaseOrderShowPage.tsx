@@ -322,10 +322,10 @@ export function PurchaseOrderShowPage() {
           )}
 
           {['freight_booked', 'in_transit', 'picked_up', 'shipped', 'out_for_delivery', 'received', 'completed'].includes(purchaseOrder.po_state_system_code || '') && (
-            <>
-              <FreightBookingCard poId={purchaseOrder.id} />
-              <ShipmentTrackingSection poId={purchaseOrder.id} />
-            </>
+            <FreightBookingCard poId={purchaseOrder.id} />
+          )}
+          {['in_transit', 'picked_up', 'shipped', 'out_for_delivery', 'received', 'completed'].includes(purchaseOrder.po_state_system_code || '') && (
+            <ShipmentTrackingSection poId={purchaseOrder.id} />
           )}
 
           {/* Essential Details Glass Card */}
