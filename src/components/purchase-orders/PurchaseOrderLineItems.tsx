@@ -3,7 +3,8 @@ import {
   listPurchaseOrderLineItems, 
   createPurchaseOrderLineItem, 
   updatePurchaseOrderLineItem, 
-  deletePurchaseOrderLineItem 
+  deletePurchaseOrderLineItem,
+  exportPurchaseOrderLineItems
 } from '../../api/purchase-order-line-items';
 import type { 
   PurchaseOrderLineItemResponse, 
@@ -193,6 +194,14 @@ export const PurchaseOrderLineItems: React.FC<PurchaseOrderLineItemsProps> = ({ 
     }
   };
 
+  const handleExport = async () => {
+    try {
+      await exportPurchaseOrderLineItems(poId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to export line items');
+    }
+  };
+
   const getStatusColor = (status: string | null) => {
     switch (status?.toLowerCase()) {
       case 'received': return 'bg-green-100 text-green-700 border-green-200';
@@ -217,15 +226,24 @@ export const PurchaseOrderLineItems: React.FC<PurchaseOrderLineItemsProps> = ({ 
             {lineItems.length} ITEMS
           </span>
         </div>
-        {canManage && (
+        <div className="flex gap-4">
           <button
-            onClick={handleAddClick}
-            className="px-6 py-2 bg-primary text-on-primary font-bold rounded-lg shadow hover:opacity-90 active:scale-95 transition-all flex items-center gap-2 text-sm"
+            onClick={handleExport}
+            className="px-6 py-2 bg-secondary-container text-on-secondary-container font-bold rounded-lg shadow hover:opacity-90 active:scale-95 transition-all flex items-center gap-2 text-sm"
           >
-            <span className="material-symbols-outlined text-sm">add</span>
-            Add Item
+            <span className="material-symbols-outlined text-sm">file_download</span>
+            Export
           </button>
-        )}
+          {canManage && (
+            <button
+              onClick={handleAddClick}
+              className="px-6 py-2 bg-primary text-on-primary font-bold rounded-lg shadow hover:opacity-90 active:scale-95 transition-all flex items-center gap-2 text-sm"
+            >
+              <span className="material-symbols-outlined text-sm">add</span>
+              Add Item
+            </button>
+          )}
+        </div>
       </div>
 
       {error && <AlertMessage variant="danger" message={error} onClose={() => setError(null)} />}

@@ -26,6 +26,16 @@ export default function FreightRatesList() {
     }
   }
 
+  const handleExport = async () => {
+    try {
+      await freightContractRatesApi.export({
+        'q[carrier_name_or_origin_port_or_destination_port_cont]': search
+      })
+    } catch (err: any) {
+      setError(err.message || 'Failed to export freight rates')
+    }
+  }
+
   useEffect(() => {
     fetchRates()
   }, [search])
@@ -52,6 +62,13 @@ export default function FreightRatesList() {
           <p className="text-on-surface-variant font-light tracking-wide">Manage pre-negotiated carrier rates for automated booking.</p>
         </div>
         <div className="flex gap-4">
+          <button
+            onClick={handleExport}
+            className="flex items-center gap-2 px-6 py-3 bg-secondary-container text-on-secondary-container rounded-lg font-medium hover:opacity-90 transition-opacity"
+          >
+            <span className="material-symbols-outlined">file_download</span>
+            <span>Export</span>
+          </button>
           <button
             onClick={() => navigate('/settings/freight-rates/new')}
             className="flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-lg font-bold ambient-shadow hover:scale-[1.02] transition-transform"

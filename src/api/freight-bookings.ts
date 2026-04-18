@@ -1,4 +1,5 @@
 import { api } from './client'
+import { API_ROUTES } from '../config'
 import type { FreightBooking, FreightBookingRate, FreightBookingWithSummary, FreightBookingDetail } from '../types/api'
 
 export interface BookingDraftResponse {
@@ -52,5 +53,13 @@ export const freightBookingsApi = {
 
   delete: async (poId: number, bookingId: number) => {
     await api.delete(`/api/v1/purchase_orders/${poId}/freight_bookings/${bookingId}`)
+  },
+
+  export: async (params?: { status?: string }) => {
+    let url = API_ROUTES.FREIGHT_BOOKINGS_EXPORT
+    if (params?.status) {
+      url += `?status=${params.status}`
+    }
+    return api.download(url)
   }
 }

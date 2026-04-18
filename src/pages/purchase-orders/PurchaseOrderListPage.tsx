@@ -5,6 +5,7 @@ import { AlertMessage, ConfirmationModal } from '../../components/common'
 import {
   searchPurchaseOrders,
   deletePurchaseOrder,
+  exportPurchaseOrders,
 } from '../../api/purchase-orders'
 import type {
   PurchaseOrderResponse,
@@ -180,6 +181,56 @@ export function PurchaseOrderListPage() {
         setSortDir('asc')
       }
       setPage(1)
+    }
+
+    const handleExport = async () => {
+      try {
+        const conditions: any[] = []
+        if (poNumber.trim()) {
+          conditions.push({ field: 'po_number', pred: 'i_cont', value: poNumber.trim() })
+        }
+        if (vendorId.trim()) {
+          conditions.push({ field: 'vendor_id', pred: 'eq', value: vendorId.trim() })
+        }
+        if (shippingMethod.trim()) {
+          conditions.push({ field: 'shipping_method', pred: 'eq', value: shippingMethod.trim() })
+        }
+        if (carrier.trim()) {
+          conditions.push({ field: 'carrier', pred: 'i_cont', value: carrier.trim() })
+        }
+        if (trackingNumber.trim()) {
+          conditions.push({ field: 'tracking_number', pred: 'i_cont', value: trackingNumber.trim() })
+        }
+        if (totalAmountMin.trim()) {
+          conditions.push({ field: 'total_amount', pred: 'gteq', value: totalAmountMin.trim() })
+        }
+        if (totalAmountMax.trim()) {
+          conditions.push({ field: 'total_amount', pred: 'lteq', value: totalAmountMax.trim() })
+        }
+
+        const exportParams: any = {
+          export_scope: 'all',
+          q: searchTerm.trim() || undefined,
+          status: statusFilter !== 'all' ? statusFilter : undefined,
+          po_type: poTypeFilter !== 'all' ? poTypeFilter : undefined,
+          order_date_from: orderDateFrom || undefined,
+          order_date_to: orderDateTo || undefined,
+          sort_by: sortKey,
+          sort_dir: sortDir,
+        }
+
+        // For nested objects in GET params, we might need to handle them specially 
+        // depending on how the server expects them. 
+        // Here we'll just pass them and exportPurchaseOrders uses URLSearchParams
+        if (conditions.length > 0) {
+          exportParams.conditions = conditions
+        }
+
+        await exportPurchaseOrders(exportParams)
+      } catch (err) {
+        console.error('Failed to export purchase orders:', err)
+        setError(err instanceof Error ? err.message : 'Failed to export purchase orders')
+      }
     }
 
     const handleFilterClick = (e: React.MouseEvent, type: 'status' | 'po_type' | 'method' | 'carrier', value: string) => {
@@ -359,7 +410,10 @@ export function PurchaseOrderListPage() {
           <p className="text-on-surface-variant font-light tracking-wide">Manage and curate your global procurement workflow.</p>
         </div>
         <div className="flex gap-4">
-          <button className="flex items-center gap-2 px-6 py-3 bg-secondary-container text-on-secondary-container rounded-lg font-medium hover:opacity-90 transition-opacity">
+          <button 
+            onClick={handleExport}
+            className="flex items-center gap-2 px-6 py-3 bg-secondary-container text-on-secondary-container rounded-lg font-medium hover:opacity-90 transition-opacity"
+          >
             <span className="material-symbols-outlined">file_download</span>
             <span>Export</span>
           </button>

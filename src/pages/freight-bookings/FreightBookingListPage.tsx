@@ -64,6 +64,14 @@ export function FreightBookingListPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [search, setSearch] = useState('')
 
+  const handleExport = async () => {
+    try {
+      await freightBookingsApi.export(statusFilter !== 'all' ? { status: statusFilter } : undefined)
+    } catch (err: any) {
+      console.error('Failed to export freight bookings:', err)
+    }
+  }
+
   useEffect(() => {
     if (!isAuth) return
     setLoading(true)
@@ -98,6 +106,13 @@ export function FreightBookingListPage() {
           <h1 className="text-3xl font-extrabold tracking-tight text-on-primary-container">Freight Bookings</h1>
           <p className="text-on-surface-variant text-sm mt-1">All shipment bookings across purchase orders</p>
         </div>
+        <button 
+          onClick={handleExport}
+          className="flex items-center gap-2 px-6 py-3 bg-secondary-container text-on-secondary-container rounded-lg font-medium hover:opacity-90 transition-opacity"
+        >
+          <span className="material-symbols-outlined">file_download</span>
+          <span>Export</span>
+        </button>
       </header>
 
       {/* Summary stats */}

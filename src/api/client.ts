@@ -264,6 +264,42 @@ export const api = {
   // For when you need the whole envelope (like for pagination meta)
   requestFull: <T, M = Record<string, never>>(endpoint: string, options: RequestInit = {}) =>
     apiRequest<T, M>(endpoint, options, true),
+
+  download: async (endpoint: string, filename?: string) => {
+    const url = `${API_BASE_URL}${endpoint}`
+    const token = storage.getToken()
+    const headers: Record<string, string> = {
+      'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/octet-stream',
+    }
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+
+    const response = await fetch(url, { headers })
+    if (!response.ok) {
+      throw new Error(`Failed to download file: ${response.statusText}`)
+    }
+
+    const blob = await response.blob()
+    const downloadUrl = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = downloadUrl
+    
+    // Try to get filename from content-disposition header
+    const disposition = response.headers.get('content-disposition')
+    let finalFilename = filename || 'download.xlsx'
+    if (disposition && disposition.includes('filename=')) {
+      const match = disposition.match(/filename="?([^"]+)"?/)
+      if (match?.[1]) finalFilename = match[1]
+    }
+    
+    link.setAttribute('download', finalFilename)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(downloadUrl)
+  }
 }
 
 export { storage }

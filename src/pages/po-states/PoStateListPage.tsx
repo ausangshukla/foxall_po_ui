@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth, useRequireAuth } from '../../contexts/AuthContext'
 import { LoadingSpinner, AlertMessage, ConfirmationModal } from '../../components/common'
-import { listPoStates, deletePoState } from '../../api/po-states'
+import { listPoStates, deletePoState, exportPoStates } from '../../api/po-states'
 import { listEntities } from '../../api/entities'
 import type { PoStateResponse, EntityResponse } from '../../types/api'
 
@@ -34,6 +34,14 @@ export function PoStateListPage() {
     } else {
       setSortKey(key)
       setSortDir('asc')
+    }
+  }
+
+  const handleExport = async () => {
+    try {
+      await exportPoStates()
+    } catch (err) {
+      console.error('Failed to export PO states:', err)
     }
   }
 
@@ -126,6 +134,13 @@ export function PoStateListPage() {
           <p className="text-on-surface-variant font-light tracking-wide">Manage your custom PO lifecycle states.</p>
         </div>
         <div className="flex gap-4">
+          <button 
+            onClick={handleExport}
+            className="flex items-center gap-2 px-6 py-3 bg-secondary-container text-on-secondary-container rounded-lg font-medium hover:opacity-90 transition-opacity"
+          >
+            <span className="material-symbols-outlined">file_download</span>
+            <span>Export</span>
+          </button>
           <button
             onClick={() => navigate('/po-states/new')}
             className="flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-lg font-bold ambient-shadow hover:scale-[1.02] transition-transform"

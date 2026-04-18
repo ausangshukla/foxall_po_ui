@@ -44,3 +44,7 @@ export async function getCustomFieldDefinitions(
     : `${API_ROUTES.CUSTOM_FIELD_DEFINITIONS}?resource_name=${resourceName}`
   return api.get<CustomFieldDefinition[]>(url)
 }
+
+export async function exportCustomFieldDefinitions(): Promise<void> {
+  return api.download(API_ROUTES.CUSTOM_FIELD_DEFINITIONS_EXPORT)
+}

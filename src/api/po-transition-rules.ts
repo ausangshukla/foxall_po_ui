@@ -30,3 +30,7 @@ export async function updatePoTransitionRule(
 export async function deletePoTransitionRule(id: number): Promise<string> {
   return api.delete<string>(API_ROUTES.PO_TRANSITION_RULE(id))
 }
+
+export async function exportPoTransitionRules(): Promise<void> {
+  return api.download(API_ROUTES.PO_TRANSITION_RULES_EXPORT)
+}

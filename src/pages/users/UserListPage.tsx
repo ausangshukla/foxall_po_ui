@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth, useRequireAuth } from '../../contexts/AuthContext'
 import { LoadingSpinner, AlertMessage, ConfirmationModal } from '../../components/common'
-import { listUsers, deleteUser } from '../../api/users'
+import { listUsers, deleteUser, exportUsers } from '../../api/users'
 import { listEntities } from '../../api/entities'
 import type { UserResponse, EntityResponse } from '../../types/api'
 
@@ -27,6 +27,14 @@ export function UserListPage() {
     } else {
       setSortKey(key)
       setSortDir('asc')
+    }
+  }
+
+  const handleExport = async () => {
+    try {
+      await exportUsers()
+    } catch (err) {
+      console.error('Failed to export users:', err)
     }
   }
 
@@ -131,6 +139,13 @@ export function UserListPage() {
           <p className="text-on-surface-variant font-light tracking-wide">Manage platform users, roles and their access permissions.</p>
         </div>
         <div className="flex gap-4">
+          <button 
+            onClick={handleExport}
+            className="flex items-center gap-2 px-6 py-3 bg-secondary-container text-on-secondary-container rounded-lg font-medium hover:opacity-90 transition-opacity"
+          >
+            <span className="material-symbols-outlined">file_download</span>
+            <span>Export</span>
+          </button>
           {canManageUsers() && (
             <button
               onClick={() => navigate('/users/new')}

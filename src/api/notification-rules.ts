@@ -30,3 +30,7 @@ export async function updateNotificationRule(
 export async function deleteNotificationRule(id: number): Promise<string> {
   return api.delete<string>(API_ROUTES.NOTIFICATION_RULE(id))
 }
+
+export async function exportNotificationRules(): Promise<void> {
+  return api.download(API_ROUTES.NOTIFICATION_RULES_EXPORT)
+}

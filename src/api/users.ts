@@ -30,3 +30,7 @@ export async function updateUser(
 export async function deleteUser(id: number): Promise<string> {
   return api.delete<string>(API_ROUTES.USER(id))
 }
+
+export async function exportUsers(): Promise<void> {
+  return api.download(API_ROUTES.USERS_EXPORT)
+}

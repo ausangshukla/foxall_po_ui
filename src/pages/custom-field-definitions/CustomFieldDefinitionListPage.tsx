@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth, useRequireAuth } from '../../contexts/AuthContext'
 import { LoadingSpinner, AlertMessage, ConfirmationModal } from '../../components/common'
-import { listCustomFieldDefinitions, deleteCustomFieldDefinition } from '../../api/custom-fields'
+import { listCustomFieldDefinitions, deleteCustomFieldDefinition, exportCustomFieldDefinitions } from '../../api/custom-fields'
 import type { CustomFieldDefinition } from '../../types/api'
 
 export function CustomFieldDefinitionListPage() {
@@ -16,6 +16,14 @@ export function CustomFieldDefinitionListPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
+  const handleExport = async () => {
+    try {
+      await exportCustomFieldDefinitions()
+    } catch (err) {
+      console.error('Failed to export custom field definitions:', err)
+    }
+  }
 
   useEffect(() => {
     if (!isAuth) return
@@ -93,6 +101,13 @@ export function CustomFieldDefinitionListPage() {
           <p className="text-on-surface-variant font-light tracking-wide">Manage dynamic fields for your system resources.</p>
         </div>
         <div className="flex gap-4">
+          <button 
+            onClick={handleExport}
+            className="flex items-center gap-2 px-6 py-3 bg-secondary-container text-on-secondary-container rounded-lg font-medium hover:opacity-90 transition-opacity"
+          >
+            <span className="material-symbols-outlined">file_download</span>
+            <span>Export</span>
+          </button>
           <button
             onClick={() => navigate('/custom-field-definitions/new')}
             data-test-id="custom-field-definition-create"

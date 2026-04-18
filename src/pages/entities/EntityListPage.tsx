@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth, useRequireAuth } from '../../contexts/AuthContext'
 import { LoadingSpinner, AlertMessage, ConfirmationModal } from '../../components/common'
-import { listEntities, deleteEntity } from '../../api/entities'
+import { listEntities, deleteEntity, exportEntities } from '../../api/entities'
 import { listUsers } from '../../api/users'
 import type { EntityResponse, UserResponse } from '../../types/api'
 
@@ -34,6 +34,14 @@ export function EntityListPage() {
     } else {
       setSortKey(key)
       setSortDir('asc')
+    }
+  }
+
+  const handleExport = async () => {
+    try {
+      await exportEntities()
+    } catch (err) {
+      console.error('Failed to export entities:', err)
     }
   }
 
@@ -129,7 +137,10 @@ export function EntityListPage() {
           <p className="text-on-surface-variant font-light tracking-wide">Manage and curate your global procurement workflow.</p>
         </div>
         <div className="flex gap-4">
-          <button className="flex items-center gap-2 px-6 py-3 bg-secondary-container text-on-secondary-container rounded-lg font-medium hover:opacity-90 transition-opacity">
+          <button 
+            onClick={handleExport}
+            className="flex items-center gap-2 px-6 py-3 bg-secondary-container text-on-secondary-container rounded-lg font-medium hover:opacity-90 transition-opacity"
+          >
             <span className="material-symbols-outlined">file_download</span>
             <span>Export</span>
           </button>

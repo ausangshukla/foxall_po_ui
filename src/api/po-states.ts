@@ -30,3 +30,7 @@ export async function updatePoState(
 export async function deletePoState(id: number): Promise<string> {
   return api.delete<string>(API_ROUTES.PO_STATE(id))
 }
+
+export async function exportPoStates(): Promise<void> {
+  return api.download(API_ROUTES.PO_STATES_EXPORT)
+}

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth, useRequireAuth } from '../../contexts/AuthContext'
 import { LoadingSpinner, AlertMessage, ConfirmationModal } from '../../components/common'
-import { listExternalParties, deleteExternalParty } from '../../api/external-parties'
+import { listExternalParties, deleteExternalParty, exportExternalParties } from '../../api/external-parties'
 import type { ExternalPartyResponse, ExternalPartyType } from '../../types/api'
 
 const PARTY_TYPE_CONFIG: Record<ExternalPartyType, { icon: string; bg: string; text: string; label: string }> = {
@@ -31,6 +31,14 @@ export function ExternalPartyListPage() {
   const toggleSort = (key: keyof ExternalPartyResponse) => {
     if (sortKey === key) setSortDir(sortDir === 'asc' ? 'desc' : 'asc')
     else { setSortKey(key); setSortDir('asc') }
+  }
+
+  const handleExport = async () => {
+    try {
+      await exportExternalParties()
+    } catch (err) {
+      console.error('Failed to export external parties:', err)
+    }
   }
 
   useEffect(() => {
@@ -90,9 +98,18 @@ export function ExternalPartyListPage() {
           <h1 className="text-4xl font-extrabold tracking-tight text-on-primary-container mb-2 font-headline">External Parties</h1>
           <p className="text-on-surface-variant font-light tracking-wide">Manage vendors, logistics providers, and carriers.</p>
         </div>
-        <button onClick={() => navigate('/external-parties/new')} className="flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-lg font-bold ambient-shadow hover:scale-[1.02] transition-transform">
-          <span className="material-symbols-outlined">add</span><span>Add External Party</span>
-        </button>
+        <div className="flex gap-4">
+          <button 
+            onClick={handleExport}
+            className="flex items-center gap-2 px-6 py-3 bg-secondary-container text-on-secondary-container rounded-lg font-medium hover:opacity-90 transition-opacity"
+          >
+            <span className="material-symbols-outlined">file_download</span>
+            <span>Export</span>
+          </button>
+          <button onClick={() => navigate('/external-parties/new')} className="flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-lg font-bold ambient-shadow hover:scale-[1.02] transition-transform">
+            <span className="material-symbols-outlined">add</span><span>Add External Party</span>
+          </button>
+        </div>
       </section>
 
       <section className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-16">

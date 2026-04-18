@@ -30,3 +30,7 @@ export async function updateEntity(
 export async function deleteEntity(id: number): Promise<string> {
   return api.delete<string>(API_ROUTES.ENTITY(id))
 }
+
+export async function exportEntities(): Promise<void> {
+  return api.download(API_ROUTES.ENTITIES_EXPORT)
+}

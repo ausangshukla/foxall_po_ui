@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth, useRequireAuth } from '../../contexts/AuthContext'
 import { LoadingSpinner, AlertMessage, ConfirmationModal, Modal } from '../../components/common'
-import { listPoTransitionRules, deletePoTransitionRule } from '../../api/po-transition-rules'
+import { listPoTransitionRules, deletePoTransitionRule, exportPoTransitionRules } from '../../api/po-transition-rules'
 import { listPoStates } from '../../api/po-states'
 import { listEntities } from '../../api/entities'
 import type { PoTransitionRuleResponse, PoStateResponse, EntityResponse } from '../../types/api'
@@ -142,6 +142,14 @@ export function PoTransitionRuleListPage() {
     }
   }
 
+  const handleExport = async () => {
+    try {
+      await exportPoTransitionRules()
+    } catch (err) {
+      console.error('Failed to export transition rules:', err)
+    }
+  }
+
   const getSortIndicator = (key: keyof PoTransitionRuleResponse) => {
     if (sortKey !== key) return <span className="material-symbols-outlined text-outline text-xs ml-1">unfold_more</span>
     return <span className="material-symbols-outlined text-primary text-xs ml-1">{sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward'}</span>
@@ -158,6 +166,13 @@ export function PoTransitionRuleListPage() {
           <p className="text-on-surface-variant font-light tracking-wide">The authorization backbone of your Purchase Order lifecycle.</p>
         </div>
         <div className="flex gap-4">
+          <button 
+            onClick={handleExport}
+            className="flex items-center gap-2 px-6 py-3 bg-secondary-container text-on-secondary-container rounded-lg font-medium hover:opacity-90 transition-opacity"
+          >
+            <span className="material-symbols-outlined">file_download</span>
+            <span>Export</span>
+          </button>
           <button
             onClick={() => navigate('/po-transition-rules/new')}
             className="flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-lg font-bold ambient-shadow hover:scale-[1.02] transition-transform"

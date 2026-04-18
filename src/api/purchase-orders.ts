@@ -75,3 +75,34 @@ export async function transitionPurchaseOrder(
 export async function getPurchaseOrderTransitionAttempts(id: number): Promise<PurchaseOrderTransitionAttemptsResponse> {
   return api.get<PurchaseOrderTransitionAttemptsResponse>(API_ROUTES.PURCHASE_ORDER_TRANSITION_ATTEMPTS(id))
 }
+
+export async function exportPurchaseOrders(params?: Record<string, any>): Promise<void> {
+  let url = API_ROUTES.PURCHASE_ORDERS_EXPORT
+  if (params) {
+    const query = new URLSearchParams()
+    
+    const appendParam = (prefix: string, value: any) => {
+      if (value === undefined || value === null || value === '') return
+
+      if (Array.isArray(value)) {
+        value.forEach((item, index) => {
+          appendParam(`${prefix}[${index}]`, item)
+        })
+      } else if (typeof value === 'object' && value !== null) {
+        Object.entries(value).forEach(([k, v]) => {
+          appendParam(`${prefix}[${k}]`, v)
+        })
+      } else {
+        query.append(prefix, value.toString())
+      }
+    }
+
+    Object.entries(params).forEach(([key, value]) => {
+      appendParam(key, value)
+    })
+    
+    const queryString = query.toString()
+    if (queryString) url += `?${queryString}`
+  }
+  return api.download(url)
+}

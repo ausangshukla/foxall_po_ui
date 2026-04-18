@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth, useRequireAuth } from '../../contexts/AuthContext'
 import { LoadingSpinner, AlertMessage, ConfirmationModal } from '../../components/common'
-import { listNotificationRules, deleteNotificationRule } from '../../api/notification-rules'
+import { listNotificationRules, deleteNotificationRule, exportNotificationRules } from '../../api/notification-rules'
 import { listEntities } from '../../api/entities'
 import { listPoStates } from '../../api/po-states'
 import type { NotificationRuleResponse, EntityResponse, PoStateResponse } from '../../types/api'
@@ -42,6 +42,14 @@ export function NotificationRuleListPage() {
     } else {
       setSortKey(key)
       setSortDir('asc')
+    }
+  }
+
+  const handleExport = async () => {
+    try {
+      await exportNotificationRules()
+    } catch (err) {
+      console.error('Failed to export notification rules:', err)
     }
   }
 
@@ -140,6 +148,13 @@ export function NotificationRuleListPage() {
           <p className="text-on-surface-variant font-light tracking-wide">Configure automated notifications for your PO lifecycle.</p>
         </div>
         <div className="flex gap-4">
+          <button 
+            onClick={handleExport}
+            className="flex items-center gap-2 px-6 py-3 bg-secondary-container text-on-secondary-container rounded-lg font-medium hover:opacity-90 transition-opacity"
+          >
+            <span className="material-symbols-outlined">file_download</span>
+            <span>Export</span>
+          </button>
           <button
             onClick={() => navigate('/notification-rules/new')}
             className="flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-lg font-bold ambient-shadow hover:scale-[1.02] transition-transform"

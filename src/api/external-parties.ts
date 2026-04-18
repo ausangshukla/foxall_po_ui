@@ -36,3 +36,7 @@ export async function listExternalPartiesForPO(
 ): Promise<ExternalPartyResponse[]> {
   return api.get<ExternalPartyResponse[]>(API_ROUTES.EXTERNAL_PARTIES_FOR_PO(poId))
 }
+
+export async function exportExternalParties(): Promise<void> {
+  return api.download(API_ROUTES.EXTERNAL_PARTIES_EXPORT)
+}

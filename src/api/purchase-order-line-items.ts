@@ -43,3 +43,8 @@ export async function deletePurchaseOrderLineItem(
 ): Promise<void> {
   return api.delete<void>(API_ROUTES.PURCHASE_ORDER_LINE_ITEM(poId, id))
 }
+
+export async function exportPurchaseOrderLineItems(poId: number): Promise<void> {
+  const url = `${API_ROUTES.PURCHASE_ORDER_LINE_ITEMS(poId)}/export`
+  return api.download(url)
+}

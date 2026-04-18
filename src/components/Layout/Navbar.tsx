@@ -8,10 +8,21 @@ export function AppNavbar() {
   const location = useLocation()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const [isMoreOpen, setIsMoreOpen] = useState(false)
 
   const handleLogout = () => {
     logout()
     navigate('/login')
+  }
+
+  const toggleMore = () => {
+    setIsMoreOpen(!isMoreOpen)
+    setIsProfileOpen(false)
+  }
+
+  const toggleProfile = () => {
+    setIsProfileOpen(!isProfileOpen)
+    setIsMoreOpen(false)
   }
 
   const isActive = (path: string) => {
@@ -52,44 +63,33 @@ export function AppNavbar() {
               </Link>
             )}
             {canManageUsers() && (
-              <Link to="/entities" className={linkClass('/entities')}>
-                Entities
-              </Link>
-            )}
-            {canManageUsers() && (
-              <Link to="/users" className={linkClass('/users')}>
-                Users
-              </Link>
-            )}
-            {canManageUsers() && (
-              <Link to="/custom-field-definitions" className={linkClass('/custom-field-definitions')}>
-                Custom Fields
-              </Link>
-            )}
-            {canManageUsers() && (
-              <Link to="/external-parties" className={linkClass('/external-parties')}>
-                Parties
-              </Link>
-            )}
-            {canManageUsers() && (
-              <Link to="/notification-rules" className={linkClass('/notification-rules')}>
-                Rules
-              </Link>
-            )}
-            {canManageUsers() && (
-              <Link to="/po-states" className={linkClass('/po-states')}>
-                States
-              </Link>
-            )}
-            {canManageUsers() && (
-              <Link to="/po-transition-rules" className={linkClass('/po-transition-rules')}>
-                Transitions
-              </Link>
-            )}
-            {canManageUsers() && (
               <Link to="/settings/freight-rates" className={linkClass('/settings/freight-rates')}>
-                Freight Rates
+                Rates
               </Link>
+            )}
+            {canManageUsers() && (
+              <div className="relative">
+                <button 
+                  onClick={toggleMore}
+                  className={`flex items-center gap-1 transition-colors font-bold tracking-tight text-sm ${isMoreOpen || isActive('/entities') || isActive('/users') || isActive('/custom-field-definitions') || isActive('/external-parties') || isActive('/notification-rules') || isActive('/po-states') || isActive('/po-transition-rules') ? 'text-emerald-700' : 'text-slate-500 hover:text-emerald-700'}`}
+                >
+                  More
+                  <span className={`material-symbols-outlined text-sm transition-transform ${isMoreOpen ? 'rotate-180' : ''}`}>
+                    expand_more
+                  </span>
+                </button>
+                {isMoreOpen && (
+                  <div className="absolute left-0 z-50 mt-2 w-56 origin-top-left rounded-xl bg-white py-2 shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none text-slate-800 border border-slate-100 animate-in fade-in slide-in-from-top-2">
+                    <Link to="/entities" className={`block px-4 py-2 text-sm font-bold hover:bg-slate-50 transition-colors ${isActive('/entities') ? 'text-emerald-700 bg-emerald-50/50' : 'text-slate-700'}`} onClick={() => setIsMoreOpen(false)}>Entities</Link>
+                    <Link to="/users" className={`block px-4 py-2 text-sm font-bold hover:bg-slate-50 transition-colors ${isActive('/users') ? 'text-emerald-700 bg-emerald-50/50' : 'text-slate-700'}`} onClick={() => setIsMoreOpen(false)}>Users</Link>
+                    <Link to="/custom-field-definitions" className={`block px-4 py-2 text-sm font-bold hover:bg-slate-50 transition-colors ${isActive('/custom-field-definitions') ? 'text-emerald-700 bg-emerald-50/50' : 'text-slate-700'}`} onClick={() => setIsMoreOpen(false)}>Custom Fields</Link>
+                    <Link to="/external-parties" className={`block px-4 py-2 text-sm font-bold hover:bg-slate-50 transition-colors ${isActive('/external-parties') ? 'text-emerald-700 bg-emerald-50/50' : 'text-slate-700'}`} onClick={() => setIsMoreOpen(false)}>Parties</Link>
+                    <Link to="/notification-rules" className={`block px-4 py-2 text-sm font-bold hover:bg-slate-50 transition-colors ${isActive('/notification-rules') ? 'text-emerald-700 bg-emerald-50/50' : 'text-slate-700'}`} onClick={() => setIsMoreOpen(false)}>Rules</Link>
+                    <Link to="/po-states" className={`block px-4 py-2 text-sm font-bold hover:bg-slate-50 transition-colors ${isActive('/po-states') ? 'text-emerald-700 bg-emerald-50/50' : 'text-slate-700'}`} onClick={() => setIsMoreOpen(false)}>States</Link>
+                    <Link to="/po-transition-rules" className={`block px-4 py-2 text-sm font-bold hover:bg-slate-50 transition-colors ${isActive('/po-transition-rules') ? 'text-emerald-700 bg-emerald-50/50' : 'text-slate-700'}`} onClick={() => setIsMoreOpen(false)}>Transitions</Link>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -105,7 +105,7 @@ export function AppNavbar() {
               </button>
               <div className="relative">
                 <button 
-                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  onClick={toggleProfile}
                   className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center overflow-hidden border-2 border-white shadow-sm hover:scale-105 transition-transform"
                 >
                   <img 
