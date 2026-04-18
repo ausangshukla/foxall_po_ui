@@ -26,7 +26,7 @@ export const freightBookingsApi = {
     return api.get<BookingDraftResponse>(`/api/v1/purchase_orders/${poId}/booking_draft`)
   },
 
-  getRates: async (poId: number, params: { transport_mode: string; container_type?: string; destination_port?: string }) => {
+  getRates: async (poId: number, params: { transport_mode: string; container_type?: string; origin_port?: string; destination_port?: string }) => {
     return api.post<FreightBookingRate[]>(`/api/v1/purchase_orders/${poId}/booking_draft/rates`, params)
   },
 

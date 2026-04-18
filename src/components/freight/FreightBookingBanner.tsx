@@ -1,18 +1,34 @@
 import { useState, useEffect } from 'react'
 import { freightBookingsApi } from '../../api/freight-bookings'
 import type { BookingDraftResponse } from '../../api/freight-bookings'
-import FreightBookingWizard from './FreightBookingWizard'
+import { FreightBookingWizard } from './FreightBookingWizard'
 
 interface Props {
   poId: number
+  poStateCode: string
   onConfirm: () => void
 }
 
-export function FreightBookingBanner({ poId, onConfirm }: Props) {
+export function FreightBookingBanner({ poId, poStateCode, onConfirm }: Props) {
   const [draft, setDraft] = useState<BookingDraftResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [confirming, setConfirming] = useState(false)
   const [wizardOpen, setWizardOpen] = useState(false)
+
+  useEffect(() => {
+    (window as any).openFreightWizard = () => setWizardOpen(true);
+    return () => { delete (window as any).openFreightWizard; };
+  }, []);
+
+  const onSuccess = (data: any) => {
+    // If the response is a full PO object (standard for our creates)
+    if (data && data.po_number && (window as any).setPurchaseOrder) {
+      (window as any).setPurchaseOrder(data)
+    }
+    setWizardOpen(false)
+    fetchDraft()
+    onConfirm()
+  }
 
   const fetchDraft = async () => {
     try {
@@ -94,11 +110,7 @@ export function FreightBookingBanner({ poId, onConfirm }: Props) {
           <FreightBookingWizard 
             poId={poId} 
             onClose={() => setWizardOpen(false)} 
-            onSuccess={() => {
-              setWizardOpen(false)
-              fetchDraft() // Refresh the local draft state
-              onConfirm()  // Refresh the parent PO state
-            }} 
+            onSuccess={onSuccess} 
           />
         )}
       </>
@@ -106,20 +118,24 @@ export function FreightBookingBanner({ poId, onConfirm }: Props) {
   }
 
   // If no contract rate OR if we are in a freight state without a booking record
+  const isInFreightState = !['goods_ready_approved', 'draft', 'pending_approval', 'approved', 'sent_to_seller', 'seller_confirmed', 'seller_confirmed_partial', 'ready_to_ship'].includes(poStateCode)
+
   return (
     <>
-      <div className="bg-primary-container/10 border border-primary-container/20 rounded-2xl p-6 mb-8 flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
+      <div className={`${isInFreightState ? 'bg-amber-50 border-amber-200' : 'bg-primary-container/10 border-primary-container/20'} border rounded-2xl p-6 mb-8 flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4 duration-500`}>
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-primary-container/20 flex items-center justify-center text-primary">
-            <span className="material-symbols-outlined text-3xl">{isNoBookingInFreightState ? 'warning' : 'smart_toy'}</span>
+          <div className={`w-12 h-12 rounded-full ${isInFreightState ? 'bg-amber-100 text-amber-600' : 'bg-primary-container/20 text-primary'} flex items-center justify-center`}>
+            <span className="material-symbols-outlined text-3xl">{isInFreightState || isNoBookingInFreightState ? 'warning' : 'smart_toy'}</span>
           </div>
           <div>
-            <h3 className="text-on-primary-container font-bold text-lg">
-              {isNoBookingInFreightState ? 'Missing Freight Booking' : 'Ready to Book Freight'}
+            <h3 className={`${isInFreightState ? 'text-amber-900' : 'text-on-primary-container'} font-bold text-lg`}>
+              {isNoBookingInFreightState ? 'Missing Freight Booking' : isInFreightState ? 'Incomplete Freight Booking' : 'Ready to Book Freight'}
             </h3>
-            <p className="text-on-surface-variant text-sm">
+            <p className={`${isInFreightState ? 'text-amber-700' : 'text-on-surface-variant'} text-sm`}>
               {isNoBookingInFreightState 
                 ? 'This PO is in a freight state but no booking record was found. Please create one.'
+                : isInFreightState
+                ? 'This PO is marked as Freight Booked but the booking details are still in draft. Please complete the booking.'
                 : `AI recommends ${draft?.recommendation.transport_mode.replace('_', ' ').toUpperCase()}. ${draft?.recommendation.rationale}`
               }
             </p>
@@ -127,21 +143,17 @@ export function FreightBookingBanner({ poId, onConfirm }: Props) {
         </div>
         <button
           onClick={() => setWizardOpen(true)}
-          className="bg-primary text-on-primary px-8 py-2.5 rounded-xl text-sm font-bold hover:opacity-90 transition-all shadow-md active:scale-[0.98] flex items-center gap-2"
+          className={`${isInFreightState ? 'bg-amber-600' : 'bg-primary'} text-white px-8 py-2.5 rounded-xl text-sm font-bold hover:opacity-90 transition-all shadow-md active:scale-[0.98] flex items-center gap-2`}
         >
           <span className="material-symbols-outlined">directions_boat</span>
-          {isNoBookingInFreightState ? 'Create Booking' : 'Book Freight'}
+          {isNoBookingInFreightState ? 'Create Booking' : isInFreightState ? 'Complete Booking' : 'Book Freight'}
         </button>
       </div>
       {wizardOpen && (
         <FreightBookingWizard 
           poId={poId} 
           onClose={() => setWizardOpen(false)} 
-          onSuccess={() => {
-            setWizardOpen(false)
-            fetchDraft() // Refresh local draft
-            onConfirm()  // Refresh parent PO
-          }} 
+          onSuccess={onSuccess} 
         />
       )}
     </>

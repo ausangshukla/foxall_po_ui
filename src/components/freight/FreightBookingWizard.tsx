@@ -10,7 +10,7 @@ interface FreightBookingWizardProps {
   onSuccess: (booking: FreightBooking) => void
 }
 
-export default function FreightBookingWizard({ poId, onClose, onSuccess }: FreightBookingWizardProps) {
+export function FreightBookingWizard({ poId, onClose, onSuccess }: FreightBookingWizardProps) {
   const [step, setStep] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -25,22 +25,54 @@ export default function FreightBookingWizard({ poId, onClose, onSuccess }: Freig
     destination_port: '',
     etd: '',
     eta: '',
-    notes: ''
+    notes: '',
+    carrier_name: '',
+    total_cost_usd: ''
   })
 
   const [selectedRateId, setSelectedRateId] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (selectedRateId) {
+      const rate = rates.find(r => r.id === selectedRateId)
+      if (rate) {
+        setFormData(prev => ({
+          ...prev,
+          carrier_name: rate.carrier_name,
+          total_cost_usd: String(rate.total_cost_usd)
+        }))
+      }
+    }
+  }, [selectedRateId, rates])
 
   useEffect(() => {
     const fetchDraft = async () => {
       try {
         const response = await freightBookingsApi.getDraft(poId)
         setDraft(response)
-        setFormData(prev => ({
-          ...prev,
-          transport_mode: response.recommendation.transport_mode,
-          container_type: response.recommendation.container_type || '',
-          origin_port: response.purchase_order.origin_city_port || ''
-        }))
+        
+        // If an existing booking exists (even draft), pre-populate the form
+        if (response.booking) {
+          const b = response.booking
+          setFormData({
+            transport_mode: b.transport_mode || response.recommendation.transport_mode,
+            container_type: b.container_type || response.recommendation.container_type || '',
+            origin_port: b.origin_port || response.purchase_order.origin_city_port || '',
+            destination_port: b.destination_port || '',
+            etd: b.etd || '',
+            eta: b.eta || '',
+            notes: b.notes || '',
+            carrier_name: b.carrier_name || '',
+            total_cost_usd: b.total_cost_usd ? String(b.total_cost_usd) : ''
+          })
+        } else {
+          setFormData(prev => ({
+            ...prev,
+            transport_mode: response.recommendation.transport_mode,
+            container_type: response.recommendation.container_type || '',
+            origin_port: response.purchase_order.origin_city_port || ''
+          }))
+        }
       } catch (err: any) {
         setError(err.message || 'Failed to load booking draft')
       } finally {
@@ -57,6 +89,7 @@ export default function FreightBookingWizard({ poId, onClose, onSuccess }: Freig
       const response = await freightBookingsApi.getRates(poId, {
         transport_mode: formData.transport_mode,
         container_type: formData.container_type,
+        origin_port: formData.origin_port,
         destination_port: formData.destination_port
       })
       setRates(response)
@@ -71,17 +104,26 @@ export default function FreightBookingWizard({ poId, onClose, onSuccess }: Freig
   const handleSubmit = async () => {
     setLoading(true)
     try {
-      const selectedRate = rates.find(r => r.id === selectedRateId)
       const bookingData: Partial<FreightBooking> = {
         ...formData,
-        booking_source: 'rate_shopping',
-        agreed_rate_usd: selectedRate?.rate_usd,
-        total_cost_usd: selectedRate?.total_cost_usd,
-        carrier_name: selectedRate?.carrier_name
+        booking_source: selectedRateId ? 'rate_shopping' : (draft?.booking?.booking_source || 'manual_entry'),
+        agreed_rate_usd: Number(formData.total_cost_usd),
+        total_cost_usd: Number(formData.total_cost_usd),
+        carrier_name: formData.carrier_name
       }
-      const response = await freightBookingsApi.create(poId, bookingData)
-      // The backend now returns the full PO object on success
-      onSuccess(response as any)
+      
+      let response;
+      if (draft?.booking?.id) {
+        // Update existing booking
+        response = await freightBookingsApi.update(poId, draft.booking.id, bookingData) as any
+      } else {
+        // Create new booking
+        response = await freightBookingsApi.create(poId, bookingData) as any
+      }
+
+      // Handle both full PO response and single booking response
+      const result = response.data || response
+      onSuccess(result)
     } catch (err: any) {
       setError(err.message || 'Failed to create booking')
       setLoading(false)
@@ -280,7 +322,17 @@ export default function FreightBookingWizard({ poId, onClose, onSuccess }: Freig
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12">
                   <div className="space-y-1">
                     <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Carrier</span>
-                    <p className="font-bold text-lg">{rates.find(r => r.id === selectedRateId)?.carrier_name || 'Manual Entry'}</p>
+                    {selectedRateId ? (
+                      <p className="font-bold text-lg">{formData.carrier_name}</p>
+                    ) : (
+                      <input 
+                        type="text" 
+                        value={formData.carrier_name}
+                        onChange={(e) => setFormData({ ...formData, carrier_name: e.target.value })}
+                        className="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/20 transition-all font-bold"
+                        placeholder="Enter Carrier Name"
+                      />
+                    )}
                   </div>
                   <div className="space-y-1">
                     <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Route</span>
@@ -291,8 +343,18 @@ export default function FreightBookingWizard({ poId, onClose, onSuccess }: Freig
                     <p className="font-bold text-lg uppercase">{formData.transport_mode.replace('_', ' ')} {formData.container_type}</p>
                   </div>
                   <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Total Cost</span>
-                    <p className="font-bold text-lg text-primary">USD {Number(rates.find(r => r.id === selectedRateId)?.total_cost_usd || 0).toLocaleString()}</p>
+                    <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Total Cost (USD)</span>
+                    {selectedRateId ? (
+                      <p className="font-bold text-lg text-primary">USD {Number(formData.total_cost_usd).toLocaleString()}</p>
+                    ) : (
+                      <input 
+                        type="number" 
+                        value={formData.total_cost_usd}
+                        onChange={(e) => setFormData({ ...formData, total_cost_usd: e.target.value })}
+                        className="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/20 transition-all font-bold text-primary"
+                        placeholder="0.00"
+                      />
+                    )}
                   </div>
                 </div>
               </div>
@@ -347,7 +409,7 @@ export default function FreightBookingWizard({ poId, onClose, onSuccess }: Freig
             ) : (
               <button
                 onClick={handleSubmit}
-                disabled={loading}
+                disabled={loading || (!selectedRateId && (!formData.carrier_name || !formData.total_cost_usd))}
                 className="px-8 py-2.5 rounded-xl text-sm font-bold text-on-primary bg-gradient-to-br from-primary to-primary-fixed-dim editorial-shadow hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2"
               >
                 {loading ? <span className="material-symbols-outlined animate-spin">progress_activity</span> : <span className="material-symbols-outlined">send</span>}

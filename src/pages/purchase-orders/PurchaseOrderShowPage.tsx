@@ -56,6 +56,12 @@ export function PurchaseOrderShowPage() {
   const poId = id ? parseInt(id, 10) : null
 
   const [purchaseOrder, setPurchaseOrder] = useState<PurchaseOrderResponse | null>(null)
+  
+  // Expose setPurchaseOrder to window for child components to trigger global refreshes
+  useEffect(() => {
+    (window as any).setPurchaseOrder = setPurchaseOrder;
+    return () => { delete (window as any).setPurchaseOrder; };
+  }, []);
   const [fieldDefinitions, setFieldDefinitions] = useState<CustomFieldDefinition[]>([])
   const [availableActions, setAvailableActions] = useState<PurchaseOrderAvailableAction[]>([])
   const [transitionAttempts, setTransitionAttempts] = useState<PoTransitionAttemptResponse[]>([])

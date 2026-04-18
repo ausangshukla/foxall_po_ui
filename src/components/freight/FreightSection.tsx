@@ -28,7 +28,7 @@ export function FreightSection({ poId, poStateCode, onStateChange }: Props) {
          If in a freight state but booking record is missing, 
          the Banner will show a "Create Booking" trigger.
       */}
-      <FreightBookingBanner poId={poId} onConfirm={onStateChange} />
+      <FreightBookingBanner poId={poId} poStateCode={poStateCode} onConfirm={onStateChange} />
       
       {isFreightState && (
         <div className="glass-panel rounded-3xl ambient-shadow border border-outline-variant/20 overflow-hidden mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -59,7 +59,7 @@ export function FreightSection({ poId, poStateCode, onStateChange }: Props) {
 
           <div className="p-8">
             {(!hasTracking || activeTab === 'booking') && (
-              <FreightBookingCard poId={poId} />
+              <FreightBookingCard poId={poId} onUpdate={onStateChange} />
             )}
             {hasTracking && activeTab === 'tracking' && (
               <ShipmentTrackingSection poId={poId} />
