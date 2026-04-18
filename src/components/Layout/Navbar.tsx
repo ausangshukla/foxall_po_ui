@@ -46,6 +46,11 @@ export function AppNavbar() {
                 Orders
               </Link>
             )}
+            {isAuthenticated && (
+              <Link to="/freight-bookings" className={linkClass('/freight-bookings')}>
+                Freight
+              </Link>
+            )}
             {canManageUsers() && (
               <Link to="/entities" className={linkClass('/entities')}>
                 Entities
@@ -153,6 +158,7 @@ export function AppNavbar() {
             <>
               <Link to="/dashboard" className={mobileLinkClass('/dashboard')}>Dashboard</Link>
               <Link to="/purchase-orders" className={mobileLinkClass('/purchase-orders')}>Purchase Orders</Link>
+              <Link to="/freight-bookings" className={mobileLinkClass('/freight-bookings')}>Freight Bookings</Link>
             </>
           )}
           {canManageUsers() && (

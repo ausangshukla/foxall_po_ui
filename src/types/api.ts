@@ -855,6 +855,19 @@ export interface FreightBooking {
   carrier_booking_workflow?: 'api' | 'manual'
 }
 
+export interface FreightBookingWithSummary extends FreightBooking {
+  po_number: string | null
+  tracking_status: string | null
+  tracking_vessel: string | null
+  tracking_eta: string | null
+  active_delay_alerts: number
+}
+
+export interface FreightBookingDetail extends FreightBooking {
+  purchase_order: { id: number; po_number: string } | null
+  tracking: ShipmentTracking | null
+}
+
 export interface FreightBookingRate {
   id: number
   carrier_name: string

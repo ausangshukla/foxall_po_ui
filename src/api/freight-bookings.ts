@@ -1,5 +1,5 @@
 import { api } from './client'
-import type { FreightBooking, FreightBookingRate } from '../types/api'
+import type { FreightBooking, FreightBookingRate, FreightBookingWithSummary, FreightBookingDetail } from '../types/api'
 
 export interface BookingDraftResponse {
   booking: FreightBooking | null
@@ -19,7 +19,11 @@ export interface BookingDraftResponse {
 export const freightBookingsApi = {
   list: async (params?: { status?: string }) => {
     const query = params?.status ? `?status=${params.status}` : ''
-    return api.get<FreightBooking[]>(`/api/v1/freight_bookings${query}`)
+    return api.get<FreightBookingWithSummary[]>(`/api/v1/freight_bookings${query}`)
+  },
+
+  getWithTracking: async (id: number) => {
+    return api.get<FreightBookingDetail>(`/api/v1/freight_bookings/${id}`)
   },
 
   getDraft: async (poId: number) => {

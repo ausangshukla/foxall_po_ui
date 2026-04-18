@@ -27,6 +27,8 @@ import {
   PoTransitionRuleFormPage,
   PoTransitionRuleShowPage,
   SupplierShipmentDocsPage,
+  FreightBookingListPage,
+  FreightBookingShowPage,
 } from '../pages'
 import { SellerConfirmationPage } from '../pages/seller-confirmation'
 import { NotFound } from '../components/common'
@@ -86,6 +88,9 @@ export function AppRouter() {
         <Route path="/po-transition-rules/new" element={<PoTransitionRuleFormPage />} />
         <Route path="/po-transition-rules/:id" element={<PoTransitionRuleShowPage />} />
         <Route path="/po-transition-rules/:id/edit" element={<PoTransitionRuleFormPage />} />
+
+        <Route path="/freight-bookings" element={<FreightBookingListPage />} />
+        <Route path="/freight-bookings/:id" element={<FreightBookingShowPage />} />
 
         <Route path="/settings/freight-rates" element={<FreightRatesList />} />
         <Route path="/settings/freight-rates/new" element={<FreightRateForm />} />
