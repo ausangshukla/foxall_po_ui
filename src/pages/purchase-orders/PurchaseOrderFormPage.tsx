@@ -339,6 +339,7 @@ export function PurchaseOrderFormPage() {
   }, [isAuth, isEditing, poId, user])
 
   const validateStep = (step: number, validateAll = false): { isValid: boolean, errors: Record<string, string> } => {
+    console.log('>>> [validateStep] step:', step, 'validateAll:', validateAll, 'formData:', formData)
     const errors: Record<string, string> = {}
 
     // Step 0: Core Order Details
@@ -513,10 +514,10 @@ export function PurchaseOrderFormPage() {
       data.append('purchase_order[target_ship_date]', formData.target_ship_date);
 
       // Files - Only append if a new file was actually selected
-      if (formData.po_document instanceof File) data.append('purchase_order[po_document]', formData.po_document);
-      if (formData.product_spec_sheet instanceof File) data.append('purchase_order[product_spec_sheet]', formData.product_spec_sheet);
-      if (formData.msds instanceof File) data.append('purchase_order[msds]', formData.msds);
-      if (formData.pre_production_sample instanceof File) data.append('purchase_order[pre_production_sample]', formData.pre_production_sample);
+      if (formData.po_document) data.append('purchase_order[po_document]', formData.po_document);
+      if (formData.product_spec_sheet) data.append('purchase_order[product_spec_sheet]', formData.product_spec_sheet);
+      if (formData.msds) data.append('purchase_order[msds]', formData.msds);
+      if (formData.pre_production_sample) data.append('purchase_order[pre_production_sample]', formData.pre_production_sample);
 
       let response: PurchaseOrderResponse;
       if (isEditing && poId) {
@@ -552,10 +553,6 @@ export function PurchaseOrderFormPage() {
 
       const message = err instanceof Error ? err.message : 'Failed to save purchase order';
       setError(message)
-      // If it's a validation error about the document, alert the user specifically
-      if (message.toLowerCase().includes('po_document')) {
-        alert("Server Error: The PO Document is required. Please re-upload it if the error persists.")
-      }
     } finally {
       setIsSaving(false)
     }
