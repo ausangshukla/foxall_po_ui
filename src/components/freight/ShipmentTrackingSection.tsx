@@ -14,7 +14,7 @@ interface Props {
 export function ShipmentTrackingSection({ poId, embedded = false }: Props) {
   const [tracking, setTracking] = useState<ShipmentTracking | null>(null)
   const [loading, setLoading] = useState(true)
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(true)
 
   const fetchTracking = async () => {
     try {
@@ -37,8 +37,7 @@ export function ShipmentTrackingSection({ poId, embedded = false }: Props) {
   if (!tracking) return null
 
   const hasActiveAlerts = tracking.alerts?.some(a => !a.acknowledged_at)
-  const API_CARRIER_SOURCES = ['maersk', 'hapag_lloyd']
-  const isApiTracking = API_CARRIER_SOURCES.includes((tracking.carrier_api_source || '').toLowerCase())
+  const isApiTracking = tracking.is_api_tracking ?? false
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -51,7 +50,7 @@ export function ShipmentTrackingSection({ poId, embedded = false }: Props) {
 
       {/* Tracking Summary Card */}
       <section className="glass-panel ambient-shadow rounded-xl border border-outline-variant/20 overflow-hidden">
-        <div className="px-8 py-5 border-b border-outline-variant/10 flex justify-between items-center bg-surface-container-low">
+        <div data-test-id="shipment-tracking-section" className="px-8 py-5 border-b border-outline-variant/10 flex justify-between items-center bg-surface-container-low">
           <div className="flex items-center gap-3">
             <span className="material-symbols-outlined text-primary">analytics</span>
             <h2 className="text-on-primary-container font-extrabold tracking-tight text-lg">
@@ -69,7 +68,7 @@ export function ShipmentTrackingSection({ poId, embedded = false }: Props) {
               onClick={() => setIsExpanded(!isExpanded)}
               className="text-primary text-sm font-bold flex items-center gap-1 hover:underline"
             >
-              {isExpanded ? 'Hide Details' : 'Show Full Timeline'}
+              {isExpanded ? 'Hide Details' : 'Show Details'}
               <span className="material-symbols-outlined text-sm">
                 {isExpanded ? 'expand_less' : 'expand_more'}
               </span>
@@ -81,7 +80,7 @@ export function ShipmentTrackingSection({ poId, embedded = false }: Props) {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="space-y-1">
               <p className="text-on-surface-variant text-[10px] uppercase tracking-widest font-bold">Current Status</p>
-              <p className="font-extrabold text-on-surface text-xl tracking-tight">
+              <p data-test-id="current-status-code" className="font-extrabold text-on-surface text-xl tracking-tight">
                 {tracking.current_status_code.replace(/_/g, ' ')}
               </p>
               <p className="text-xs text-on-surface-variant">
@@ -142,7 +141,9 @@ export function ShipmentTrackingSection({ poId, embedded = false }: Props) {
           {isExpanded && (
             <div className="mt-12 pt-12 border-t border-outline-variant/10 animate-in fade-in duration-500">
               <h3 className="text-on-surface-variant text-[10px] uppercase tracking-widest font-black mb-8">Shipment Milestones</h3>
-              <ShipmentTimeline events={tracking.events || []} />
+              <div data-test-id="shipment-milestones">
+                <ShipmentTimeline events={tracking.events || []} />
+              </div>
             </div>
           )}
         </div>

@@ -1,0 +1,13 @@
+# Staging UI configuration
+servers:
+  web:
+    - 1.2.3.4 # Staging EC2 IP
+
+proxy:
+  ssl: true
+  host: app-stage.yourdomain.com
+  app_port: 80
+
+builder:
+  args:
+    VITE_API_URL: https://api-stage.yourdomain.com

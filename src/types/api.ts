@@ -997,6 +997,7 @@ export interface ShipmentTracking {
   poll_failures: number
   created_at: string
   updated_at: string
+  is_api_tracking?: boolean
   events?: ShipmentEvent[]
   alerts?: DelayAlert[]
 }

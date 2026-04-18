@@ -45,7 +45,7 @@ export function ShipmentTimeline({ events }: Props) {
   return (
     <div className="relative space-y-8 pl-8 before:absolute before:inset-y-0 before:left-[15px] before:w-0.5 before:bg-outline-variant/30">
       {events.map((event) => (
-        <div key={event.id} className="relative">
+        <div key={event.id} data-test-id="shipment-event" className="relative">
           <div className={`absolute -left-[32px] top-0 w-8 h-8 rounded-full flex items-center justify-center border-4 border-surface ${getEventColor(event.event_category)}`}>
             <span className="material-symbols-outlined text-sm">
               {getEventIcon(event.event_category)}

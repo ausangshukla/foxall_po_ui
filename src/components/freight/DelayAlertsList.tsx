@@ -40,8 +40,9 @@ export function DelayAlertsList({ poId, alerts, onAcknowledge }: Props) {
   return (
     <div className="space-y-4 mb-8">
       {activeAlerts.map((alert) => (
-        <div 
-          key={alert.id} 
+        <div
+          key={alert.id}
+          data-test-id="delay-alert"
           className={`p-6 rounded-2xl border flex flex-col md:flex-row md:items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2 ${getSeverityStyles(alert.severity)}`}
         >
           <div className="flex items-start gap-4">

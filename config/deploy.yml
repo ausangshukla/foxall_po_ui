@@ -1,0 +1,11 @@
+service: foxall-po-ui
+image: ghcr.io/your-github-user/foxall-po-ui
+
+registry:
+  server: ghcr.io
+  username: your-github-user
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+builder:
+  arch: amd64
