@@ -61,6 +61,12 @@ export function ShipmentTimeline({ events }: Props) {
                 }`}>
                   {event.event_time_type}
                 </span>
+                {event.raw_source === 'manual_logistics' && (
+                  <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 flex items-center gap-0.5">
+                    <span className="material-symbols-outlined text-[11px]">link</span>
+                    Shipper
+                  </span>
+                )}
               </div>
               
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-on-surface-variant">

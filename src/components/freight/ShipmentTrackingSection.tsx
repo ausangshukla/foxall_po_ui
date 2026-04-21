@@ -132,9 +132,11 @@ export function ShipmentTrackingSection({ poId, embedded = false }: Props) {
           </div>
 
           {!isApiTracking && (
-            <div className="mt-6 p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-3">
-              <span className="material-symbols-outlined text-slate-400">info</span>
-              <p className="text-slate-600 text-sm">Live tracking is not available for this carrier. Contact the carrier directly for status updates.</p>
+            <div className="mt-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-3">
+              <span className="material-symbols-outlined text-emerald-600 mt-0.5">link</span>
+              <p className="text-emerald-800 text-sm leading-relaxed">
+                <strong>Manual tracking active.</strong> The logistics partner receives a secure link and updates milestones by clicking buttons — no login needed. Events appear in the timeline below as they are submitted.
+              </p>
             </div>
           )}
 
