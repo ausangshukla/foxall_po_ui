@@ -66,8 +66,6 @@ export async function apiRequest<T, M = Record<string, never>>(
   returnFull: boolean = false
 ): Promise<T | ApiResponse<T, M>> {
   const url = `${API_BASE_URL}${endpoint}`
-  console.debug('[API Client] Request:', options.method || 'GET', url)
-  console.debug('[API Client] Body type:', options.body instanceof FormData ? 'FormData' : typeof options.body)
 
   // Prepare headers
   const headers: Record<string, string> = {
@@ -93,13 +91,10 @@ export async function apiRequest<T, M = Record<string, never>>(
   }
 
   // Make the request
-  console.debug('[API Client] Headers:', headers)
   const response = await fetch(url, {
     ...options,
     headers,
   })
-
-  console.debug('[API Client] Response status:', response.status, response.statusText)
 
   // Capture Authorization header (for devise-jwt login)
   const authHeader = response.headers.get('Authorization')

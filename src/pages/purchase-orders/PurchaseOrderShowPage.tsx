@@ -85,30 +85,22 @@ export function PurchaseOrderShowPage() {
 
   const fetchStateData = async (id: number) => {
     try {
-      console.log(`[PO State Debug] Fetching state data for PO #${id}`)
       const [actionsRes, attemptsRes] = await Promise.allSettled([
         getPurchaseOrderAvailableActions(id),
         poTransitionAttemptApi.getByPurchaseOrder(id)
       ])
-      
+
       if (actionsRes.status === 'fulfilled') {
-        console.log(`[PO State Debug] Actions:`, actionsRes.value?.available_actions)
         setAvailableActions(actionsRes.value?.available_actions || [])
-      } else {
-        // Fallback to what we already have if any
-        console.error('[PO State Debug] Failed to load available actions', actionsRes.reason)
-        // If we already have actions from the PO data, don't clear them
       }
 
       if (attemptsRes.status === 'fulfilled') {
-        console.log(`[PO State Debug] Attempts:`, attemptsRes.value?.data)
         setTransitionAttempts(attemptsRes.value?.data || [])
       } else {
-        console.error('[PO State Debug] Failed to load transition attempts', attemptsRes.reason)
         setTransitionAttempts([])
       }
-    } catch (err) {
-      console.error('[PO State Debug] Unexpected error loading state data', err)
+    } catch {
+      // state data failures are non-fatal; existing state is preserved
     }
   }
 
@@ -122,14 +114,12 @@ export function PurchaseOrderShowPage() {
         setPurchaseOrder(data)
         
         // If data includes transition history, use it as initial state
-        if (data.history) {
-          console.log(`[PO State Debug] Found history in PO data:`, data.history)
-          setTransitionAttempts(data.history)
+        if (data.transition_history) {
+          setTransitionAttempts(data.transition_history)
         }
 
         // If data includes available actions, use them immediately
         if (data.available_actions) {
-          console.log(`[PO State Debug] Found actions in PO data:`, data.available_actions)
           setAvailableActions(data.available_actions)
         }
 

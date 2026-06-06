@@ -179,7 +179,31 @@ const INCOTERMS = ['EXW', 'FOB', 'CFR', 'CIF', 'DAP', 'DDP', 'FCA']
 const PAYMENT_TERMS = ['30% deposit / 70% BL', 'LC', 'TT', 'Net 30', 'Net 60']
 const UNITS_OF_MEASURE = ['pcs', 'kg', 'cbm', 'sets']
 const PRODUCT_CATEGORIES = ['Electronics', 'Textiles', 'Furniture', 'Machinery', 'Chemicals', 'Other']
-const COUNTRIES = ['China', 'USA', 'Germany', 'Japan', 'India', 'UK', 'France', 'UAE', 'Other']
+const COUNTRIES: { code: string; name: string }[] = [
+  { code: 'CN', name: 'China' },
+  { code: 'US', name: 'USA' },
+  { code: 'DE', name: 'Germany' },
+  { code: 'JP', name: 'Japan' },
+  { code: 'IN', name: 'India' },
+  { code: 'GB', name: 'United Kingdom' },
+  { code: 'FR', name: 'France' },
+  { code: 'AE', name: 'UAE' },
+  { code: 'VN', name: 'Vietnam' },
+  { code: 'BD', name: 'Bangladesh' },
+  { code: 'TH', name: 'Thailand' },
+  { code: 'MY', name: 'Malaysia' },
+  { code: 'ID', name: 'Indonesia' },
+  { code: 'PK', name: 'Pakistan' },
+  { code: 'TR', name: 'Turkey' },
+  { code: 'MX', name: 'Mexico' },
+  { code: 'BR', name: 'Brazil' },
+  { code: 'KR', name: 'South Korea' },
+  { code: 'TW', name: 'Taiwan' },
+  { code: 'SG', name: 'Singapore' },
+  { code: 'HK', name: 'Hong Kong' },
+  { code: 'PH', name: 'Philippines' },
+  { code: 'OTHER', name: 'Other' },
+]
 
 export function PurchaseOrderFormPage() {
   const { id } = useParams<{ id: string }>()
@@ -209,15 +233,11 @@ export function PurchaseOrderFormPage() {
   ]
 
   useEffect(() => {
-    console.log('>>> [useEffect] Running, isAuth:', isAuth, 'user:', !!user, 'isEditing:', isEditing, 'poId:', poId)
-    
     if (!isAuth || !user) {
-      console.log('>>> [useEffect] Skipping - auth not ready')
       return
     }
 
     const loadData = async () => {
-      console.log('>>> [useEffect] Loading data...')
       try {
         const [entitiesData, usersData] = await Promise.all([
           listEntities(),
@@ -228,9 +248,7 @@ export function PurchaseOrderFormPage() {
 
         let poData: PurchaseOrderResponse | null = null;
         if (isEditing && poId) {
-          console.log('>>> [useEffect] Fetching PO id:', poId)
           poData = await getPurchaseOrder(poId);
-          console.log('>>> [useEffect] PO data received:', poData)
         }
 
         const definitions = await getCustomFieldDefinitions('PurchaseOrder', poData?.po_type || undefined);
@@ -241,7 +259,6 @@ export function PurchaseOrderFormPage() {
         })
 
         if (poData) {
-          console.log('>>> [useEffect] Setting formData with PO data...')
           setFormData({
             entity_id: poData.entity_id?.toString() || '',
             po_number: poData.po_number || '',
@@ -314,9 +331,7 @@ export function PurchaseOrderFormPage() {
             msds_url: poData.msds_url,
             pre_production_sample_url: poData.pre_production_sample_url,
           })
-          console.log('>>> [useEffect] formData set successfully')
         } else {
-          console.log('>>> [useEffect] No PO data, using defaults')
           setFormData((prev) => ({
             ...prev,
             entity_id: user.entity_id?.toString() || '',
@@ -324,7 +339,6 @@ export function PurchaseOrderFormPage() {
           }))
         }
       } catch (err) {
-        console.error('>>> [useEffect] Error loading PO:', err)
         // Re-throw AuthError so the auth system handles redirect to login
         if (err instanceof Error && err.name === 'AuthError') {
           throw err
@@ -339,7 +353,6 @@ export function PurchaseOrderFormPage() {
   }, [isAuth, isEditing, poId, user])
 
   const validateStep = (step: number, validateAll = false): { isValid: boolean, errors: Record<string, string> } => {
-    console.log('>>> [validateStep] step:', step, 'validateAll:', validateAll, 'formData:', formData)
     const errors: Record<string, string> = {}
 
     // Step 0: Core Order Details
@@ -443,7 +456,6 @@ export function PurchaseOrderFormPage() {
     const { isValid, errors } = validateStep(4, true)
     if (!isValid) {
       const errorMsg = "Validation failed for: " + Object.keys(errors).map(k => k.replace('custom_fields.', '')).join(", ")
-      console.error('>>> ' + errorMsg, errors)
       setError("Please check the following fields: " + Object.values(errors).join("; "))
       return
     }
@@ -961,7 +973,7 @@ export function PurchaseOrderFormPage() {
                         className={`w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-4 transition-all font-medium text-on-surface appearance-none ${validationErrors.supplier_country ? 'ring-2 ring-error/20' : 'focus:ring-primary-container/40'}`}
                       >
                         <option value="">Select country...</option>
-                        {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+                        {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
                       </select>
                     </div>
                     <div className="space-y-1.5">
