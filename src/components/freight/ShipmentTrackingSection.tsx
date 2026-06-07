@@ -11,7 +11,7 @@ interface Props {
   embedded?: boolean
 }
 
-export function ShipmentTrackingSection({ poId, embedded = false }: Props) {
+export function ShipmentTrackingSection({ poId, embedded: _embedded = false }: Props) {
   const [tracking, setTracking] = useState<ShipmentTracking | null>(null)
   const [loading, setLoading] = useState(true)
   const [isExpanded, setIsExpanded] = useState(true)

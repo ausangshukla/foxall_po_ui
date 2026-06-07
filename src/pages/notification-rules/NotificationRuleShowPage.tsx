@@ -24,7 +24,7 @@ export function NotificationRuleShowPage() {
   const [entity, setEntity] = useState<EntityResponse | null>(null)
   const [poState, setPoState] = useState<PoStateResponse | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!isAuth || !id) return

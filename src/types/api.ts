@@ -232,6 +232,7 @@ export interface PurchaseOrderResponse {
   po_state_name?: string | null
   po_state_description?: string | null
   history?: PoTransitionAttemptResponse[]
+  transition_history?: PoTransitionAttemptResponse[]
   creator_name?: string | null
   carrier_booking_workflow?: 'api' | 'manual' | null
   
@@ -853,6 +854,7 @@ export interface FreightBooking {
   agreed_rate_usd?: number | null
   carrier_api_source?: string | null
   carrier_booking_workflow?: 'api' | 'manual'
+  carrier_entity_name?: string | null
 }
 
 export interface FreightBookingWithSummary extends FreightBooking {
@@ -866,6 +868,7 @@ export interface FreightBookingWithSummary extends FreightBooking {
 export interface FreightBookingDetail extends FreightBooking {
   purchase_order: { id: number; po_number: string } | null
   tracking: ShipmentTracking | null
+  chargeable_weight_kg?: number | null
 }
 
 export interface FreightBookingRate {
@@ -1011,6 +1014,7 @@ export interface ShipmentTracking {
   created_at: string
   updated_at: string
   is_api_tracking?: boolean
+  voyage_number?: string | null
   events?: ShipmentEvent[]
   alerts?: DelayAlert[]
 }

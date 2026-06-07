@@ -2,12 +2,14 @@ interface AlertMessageProps {
   variant?: 'success' | 'danger' | 'warning' | 'info'
   message: string
   onClose?: () => void
+  className?: string
 }
 
 export function AlertMessage({
   variant = 'info',
   message,
   onClose,
+  className = '',
 }: AlertMessageProps) {
   const getVariantStyles = () => {
     switch (variant) {
@@ -34,7 +36,7 @@ export function AlertMessage({
   }
 
   return (
-    <div className={`p-4 rounded-xl border flex items-center justify-between shadow-sm animate-in slide-in-from-top-2 duration-300 ${getVariantStyles()}`}>
+    <div className={`p-4 rounded-xl border flex items-center justify-between shadow-sm animate-in slide-in-from-top-2 duration-300 ${getVariantStyles()} ${className}`}>
       <div className="flex items-center gap-3">
         <span className="material-symbols-outlined text-[20px]">{getIcon()}</span>
         <span className="text-sm font-semibold tracking-tight">{message}</span>

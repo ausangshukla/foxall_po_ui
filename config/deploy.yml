@@ -1,9 +1,9 @@
 service: foxall-po-ui
-image: ghcr.io/your-github-user/foxall-po-ui
+image: ausangshukla/foxall-po-ui
 
 registry:
   server: ghcr.io
-  username: your-github-user
+  username: ausangshukla
   password:
     - KAMAL_REGISTRY_PASSWORD
 

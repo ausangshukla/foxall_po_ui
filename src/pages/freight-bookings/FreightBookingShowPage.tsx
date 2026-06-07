@@ -5,7 +5,6 @@ import { LoadingSpinner } from '../../components/common'
 import { ShipmentTimeline } from '../../components/freight/ShipmentTimeline'
 import { DelayAlertsList } from '../../components/freight/DelayAlertsList'
 import { freightBookingsApi } from '../../api/freight-bookings'
-import { shipmentTrackingsApi } from '../../api/shipment-trackings'
 import type { FreightBookingDetail } from '../../types/api'
 
 const STATUS_LABELS: Record<string, string> = {
@@ -78,12 +77,6 @@ export function FreightBookingShowPage() {
   useEffect(() => {
     if (isAuth) loadBooking()
   }, [isAuth, id])
-
-  const acknowledgeAlert = async (alertId: number) => {
-    if (!booking?.purchase_order?.id) return
-    await shipmentTrackingsApi.acknowledgeAlert(booking.purchase_order.id, alertId)
-    loadBooking()
-  }
 
   if (!isAuth || loading) return <LoadingSpinner />
   if (error || !booking) return (

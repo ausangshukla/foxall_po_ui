@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useAuth, useRequireAuth } from '../../contexts/AuthContext'
+import { useRequireAuth } from '../../contexts/AuthContext'
 import { LoadingSpinner, AlertMessage } from '../../components/common'
 import { getPoTransitionRule } from '../../api/po-transition-rules'
 import { listPoStates } from '../../api/po-states'
@@ -15,8 +15,6 @@ export function PoTransitionRuleShowPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const isAuth = useRequireAuth()
-  const { canManageUsers } = useAuth()
-
   const ruleId = id ? parseInt(id, 10) : null
 
   const [rule, setRule] = useState<PoTransitionRuleResponse | null>(null)

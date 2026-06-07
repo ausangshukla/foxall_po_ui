@@ -455,7 +455,6 @@ export function PurchaseOrderFormPage() {
 
     const { isValid, errors } = validateStep(4, true)
     if (!isValid) {
-      const errorMsg = "Validation failed for: " + Object.keys(errors).map(k => k.replace('custom_fields.', '')).join(", ")
       setError("Please check the following fields: " + Object.values(errors).join("; "))
       return
     }
