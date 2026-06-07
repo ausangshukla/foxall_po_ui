@@ -97,6 +97,13 @@ export function AppNavbar() {
         <div className="flex items-center gap-4">
           {isAuthenticated ? (
             <>
+              <Link
+                to="/help"
+                className="p-2 hover:bg-emerald-50/50 rounded-lg transition-all text-emerald-800"
+                title="Help & User Guides"
+              >
+                <span className="material-symbols-outlined">help_center</span>
+              </Link>
               <button className="p-2 hover:bg-emerald-50/50 rounded-lg transition-all text-emerald-800">
                 <span className="material-symbols-outlined">notifications</span>
               </button>
@@ -172,6 +179,10 @@ export function AppNavbar() {
               <Link to="/po-transition-rules" className={mobileLinkClass('/po-transition-rules')}>Transitions</Link>
               <Link to="/settings/freight-rates" className={mobileLinkClass('/settings/freight-rates')}>Freight Rates</Link>
             </>
+          )}
+          <hr className="border-slate-100 my-2" />
+          {isAuthenticated && (
+            <Link to="/help" className={mobileLinkClass('/help')} onClick={() => setIsMobileMenuOpen(false)}>Help & Guides</Link>
           )}
           <hr className="border-slate-100 my-2" />
           {isAuthenticated ? (

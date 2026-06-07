@@ -29,6 +29,7 @@ import {
   SupplierShipmentDocsPage,
   FreightBookingListPage,
   FreightBookingShowPage,
+  HelpPage,
 } from '../pages'
 import { SellerConfirmationPage } from '../pages/seller-confirmation'
 import { NotFound } from '../components/common'
@@ -95,6 +96,8 @@ export function AppRouter() {
         <Route path="/settings/freight-rates" element={<FreightRatesList />} />
         <Route path="/settings/freight-rates/new" element={<FreightRateForm />} />
         <Route path="/settings/freight-rates/:id/edit" element={<FreightRateForm />} />
+
+        <Route path="/help" element={<HelpPage />} />
 
         <Route path="*" element={<NotFound />} />
       </Route>

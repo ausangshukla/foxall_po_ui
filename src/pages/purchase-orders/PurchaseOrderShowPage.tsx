@@ -816,7 +816,7 @@ export function PurchaseOrderShowPage() {
           </section>
 
           {/* Help Link */}
-          <a className="group flex items-center justify-between p-6 glass-panel ambient-shadow rounded-xl border border-outline-variant/20 hover:bg-primary/5 transition-colors" href="#">
+          <a className="group flex items-center justify-between p-6 glass-panel ambient-shadow rounded-xl border border-outline-variant/20 hover:bg-primary/5 transition-colors" href="/help">
             <div className="flex items-center gap-4">
               <span className="material-symbols-outlined text-primary">help_center</span>
               <span className="font-bold text-sm">Need Help with this PO?</span>
