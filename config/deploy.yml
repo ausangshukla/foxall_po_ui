@@ -1,6 +1,9 @@
 service: foxall-po-ui
 image: ausangshukla/foxall-po-ui
 
+ssh:
+  user: ubuntu
+
 registry:
   server: ghcr.io
   username: ausangshukla
